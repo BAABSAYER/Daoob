@@ -28,7 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -36,6 +36,8 @@ export default function Profile() {
   const { user, logoutMutation } = useAuth();
   
   const navigate = (path: string) => setLocation(path);
+  
+  const { toast } = useToast();
   
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
