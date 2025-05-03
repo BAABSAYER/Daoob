@@ -1,26 +1,32 @@
+import { db } from "./db";
 import { 
   users, vendors, services, bookings, messages, reviews,
-  type User, type InsertUser,
-  type Vendor, type InsertVendor,
-  type Service, type InsertService,
-  type Booking, type InsertBooking,
-  type Message, type InsertMessage, 
-  type Review, type InsertReview
+  User, Vendor, Service, Booking, Message, Review,
+  InsertUser, InsertVendor, InsertService, InsertBooking, InsertMessage, InsertReview
 } from "@shared/schema";
+import { eq, and, or, ilike, desc } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
-const MemoryStore = createMemoryStore(session);
 
-// Helper for password hashing
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
+
+async function comparePasswords(supplied: string, stored: string) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // Users
@@ -70,321 +76,213 @@ export interface IStorage {
   verifyPassword(plaintext: string, hashed: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private vendors: Map<number, Vendor>;
-  private services: Map<number, Service>;
-  private bookings: Map<number, Booking>;
-  private messages: Map<number, Message>;
-  private reviews: Map<number, Review>;
-  
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
-  
-  private userIdCounter: number;
-  private vendorIdCounter: number;
-  private serviceIdCounter: number;
-  private bookingIdCounter: number;
-  private messageIdCounter: number;
-  private reviewIdCounter: number;
-  
+
   constructor() {
-    this.users = new Map();
-    this.vendors = new Map();
-    this.services = new Map();
-    this.bookings = new Map();
-    this.messages = new Map();
-    this.reviews = new Map();
-    
-    this.userIdCounter = 1;
-    this.vendorIdCounter = 1;
-    this.serviceIdCounter = 1;
-    this.bookingIdCounter = 1;
-    this.messageIdCounter = 1;
-    this.reviewIdCounter = 1;
-    
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // 24 hours
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
     });
-    
-    // Initialize with some data
-    this.initializeData();
   }
-  
-  // Initialize some sample data
-  private async initializeData() {
-    // This is only for initial app setup, not displaying mock data to users
-  }
-  
-  // User methods
+
+  // Users
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-  
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username.toLowerCase() === username.toLowerCase()
-    );
-  }
-  
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email.toLowerCase() === email.toLowerCase()
-    );
-  }
-  
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const now = new Date();
-    
-    // Hash password if it's plaintext
-    let password = insertUser.password;
-    if (!password.includes('.')) {
-      password = await hashPassword(password);
-    }
-    
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      password,
-      createdAt: now 
-    };
-    
-    this.users.set(id, user);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
-  
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const user = await this.getUser(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
-  
-  // Vendor methods
-  async getVendor(id: number): Promise<Vendor | undefined> {
-    return this.vendors.get(id);
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
   }
-  
-  async getVendorByUserId(userId: number): Promise<Vendor | undefined> {
-    return Array.from(this.vendors.values()).find(
-      (vendor) => vendor.userId === userId
-    );
-  }
-  
-  async getVendorsByCategory(category: string): Promise<Vendor[]> {
-    return Array.from(this.vendors.values()).filter(
-      (vendor) => vendor.category === category
-    );
-  }
-  
-  async getAllVendors(): Promise<Vendor[]> {
-    return Array.from(this.vendors.values());
-  }
-  
-  async searchVendors(query: string): Promise<Vendor[]> {
-    query = query.toLowerCase();
-    return Array.from(this.vendors.values()).filter(vendor => {
-      const businessName = vendor.businessName.toLowerCase();
-      const description = vendor.description?.toLowerCase() || '';
-      const category = vendor.category.toLowerCase();
-      const city = vendor.city?.toLowerCase() || '';
-      
-      return businessName.includes(query) || 
-             description.includes(query) || 
-             category.includes(query) || 
-             city.includes(query);
-    });
-  }
-  
-  async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
-    const id = this.vendorIdCounter++;
-    
-    const vendor: Vendor = {
-      ...insertVendor,
-      id,
-      rating: 0,
-      reviewCount: 0
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    // Hash password before storing
+    const hashedPassword = await hashPassword(insertUser.password);
+    const userWithHashedPassword = {
+      ...insertUser,
+      password: hashedPassword
     };
-    
-    this.vendors.set(id, vendor);
+
+    const [user] = await db.insert(users).values(userWithHashedPassword).returning();
+    return user;
+  }
+
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  // Vendors
+  async getVendor(id: number): Promise<Vendor | undefined> {
+    const [vendor] = await db.select().from(vendors).where(eq(vendors.id, id));
     return vendor;
   }
-  
+
+  async getVendorByUserId(userId: number): Promise<Vendor | undefined> {
+    const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
+    return vendor;
+  }
+
+  async getVendorsByCategory(category: string): Promise<Vendor[]> {
+    return await db.select().from(vendors).where(eq(vendors.category, category));
+  }
+
+  async getAllVendors(): Promise<Vendor[]> {
+    return await db.select().from(vendors);
+  }
+
+  async searchVendors(query: string): Promise<Vendor[]> {
+    return await db
+      .select()
+      .from(vendors)
+      .where(
+        or(
+          ilike(vendors.businessName, `%${query}%`),
+          ilike(vendors.description, `%${query}%`),
+          ilike(vendors.category, `%${query}%`)
+        )
+      );
+  }
+
+  async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
+    const [vendor] = await db.insert(vendors).values(insertVendor).returning();
+    return vendor;
+  }
+
   async updateVendor(id: number, vendorData: Partial<Vendor>): Promise<Vendor | undefined> {
-    const vendor = await this.getVendor(id);
-    if (!vendor) return undefined;
-    
-    const updatedVendor = { ...vendor, ...vendorData };
-    this.vendors.set(id, updatedVendor);
-    return updatedVendor;
+    const [vendor] = await db
+      .update(vendors)
+      .set(vendorData)
+      .where(eq(vendors.id, id))
+      .returning();
+    return vendor;
   }
-  
-  // Service methods
+
+  // Services
   async getService(id: number): Promise<Service | undefined> {
-    return this.services.get(id);
-  }
-  
-  async getServicesByVendor(vendorId: number): Promise<Service[]> {
-    return Array.from(this.services.values()).filter(
-      (service) => service.vendorId === vendorId
-    );
-  }
-  
-  async createService(insertService: InsertService): Promise<Service> {
-    const id = this.serviceIdCounter++;
-    
-    const service: Service = {
-      ...insertService,
-      id
-    };
-    
-    this.services.set(id, service);
+    const [service] = await db.select().from(services).where(eq(services.id, id));
     return service;
   }
-  
+
+  async getServicesByVendor(vendorId: number): Promise<Service[]> {
+    return await db.select().from(services).where(eq(services.vendorId, vendorId));
+  }
+
+  async createService(insertService: InsertService): Promise<Service> {
+    const [service] = await db.insert(services).values(insertService).returning();
+    return service;
+  }
+
   async updateService(id: number, serviceData: Partial<Service>): Promise<Service | undefined> {
-    const service = await this.getService(id);
-    if (!service) return undefined;
-    
-    const updatedService = { ...service, ...serviceData };
-    this.services.set(id, updatedService);
-    return updatedService;
+    const [service] = await db
+      .update(services)
+      .set(serviceData)
+      .where(eq(services.id, id))
+      .returning();
+    return service;
   }
-  
-  // Booking methods
+
+  // Bookings
   async getBooking(id: number): Promise<Booking | undefined> {
-    return this.bookings.get(id);
-  }
-  
-  async getBookingsByClient(clientId: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(
-      (booking) => booking.clientId === clientId
-    );
-  }
-  
-  async getBookingsByVendor(vendorId: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(
-      (booking) => booking.vendorId === vendorId
-    );
-  }
-  
-  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const id = this.bookingIdCounter++;
-    const now = new Date();
-    
-    const booking: Booking = {
-      ...insertBooking,
-      id,
-      createdAt: now,
-      updatedAt: now
-    };
-    
-    this.bookings.set(id, booking);
+    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
     return booking;
   }
-  
+
+  async getBookingsByClient(clientId: number): Promise<Booking[]> {
+    return await db.select().from(bookings).where(eq(bookings.clientId, clientId));
+  }
+
+  async getBookingsByVendor(vendorId: number): Promise<Booking[]> {
+    return await db.select().from(bookings).where(eq(bookings.vendorId, vendorId));
+  }
+
+  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    const [booking] = await db.insert(bookings).values(insertBooking).returning();
+    return booking;
+  }
+
   async updateBooking(id: number, bookingData: Partial<Booking>): Promise<Booking | undefined> {
-    const booking = await this.getBooking(id);
-    if (!booking) return undefined;
-    
-    const updatedBooking = { 
-      ...booking, 
-      ...bookingData,
-      updatedAt: new Date()
-    };
-    
-    this.bookings.set(id, updatedBooking);
-    return updatedBooking;
+    const [booking] = await db
+      .update(bookings)
+      .set(bookingData)
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking;
   }
-  
-  // Message methods
+
+  // Messages
   async getMessage(id: number): Promise<Message | undefined> {
-    return this.messages.get(id);
-  }
-  
-  async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
-    return Array.from(this.messages.values()).filter(
-      (message) => (
-        (message.senderId === userId1 && message.receiverId === userId2) ||
-        (message.senderId === userId2 && message.receiverId === userId1)
-      )
-    ).sort((a, b) => {
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    });
-  }
-  
-  async createMessage(insertMessage: InsertMessage): Promise<Message> {
-    const id = this.messageIdCounter++;
-    const now = new Date();
-    
-    const message: Message = {
-      ...insertMessage,
-      id,
-      read: false,
-      createdAt: now
-    };
-    
-    this.messages.set(id, message);
+    const [message] = await db.select().from(messages).where(eq(messages.id, id));
     return message;
   }
-  
+
+  async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(
+        or(
+          and(
+            eq(messages.senderId, userId1),
+            eq(messages.receiverId, userId2)
+          ),
+          and(
+            eq(messages.senderId, userId2),
+            eq(messages.receiverId, userId1)
+          )
+        )
+      )
+      .orderBy(messages.createdAt);
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const [message] = await db.insert(messages).values(insertMessage).returning();
+    return message;
+  }
+
   async markMessageAsRead(id: number): Promise<Message | undefined> {
-    const message = await this.getMessage(id);
-    if (!message) return undefined;
-    
-    const updatedMessage = { ...message, read: true };
-    this.messages.set(id, updatedMessage);
-    return updatedMessage;
+    const [message] = await db
+      .update(messages)
+      .set({ read: true })
+      .where(eq(messages.id, id))
+      .returning();
+    return message;
   }
-  
-  // Review methods
+
+  // Reviews
   async getReview(id: number): Promise<Review | undefined> {
-    return this.reviews.get(id);
-  }
-  
-  async getReviewsByVendor(vendorId: number): Promise<Review[]> {
-    return Array.from(this.reviews.values()).filter(
-      (review) => review.vendorId === vendorId
-    );
-  }
-  
-  async createReview(insertReview: InsertReview): Promise<Review> {
-    const id = this.reviewIdCounter++;
-    const now = new Date();
-    
-    const review: Review = {
-      ...insertReview,
-      id,
-      createdAt: now
-    };
-    
-    this.reviews.set(id, review);
-    
-    // Update vendor's average rating
-    const vendor = await this.getVendor(insertReview.vendorId);
-    if (vendor) {
-      const reviews = await this.getReviewsByVendor(vendor.id);
-      const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
-      const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
-      
-      await this.updateVendor(vendor.id, {
-        rating: avgRating,
-        reviewCount: reviews.length
-      });
-    }
-    
+    const [review] = await db.select().from(reviews).where(eq(reviews.id, id));
     return review;
   }
-  
+
+  async getReviewsByVendor(vendorId: number): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.vendorId, vendorId))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async createReview(insertReview: InsertReview): Promise<Review> {
+    const [review] = await db.insert(reviews).values(insertReview).returning();
+    return review;
+  }
+
   // Password verification
   async verifyPassword(plaintext: string, hashed: string): Promise<boolean> {
-    const [hashedPart, salt] = hashed.split('.');
-    const hashedBuf = Buffer.from(hashedPart, 'hex');
-    const suppliedBuf = (await scryptAsync(plaintext, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    return comparePasswords(plaintext, hashed);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

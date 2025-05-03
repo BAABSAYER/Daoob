@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Enum-like constants
 export const USER_TYPES = {
@@ -142,6 +143,45 @@ export const insertServiceSchema = createInsertSchema(services);
 export const insertBookingSchema = createInsertSchema(bookings);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertReviewSchema = createInsertSchema(reviews);
+
+// Relation definitions
+export const usersRelations = relations(users, ({ many, one }) => ({
+  vendor: one(vendors, { fields: [users.id], references: [vendors.userId] }),
+  sentMessages: many(messages, { relationName: "sender" }),
+  receivedMessages: many(messages, { relationName: "receiver" }),
+  clientBookings: many(bookings, { relationName: "client" }),
+  reviews: many(reviews, { relationName: "client" })
+}));
+
+export const vendorsRelations = relations(vendors, ({ one, many }) => ({
+  user: one(users, { fields: [vendors.userId], references: [users.id] }),
+  services: many(services),
+  bookings: many(bookings),
+  reviews: many(reviews)
+}));
+
+export const servicesRelations = relations(services, ({ one, many }) => ({
+  vendor: one(vendors, { fields: [services.vendorId], references: [vendors.id] }),
+  bookings: many(bookings)
+}));
+
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
+  client: one(users, { fields: [bookings.clientId], references: [users.id] }),
+  vendor: one(vendors, { fields: [bookings.vendorId], references: [vendors.id] }),
+  service: one(services, { fields: [bookings.serviceId], references: [services.id] }),
+  reviews: many(reviews)
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  sender: one(users, { fields: [messages.senderId], references: [users.id], relationName: "sender" }),
+  receiver: one(users, { fields: [messages.receiverId], references: [users.id], relationName: "receiver" })
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  client: one(users, { fields: [reviews.clientId], references: [users.id], relationName: "client" }),
+  vendor: one(vendors, { fields: [reviews.vendorId], references: [vendors.id] }),
+  booking: one(bookings, { fields: [reviews.bookingId], references: [bookings.id] })
+}));
 
 // Type exports
 export type User = typeof users.$inferSelect;
