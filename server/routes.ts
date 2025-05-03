@@ -196,16 +196,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      console.log("Booking request body:", req.body);
+      
       const bookingData: InsertBooking = {
         ...req.body,
         clientId: req.user.id,
         status: BOOKING_STATUS.PENDING
       };
       
+      console.log("Processed booking data:", bookingData);
+      
       const booking = await storage.createBooking(bookingData);
       res.status(201).json(booking);
     } catch (error) {
-      res.status(500).json({ message: 'Error creating booking' });
+      console.error("Booking creation error:", error);
+      res.status(500).json({ message: 'Error creating booking', error: error.message });
     }
   });
   
