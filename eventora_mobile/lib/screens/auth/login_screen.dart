@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Sign in to continue to Eventora',
+                        'Sign in to continue to DAOOB',
                         style: TextStyle(
                           fontSize: 16,
                           color: AppTheme.textSecondaryColor,

@@ -98,7 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Sign up to get started with Eventora',
+                'Sign up to get started with DAOOB',
                 style: TextStyle(
                   fontSize: 16,
                   color: AppTheme.textSecondaryColor,

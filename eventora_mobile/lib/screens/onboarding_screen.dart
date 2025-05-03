@@ -38,7 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     OnboardingPage(
       title: 'Perfect Events Made Easy',
-      description: 'Start planning your perfect event today with Eventora!',
+      description: 'Start planning your perfect event today with DAOOB!',
       image: Icons.celebration,
     ),
   ];

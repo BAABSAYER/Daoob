@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookingService()),
       ],
       child: MaterialApp(
-        title: 'Eventora',
+        title: 'DAOOB',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.getTheme(),
         home: const AppStartup(),

@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://eventora-app.replit.app'; // Replace with your deployed app URL
+  static const String baseUrl = 'https://daoob-app.replit.app'; // Replace with your deployed app URL
   static const _storage = FlutterSecureStorage();
 
   // HTTP GET request with authorization
