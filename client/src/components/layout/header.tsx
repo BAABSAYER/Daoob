@@ -34,7 +34,7 @@ export function Header({
       ) : (
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="font-poppins font-bold text-2xl text-neutral-800">{title || "Eventora"}</h1>
+            <h1 className="font-poppins font-bold text-2xl text-neutral-800">{title || "DAOOB"}</h1>
             {user && (
               <p className="text-sm text-neutral-600">
                 Welcome back, <span>{user.fullName || user.username}</span>!

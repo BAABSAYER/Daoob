@@ -53,7 +53,7 @@ export default function AuthPage() {
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80')" }}
         ></div>
         <div className="relative z-10 text-center px-6">
-          <h1 className="font-poppins font-bold text-4xl text-white mb-2">Eventora</h1>
+          <h1 className="font-poppins font-bold text-4xl text-white mb-2">DAOOB</h1>
           <p className="font-inter text-white/90 text-lg mb-8">Your smart event planning partner</p>
           <div className="flex flex-col space-y-3 w-64 mx-auto">
             <button 
@@ -73,7 +73,7 @@ export default function AuthPage() {
       </div>
       
       <div className="py-8 px-6 flex-1 bg-white">
-        <h2 className="font-poppins font-semibold text-2xl text-neutral-800 mb-6">How Eventora Works</h2>
+        <h2 className="font-poppins font-semibold text-2xl text-neutral-800 mb-6">How DAOOB Works</h2>
         
         <div className="grid grid-cols-3 gap-4 mb-10">
           <div className="text-center">
@@ -131,7 +131,7 @@ export default function AuthPage() {
           <div className="bg-white w-full max-w-md rounded-t-2xl slide-in">
             <LoginForm />
             <p className="text-center text-sm text-neutral-600 p-4 border-t border-neutral-200">
-              New to Eventora? 
+              New to DAOOB? 
               <button onClick={showAccountTypeSelection} className="text-secondary font-medium ml-1">
                 Sign up
               </button>

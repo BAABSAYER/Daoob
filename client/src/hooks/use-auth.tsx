@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
-        description: "Welcome to Eventora!",
+        description: "Welcome to DAOOB!",
       });
     },
     onError: (error: Error) => {
