@@ -1,0 +1,93 @@
+Eventora – Event Management Platform Ideation
+1. Overview
+Eventora is a smart event planning and vendor booking app that connects clients with service providers like venues, caterers, decorators, and entertainers. It simplifies the event planning process by combining discovery, booking, communication, and payments into a single platform.
+
+2. Target Users
+Clients (End-users): Individuals or businesses planning events (weddings, parties, corporate events).
+
+Vendors (Service Providers): Event-related businesses offering services (e.g., photography, catering, venues).
+
+Admin (Platform Operator): Manages users, bookings, content, and disputes.
+
+3. Problem
+Planning events is time-consuming and fragmented, with users relying on social media, personal calls, and multiple payment methods. Vendors struggle with exposure, lead quality, and booking management.
+
+4. Solution
+A unified, mobile-first platform that:
+
+Helps clients discover and book trusted vendors.
+
+Enables vendors to manage profiles, bookings, and payments.
+
+Automates reminders, communication, and status tracking.
+
+5. Core Features
+For Clients:
+Browse vendor listings by service, location, rating.
+
+Build event plans and packages.
+
+Chat with vendors in real time.
+
+Book and pay securely.
+
+Receive reminders and updates.
+
+For Vendors:
+Create service listings with pricing and availability.
+
+Accept/reject bookings.
+
+Chat with clients.
+
+Track earnings and performance.
+
+For Admin:
+Vendor verification and content moderation.
+
+Monitor bookings, payments, and disputes.
+
+Set commissions, feature vendors.
+
+Access platform analytics.
+
+6. Monetization Strategy
+Booking commission (e.g., 10–20%)
+
+Paid promotions for vendors
+
+Vendor subscription plans
+
+Transactional markup on payment processing
+
+7. Tech Stack Recommendation
+Frontend: Flutter (for iOS & Android)
+
+Backend: Firebase (Auth, Firestore, Storage)
+
+Payments: Stripe / Razorpay
+
+Chat: Firebase Realtime DB or Stream
+
+Admin Panel: Flutter Web or React
+
+8. Unique Selling Points
+Dual-sided (clients + vendors) all-in-one app
+
+Real-time chat and availability tracking
+
+Package builder with multi-service selection
+
+Customizable for regional markets
+
+Scalable for weddings, conferences, corporate events
+
+9. Future Opportunities
+AI-based event planning assistant
+
+Analytics for vendor performance
+
+Add-on services (photobooks, invites, etc.)
+
+Integration with maps, calendars, logistics
+
