@@ -1,139 +1,102 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:eventora_app/config/theme.dart';
+import 'package:eventora_app/screens/app_wrapper.dart';
+import 'package:eventora_app/screens/auth/auth_wrapper.dart';
 import 'package:eventora_app/screens/splash_screen.dart';
 import 'package:eventora_app/services/auth_service.dart';
-import 'package:eventora_app/services/booking_service.dart';
 import 'package:eventora_app/services/vendor_service.dart';
-import 'package:eventora_app/services/chat_service.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:eventora_app/services/booking_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Set preferred orientations to portrait only
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
+  // Set system UI overlay style
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.white,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
+  
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => BookingService()),
         ChangeNotifierProvider(create: (_) => VendorService()),
-        ChangeNotifierProvider(create: (_) => ChatService()),
+        ChangeNotifierProvider(create: (_) => BookingService()),
       ],
       child: MaterialApp(
         title: 'Eventora',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6366F1),
-            primary: const Color(0xFF6366F1),
-            secondary: const Color(0xFF14B8A6),
-            tertiary: const Color(0xFFF97316),
-            background: const Color(0xFFF8FAFC),
-            surface: Colors.white,
-            error: const Color(0xFFEF4444),
-          ),
-          useMaterial3: true,
-          scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: Color(0xFF1F2937)),
-            titleTextStyle: TextStyle(
-              color: Color(0xFF1F2937),
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          textTheme: GoogleFonts.interTextTheme(
-            Theme.of(context).textTheme,
-          ),
-          cardTheme: CardTheme(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
-            ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1),
-            ),
-            hintStyle: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 15,
-            ),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: const Color(0xFF6366F1),
-              elevation: 0,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF6366F1),
-              side: const BorderSide(color: Color(0xFF6366F1), width: 1),
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF6366F1),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-            backgroundColor: Colors.white,
-            selectedItemColor: Color(0xFF6366F1),
-            unselectedItemColor: Color(0xFF9CA3AF),
-            selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            unselectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            type: BottomNavigationBarType.fixed,
-          ),
-        ),
-        home: const SplashScreen(),
+        theme: AppTheme.getTheme(),
+        home: const AppStartup(),
       ),
+    );
+  }
+}
+
+class AppStartup extends StatefulWidget {
+  const AppStartup({Key? key}) : super(key: key);
+
+  @override
+  State<AppStartup> createState() => _AppStartupState();
+}
+
+class _AppStartupState extends State<AppStartup> {
+  bool _isInitialized = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+  
+  Future<void> _initializeApp() async {
+    // Simulate app initialization with a delay
+    await Future.delayed(const Duration(seconds: 2));
+    
+    // Check if the user is already logged in
+    final authService = Provider.of<AuthService>(context, listen: false);
+    await authService.checkAuthStatus();
+    
+    setState(() {
+      _isInitialized = true;
+    });
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const SplashScreen();
+    }
+    
+    return Consumer<AuthService>(
+      builder: (context, authService, _) {
+        if (authService.isLoading) {
+          return const SplashScreen();
+        }
+        
+        if (authService.isLoggedIn) {
+          return const AppWrapper();
+        } else {
+          return const AuthWrapper();
+        }
+      },
     );
   }
 }
