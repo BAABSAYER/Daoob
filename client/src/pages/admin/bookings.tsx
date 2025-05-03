@@ -339,7 +339,7 @@ export default function AdminBookings() {
                                   Confirm Booking
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleBookingAction("cancel", booking)}>
-                                  <XCircle2 className="h-4 w-4 mr-2 text-red-500" />
+                                  <XCircle className="h-4 w-4 mr-2 text-red-500" />
                                   Cancel Booking
                                 </DropdownMenuItem>
                               </>
@@ -347,7 +347,7 @@ export default function AdminBookings() {
                             
                             {booking.status === BOOKING_STATUS.CONFIRMED && (
                               <DropdownMenuItem onClick={() => handleBookingAction("cancel", booking)}>
-                                <XCircle2 className="h-4 w-4 mr-2 text-red-500" />
+                                <XCircle className="h-4 w-4 mr-2 text-red-500" />
                                 Cancel Booking
                               </DropdownMenuItem>
                             )}
@@ -444,7 +444,7 @@ export default function AdminBookings() {
                           className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
                           onClick={() => handleBookingAction("cancel", selectedBooking)}
                         >
-                          <XCircle2 className="h-4 w-4 mr-1" />
+                          <XCircle className="h-4 w-4 mr-1" />
                           Cancel
                         </Button>
                       </div>
@@ -456,7 +456,7 @@ export default function AdminBookings() {
                         className="w-full border-red-200 text-red-600 hover:bg-red-50"
                         onClick={() => handleBookingAction("cancel", selectedBooking)}
                       >
-                        <XCircle2 className="h-4 w-4 mr-1" />
+                        <XCircle className="h-4 w-4 mr-1" />
                         Cancel Booking
                       </Button>
                     )}
@@ -678,7 +678,7 @@ function BookingStatusBadge({ status, size = "default" }: { status: string, size
         };
       case BOOKING_STATUS.CANCELLED:
         return {
-          icon: <XCircle2 className={`${size === "large" ? "h-4 w-4" : "h-3 w-3"} text-red-500 mr-1`} />,
+          icon: <XCircle className={`${size === "large" ? "h-4 w-4" : "h-3 w-3"} text-red-500 mr-1`} />,
           textColor: "text-red-600",
           text: "Cancelled"
         };
