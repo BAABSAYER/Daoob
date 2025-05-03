@@ -152,15 +152,18 @@ export function BookingForm({ vendor, onClose }: BookingFormProps) {
   
   const bookingMutation = useMutation({
     mutationFn: async (data: BookingFormValues) => {
+      console.log('Submitting booking data:', data);
+      console.log('Price breakdown:', priceBreakdown);
+      
+      // Convert date to ISO string for better serialization
       return await apiRequest("POST", "/api/bookings", {
         vendorId: vendor.id,
         eventType: data.eventType,
-        eventDate: data.eventDate,
-        guestCount: data.guestCount,
+        eventDate: data.eventDate.toISOString(), // Convert date to ISO string
+        guestCount: Number(data.guestCount),
         serviceId: null, // We're not using actual service IDs from the DB for this MVP
-        specialRequests: data.specialRequests,
+        specialRequests: data.specialRequests || '',
         totalPrice: priceBreakdown.total,
-        status: BOOKING_STATUS.PENDING
       });
     },
     onSuccess: () => {

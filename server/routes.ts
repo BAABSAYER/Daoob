@@ -196,18 +196,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      console.log("Booking request body:", req.body);
+      console.log("Booking request body:", JSON.stringify(req.body, null, 2));
       
-      const bookingData: InsertBooking = {
-        ...req.body,
-        clientId: req.user.id,
-        status: BOOKING_STATUS.PENDING
-      };
+      // Validate that required fields are present
+      if (!req.body.vendorId) {
+        return res.status(400).json({ message: 'Missing required field: vendorId' });
+      }
       
-      console.log("Processed booking data:", bookingData);
+      if (!req.body.eventType) {
+        return res.status(400).json({ message: 'Missing required field: eventType' });
+      }
       
-      const booking = await storage.createBooking(bookingData);
-      res.status(201).json(booking);
+      if (!req.body.eventDate) {
+        return res.status(400).json({ message: 'Missing required field: eventDate' });
+      }
+      
+      let bookingData;
+      try {
+        bookingData = {
+          clientId: req.user.id,
+          vendorId: req.body.vendorId,
+          eventType: req.body.eventType,
+          eventDate: new Date(req.body.eventDate),
+          guestCount: req.body.guestCount || 0,
+          specialRequests: req.body.specialRequests || "",
+          totalPrice: req.body.totalPrice || 0,
+          status: BOOKING_STATUS.PENDING,
+          serviceId: req.body.serviceId !== undefined ? req.body.serviceId : null,
+        };
+      } catch (parseError) {
+        console.error("Error parsing booking data:", parseError);
+        return res.status(400).json({ message: 'Invalid booking data', error: parseError.message });
+      }
+      
+      console.log("Processed booking data:", JSON.stringify(bookingData, null, 2));
+      
+      try {
+        const booking = await storage.createBooking(bookingData);
+        res.status(201).json(booking);
+      } catch (dbError) {
+        console.error("Database error creating booking:", dbError);
+        return res.status(500).json({ message: 'Database error creating booking', error: dbError.message });
+      }
     } catch (error) {
       console.error("Booking creation error:", error);
       res.status(500).json({ message: 'Error creating booking', error: error.message });
