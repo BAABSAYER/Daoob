@@ -837,13 +837,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 }
 EOF
 
-# Add shared_preferences to pubspec.yaml and http package
-cat >> lib/pubspec.yaml << 'EOL'
-
-# Add dependencies for API and offline functionality
-dependencies:
-  shared_preferences: ^2.2.0
-  http: ^1.1.0
-EOL
+# Note: Dependencies will be added by fix_pubspec.sh script
 
 echo "Service files created successfully."

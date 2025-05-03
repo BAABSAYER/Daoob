@@ -15,20 +15,7 @@ mkdir -p android/app/src/main/res/mipmap-xxxhdpi
 # Copy the logo file into assets
 cp ../../attached_assets/WhatsApp\ Image\ 2025-04-06\ at\ 21.40.44_8e7cb969.jpg assets/images/daoob-logo.jpg
 
-# Update pubspec.yaml to include the assets and flutter_launcher_icons dependency
-cat >> pubspec.yaml << 'EOL'
-
-# Add assets
-assets:
-  - assets/images/
-
-# For app icon generation
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/images/daoob-logo.jpg"
-  adaptive_icon_background: "#6A3DE8"
-EOL
+# Note: Assets and flutter_icons will be added by fix_pubspec.sh script
 
 # Add flutter_launcher_icons dependency
 flutter pub add flutter_launcher_icons

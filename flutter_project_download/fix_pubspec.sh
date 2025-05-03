@@ -5,6 +5,12 @@ echo "Fixing pubspec.yaml to add SDK constraints..."
 # Navigate to the Flutter project
 cd eventora_app
 
+# First, check if pubspec.yaml already exists and remove any duplicate flutter_icons
+if [ -f pubspec.yaml ]; then
+  # Remove any existing flutter_icons section to avoid duplicates
+  sed -i '/flutter_icons:/,/adaptive_icon_background:/d' pubspec.yaml
+fi
+
 # Update pubspec.yaml to include SDK constraints
 cat > pubspec.yaml.new << 'EOL'
 name: eventora_app
