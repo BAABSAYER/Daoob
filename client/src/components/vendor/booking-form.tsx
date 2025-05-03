@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -87,6 +87,10 @@ export function BookingForm({ vendor, onClose }: BookingFormProps) {
   
   const packageOptions = getPackagesForVendor(vendor);
   
+  // Set default date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
   const {
     register,
     handleSubmit,
@@ -99,6 +103,7 @@ export function BookingForm({ vendor, onClose }: BookingFormProps) {
       packageId: '',
       guestCount: 0,
       specialRequests: '',
+      eventDate: tomorrow
     }
   });
   
@@ -107,16 +112,24 @@ export function BookingForm({ vendor, onClose }: BookingFormProps) {
   const guestCount = watch('guestCount');
   
   // Automatically set the selectedPackage when packageId changes
-  useState(() => {
+  // Using useEffect instead of useState for side effects
+  useEffect(() => {
     if (packageId) {
       const found = packageOptions.find(p => p.id === packageId);
       if (found) setSelectedPackage(found);
     }
-  });
+  }, [packageId, packageOptions]);
   
   // Calculate total price
   const calculateTotal = () => {
-    if (!selectedPackage) return 0;
+    if (!selectedPackage) {
+      return {
+        subtotal: 0,
+        serviceFee: 0,
+        tax: 0,
+        total: 0
+      };
+    }
     
     const basePrice = selectedPackage.price;
     const guestPriceMultiplier = guestCount > 200 ? 1.2 : 
@@ -324,6 +337,18 @@ export function BookingForm({ vendor, onClose }: BookingFormProps) {
           </div>
           
           <div className="border-t border-neutral-200 pt-4">
+            {/* Guest count multiplier explanation if applicable */}
+            {selectedPackage && guestCount > 50 && (
+              <div className="flex justify-between mb-2 text-sm text-neutral-600 italic">
+                <span>Guest count pricing adjustment applied</span>
+                <span>
+                  {guestCount > 200 ? "+20%" : 
+                   guestCount > 100 ? "+10%" :
+                   guestCount > 50 ? "+5%" : ""}
+                </span>
+              </div>
+            )}
+            
             <div className="flex justify-between mb-2">
               <span className="text-neutral-700">Package Price</span>
               <span className="font-medium text-neutral-800">
