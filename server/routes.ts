@@ -2,9 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
+import { db } from "./db";
 import { setupAuth } from "./auth";
-import { InsertVendor, InsertBooking, InsertMessage, BOOKING_STATUS } from "@shared/schema";
+import { InsertVendor, InsertBooking, InsertMessage, BOOKING_STATUS, messages } from "@shared/schema";
 import { z } from "zod";
+import { eq, or, and } from "drizzle-orm";
 
 interface WSMessage {
   type: string;
@@ -338,9 +340,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Get all messages where current user is sender or receiver
-      const allMessages = Array.from((await storage).messages.values()).filter(
-        message => message.senderId === req.user.id || message.receiverId === req.user.id
+      // Get all users the current user has exchanged messages with
+      const allMessages = await db.select().from(messages).where(
+        or(
+          eq(messages.senderId, req.user.id),
+          eq(messages.receiverId, req.user.id)
+        )
       );
       
       // Get unique user IDs the current user has conversations with
@@ -398,6 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(validConversations);
     } catch (error) {
+      console.error('Error fetching conversations:', error);
       res.status(500).json({ message: 'Error fetching conversations' });
     }
   });
