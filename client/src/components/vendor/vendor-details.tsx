@@ -229,7 +229,7 @@ export function VendorDetails({ vendorId }: VendorDetailsProps) {
       )}
 
       {/* Booking CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 flex justify-between items-center max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 flex justify-between items-center max-w-md mx-auto z-50">
         <div>
           <p className="font-medium text-neutral-800">{vendor.priceRange || 'Contact for pricing'}</p>
           <p className="text-xs text-neutral-600">Price varies by service and date</p>
@@ -240,7 +240,7 @@ export function VendorDetails({ vendorId }: VendorDetailsProps) {
             className="border-secondary text-secondary font-medium"
             onClick={handleChat}
           >
-            Chat
+            Chat with Vendor
           </Button>
           <Button 
             className="bg-secondary text-white font-medium shadow-sm"
