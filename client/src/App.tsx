@@ -23,11 +23,11 @@ import VendorServiceForm from "@/pages/vendor/service-form";
 import VendorBookings from "@/pages/vendor/bookings";
 import VendorProfile from "@/pages/vendor/profile";
 
-// Admin Dashboard Pages - temporarily commented out
-// import AdminDashboard from "@/pages/admin/dashboard";
-// import AdminUsers from "@/pages/admin/users";
-// import AdminVendors from "@/pages/admin/vendors";
-// import AdminBookings from "@/pages/admin/bookings";
+// Admin Dashboard Pages
+import AdminDashboard from "@/pages/admin/dashboard";
+import AdminUsers from "@/pages/admin/users";
+import AdminVendors from "@/pages/admin/vendors";
+import AdminBookings from "@/pages/admin/bookings";
 
 import { ProtectedRoute } from "@/lib/protected-route";
 import "./app.css";
@@ -55,11 +55,11 @@ function Router() {
       <ProtectedRoute path="/vendor-dashboard/bookings" component={VendorBookings} />
       <ProtectedRoute path="/vendor-dashboard/profile" component={VendorProfile} />
       
-      {/* Admin Dashboard Routes - temporarily commented out */}
-      {/* <ProtectedRoute path="/admin" component={AdminDashboard} /> */}
-      {/* <ProtectedRoute path="/admin/users" component={AdminUsers} /> */}
-      {/* <ProtectedRoute path="/admin/vendors" component={AdminVendors} /> */}
-      {/* <ProtectedRoute path="/admin/bookings" component={AdminBookings} /> */}
+      {/* Admin Dashboard Routes */}
+      <ProtectedRoute path="/admin" component={AdminDashboard} />
+      <ProtectedRoute path="/admin/users" component={AdminUsers} />
+      <ProtectedRoute path="/admin/vendors" component={AdminVendors} />
+      <ProtectedRoute path="/admin/bookings" component={AdminBookings} />
       
       {/* 404 Route */}
       <Route component={NotFound} />
