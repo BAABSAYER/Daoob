@@ -67,6 +67,7 @@ class _AppStartupState extends State<AppStartup> {
   }
   
   Future<void> _initializeApp() async {
+    // Load settings like offline mode from secure storage
     // Simulate app initialization with a delay
     await Future.delayed(const Duration(seconds: 2));
     
@@ -91,7 +92,8 @@ class _AppStartupState extends State<AppStartup> {
           return const SplashScreen();
         }
         
-        if (authService.isLoggedIn) {
+        // If user is logged in or offline mode is enabled
+        if (authService.isLoggedIn || authService.isOfflineMode) {
           return const AppWrapper();
         } else {
           return const AuthWrapper();

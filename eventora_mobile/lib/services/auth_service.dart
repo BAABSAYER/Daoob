@@ -10,33 +10,46 @@ class AuthService extends ChangeNotifier {
   User? _currentUser;
   bool _isLoggedIn = false;
   bool _isLoading = false;
+  bool _isOfflineMode = false;
 
   User? get currentUser => _currentUser;
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
+  bool get isOfflineMode => _isOfflineMode;
+
+  void setOfflineMode(bool value) {
+    _isOfflineMode = value;
+    notifyListeners();
+  }
 
   Future<void> checkAuthStatus() async {
     _isLoading = true;
     notifyListeners();
 
+    // If offline mode is enabled, use demo data
+    if (_isOfflineMode) {
+      await _setupOfflineUser();
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     try {
-      final token = await _storage.read(key: 'auth_token');
-      if (token == null) {
+      // Check if we have a session cookie
+      final cookie = await _storage.read(key: 'session_cookie');
+      
+      if (cookie == null) {
         _isLoggedIn = false;
         _currentUser = null;
       } else {
-        final response = await http.get(
-          Uri.parse('${ApiService.baseUrl}/api/user'),
-          headers: {'Authorization': 'Bearer $token'},
-        );
-
-        if (response.statusCode == 200) {
-          final userData = json.decode(response.body);
+        try {
+          // Use ApiService which will handle cookies automatically
+          final userData = await ApiService.get('/api/user');
           _currentUser = User.fromJson(userData);
           _isLoggedIn = true;
-        } else {
-          // Token is invalid or expired
-          await _storage.delete(key: 'auth_token');
+        } catch (e) {
+          // Session is invalid or expired
+          await _storage.delete(key: 'session_cookie');
           _isLoggedIn = false;
           _currentUser = null;
         }
@@ -55,31 +68,26 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}/api/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'username': username,
-          'password': password,
-        }),
-      );
+    // If offline mode is enabled, use demo data
+    if (_isOfflineMode) {
+      await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
+      await _setupOfflineUser();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    }
 
-      if (response.statusCode == 200) {
-        final userData = json.decode(response.body);
-        _currentUser = User.fromJson(userData);
-        
-        // In a real production app, the server would return a JWT token
-        // For now, we'll store a placeholder since our backend uses sessions
-        await _storage.write(key: 'auth_token', value: 'session_active');
-        
-        _isLoggedIn = true;
-        notifyListeners();
-        return true;
-      } else {
-        final error = json.decode(response.body);
-        throw Exception(error['message'] ?? 'Failed to login. Please try again.');
-      }
+    try {
+      // Use ApiService for login which will handle cookies automatically
+      final userData = await ApiService.post('/api/login', {
+        'username': username,
+        'password': password,
+      });
+      
+      _currentUser = User.fromJson(userData);
+      _isLoggedIn = true;
+      notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('Login error: $e');
       rethrow;
@@ -98,33 +106,29 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}/api/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'username': username,
-          'password': password,
-          'email': email,
-          'fullName': fullName,
-          'userType': 'client', // Default user type for mobile app users
-        }),
-      );
+    // If offline mode is enabled, use demo data
+    if (_isOfflineMode) {
+      await Future.delayed(const Duration(milliseconds: 800)); // Simulate network delay
+      await _setupOfflineUser();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    }
 
-      if (response.statusCode == 201) {
-        final userData = json.decode(response.body);
-        _currentUser = User.fromJson(userData);
-        
-        // Store auth token
-        await _storage.write(key: 'auth_token', value: 'session_active');
-        
-        _isLoggedIn = true;
-        notifyListeners();
-        return true;
-      } else {
-        final error = json.decode(response.body);
-        throw Exception(error['message'] ?? 'Registration failed. Please try again.');
-      }
+    try {
+      // Use ApiService for registration which will handle cookies automatically
+      final userData = await ApiService.post('/api/register', {
+        'username': username,
+        'password': password,
+        'email': email,
+        'fullName': fullName,
+        'userType': 'client', // Default user type for mobile app users
+      });
+      
+      _currentUser = User.fromJson(userData);
+      _isLoggedIn = true;
+      notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('Registration error: $e');
       rethrow;
@@ -138,15 +142,26 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    // If offline mode is enabled, just clear local state
+    if (_isOfflineMode) {
+      await Future.delayed(const Duration(milliseconds: 300)); // Simulate network delay
+      _isLoggedIn = false;
+      _currentUser = null;
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     try {
-      await http.post(Uri.parse('${ApiService.baseUrl}/api/logout'));
-      await _storage.delete(key: 'auth_token');
+      // Use ApiService for logout which will handle cookies automatically
+      await ApiService.post('/api/logout', {});
+      await _storage.delete(key: 'session_cookie');
       _isLoggedIn = false;
       _currentUser = null;
     } catch (e) {
       debugPrint('Logout error: $e');
       // Even if the server call fails, clear local storage
-      await _storage.delete(key: 'auth_token');
+      await _storage.delete(key: 'session_cookie');
       _isLoggedIn = false;
       _currentUser = null;
     } finally {
@@ -161,7 +176,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       // In a real app, this would call a password reset API endpoint
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
+      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
       _isLoading = false;
       notifyListeners();
       return true;
@@ -170,5 +185,18 @@ class AuthService extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  // Helper method to setup offline demo user
+  Future<void> _setupOfflineUser() async {
+    _currentUser = User(
+      id: 1,
+      username: 'demouser',
+      email: 'demo@example.com',
+      fullName: 'Demo User',
+      userType: 'client',
+      createdAt: DateTime.now(),
+    );
+    _isLoggedIn = true;
   }
 }
