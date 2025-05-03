@@ -26,7 +26,7 @@ export function Header({
     <header className="bg-white py-4 px-5 shadow-sm">
       {showBack ? (
         <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-3">
+          <button onClick={() => window.history.back()} className="mr-3">
             <ChevronLeft className="h-5 w-5 text-neutral-800" />
           </button>
           <h1 className="font-poppins font-semibold text-xl text-neutral-800">{title || ""}</h1>

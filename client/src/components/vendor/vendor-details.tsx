@@ -24,7 +24,8 @@ export function VendorDetails({ vendorId }: VendorDetailsProps) {
   });
 
   const handleBack = () => {
-    navigate(-1);
+    // Instead of navigate(-1), navigate to the home page or just use history.back()
+    window.history.back();
   };
 
   const handleChat = () => {
