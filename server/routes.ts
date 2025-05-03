@@ -333,6 +333,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get user by ID (for chat)
+  app.get('/api/users/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Return user without password
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching user' });
+    }
+  });
+  
   // Get conversations (distinct users with whom the current user has exchanged messages)
   app.get('/api/conversations', async (req, res) => {
     if (!req.isAuthenticated()) {
