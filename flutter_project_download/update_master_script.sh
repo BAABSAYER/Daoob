@@ -16,6 +16,7 @@ chmod +x create_flutter_project.sh
 chmod +x setup_app_icon.sh
 chmod +x create_services.sh
 chmod +x add_localization.sh
+chmod +x fix_pubspec.sh
 
 # Create the Flutter project
 ./create_flutter_project.sh
@@ -25,6 +26,9 @@ chmod +x add_localization.sh
 
 # Add Arabic localization support
 ./add_localization.sh
+
+# Fix pubspec.yaml SDK constraints
+./fix_pubspec.sh
 
 # Create main app files
 cd eventora_app
