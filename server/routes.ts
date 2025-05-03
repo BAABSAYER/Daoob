@@ -396,6 +396,389 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Vendor Dashboard Routes
+  
+  // Get vendor dashboard data
+  app.get('/api/vendors/dashboard', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      // Get vendor profile
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Get bookings for this vendor
+      const bookings = await storage.getBookingsByVendor(vendor.id);
+      
+      // Get services for this vendor
+      const services = await storage.getServicesByVendor(vendor.id);
+      
+      // Get reviews for this vendor
+      const reviews = await storage.getReviewsByVendor(vendor.id);
+      
+      // Calculate stats
+      const totalBookings = bookings.length;
+      const pendingBookings = bookings.filter(b => b.status === BOOKING_STATUS.PENDING).length;
+      const confirmedBookings = bookings.filter(b => b.status === BOOKING_STATUS.CONFIRMED).length;
+      const totalEarnings = bookings
+        .filter(b => b.status !== BOOKING_STATUS.CANCELLED)
+        .reduce((sum, booking) => sum + (booking.totalPrice || 0), 0);
+      
+      // Calculate average rating
+      const avgRating = reviews.length > 0 
+        ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+        : 0;
+      
+      res.json({
+        vendor,
+        stats: {
+          totalBookings,
+          pendingBookings,
+          confirmedBookings,
+          totalEarnings,
+          avgRating,
+          totalReviews: reviews.length,
+          totalServices: services.length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching vendor dashboard:', error);
+      res.status(500).json({ message: 'Error fetching vendor dashboard' });
+    }
+  });
+  
+  // Get recent bookings for vendor dashboard
+  app.get('/api/bookings/recent', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Get all bookings for this vendor
+      const allBookings = await storage.getBookingsByVendor(vendor.id);
+      
+      // Sort by creation date (newest first) and take the first 5
+      const recentBookings = allBookings
+        .sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        })
+        .slice(0, 5);
+      
+      // Enhance bookings with client names
+      const enhancedBookings = await Promise.all(
+        recentBookings.map(async booking => {
+          const client = await storage.getUser(booking.clientId);
+          const service = booking.serviceId ? await storage.getService(booking.serviceId) : null;
+          
+          return {
+            ...booking,
+            clientName: client?.fullName || client?.username,
+            serviceName: service?.name
+          };
+        })
+      );
+      
+      res.json(enhancedBookings);
+    } catch (error) {
+      console.error('Error fetching recent bookings:', error);
+      res.status(500).json({ message: 'Error fetching recent bookings' });
+    }
+  });
+  
+  // Get vendor-specific bookings with filters
+  app.get('/api/vendor/bookings', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Get bookings for this vendor
+      const allBookings = await storage.getBookingsByVendor(vendor.id);
+      
+      // Apply filter based on query param
+      const { filter } = req.query;
+      let filteredBookings = [...allBookings];
+      
+      if (filter === 'upcoming') {
+        const now = new Date();
+        filteredBookings = allBookings.filter(booking => 
+          new Date(booking.eventDate) >= now && 
+          booking.status !== BOOKING_STATUS.CANCELLED
+        );
+      } else if (filter === 'pending') {
+        filteredBookings = allBookings.filter(booking => 
+          booking.status === BOOKING_STATUS.PENDING
+        );
+      } else if (filter === 'past') {
+        const now = new Date();
+        filteredBookings = allBookings.filter(booking => 
+          new Date(booking.eventDate) < now || 
+          booking.status === BOOKING_STATUS.CANCELLED ||
+          booking.status === BOOKING_STATUS.COMPLETED
+        );
+      }
+      
+      // Enhance bookings with client names and service details
+      const enhancedBookings = await Promise.all(
+        filteredBookings.map(async booking => {
+          const client = await storage.getUser(booking.clientId);
+          const service = booking.serviceId ? await storage.getService(booking.serviceId) : null;
+          
+          return {
+            ...booking,
+            clientName: client?.fullName || client?.username,
+            serviceName: service?.name,
+            // For bookings with packages selected
+            packageType: req.body.packageType || "Standard"
+          };
+        })
+      );
+      
+      res.json(enhancedBookings);
+    } catch (error) {
+      console.error('Error fetching vendor bookings:', error);
+      res.status(500).json({ message: 'Error fetching vendor bookings' });
+    }
+  });
+  
+  // Get vendor profile
+  app.get('/api/vendor/profile', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Return user data along with vendor profile
+      const userData = {
+        email: req.user.email,
+        phone: req.user.phone,
+        username: req.user.username,
+        fullName: req.user.fullName
+      };
+      
+      res.json({
+        ...vendor,
+        ...userData
+      });
+    } catch (error) {
+      console.error('Error fetching vendor profile:', error);
+      res.status(500).json({ message: 'Error fetching vendor profile' });
+    }
+  });
+  
+  // Update vendor profile
+  app.put('/api/vendor/profile', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Update user data
+      const userUpdates = {
+        email: req.body.email,
+        phone: req.body.phone,
+        fullName: req.body.businessName // Use business name as full name
+      };
+      
+      await storage.updateUser(req.user.id, userUpdates);
+      
+      // Update vendor data
+      const vendorUpdates = {
+        businessName: req.body.businessName,
+        description: req.body.description,
+        address: req.body.address,
+        city: req.body.city,
+        categories: req.body.categories,
+        eventTypes: req.body.eventTypes,
+        profileImage: req.body.profileImage
+      };
+      
+      const updatedVendor = await storage.updateVendor(vendor.id, vendorUpdates);
+      
+      res.json({
+        ...updatedVendor,
+        ...userUpdates
+      });
+    } catch (error) {
+      console.error('Error updating vendor profile:', error);
+      res.status(500).json({ message: 'Error updating vendor profile' });
+    }
+  });
+  
+  // Service management routes
+  
+  // Get all services for the logged-in vendor
+  app.get('/api/services', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      const services = await storage.getServicesByVendor(vendor.id);
+      res.json(services);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      res.status(500).json({ message: 'Error fetching services' });
+    }
+  });
+  
+  // Get specific service by ID
+  app.get('/api/services/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      const service = await storage.getService(id);
+      
+      if (!service) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      
+      // Only allow vendors to access their own services
+      if (req.user.userType === 'vendor') {
+        const vendor = await storage.getVendorByUserId(req.user.id);
+        if (!vendor || service.vendorId !== vendor.id) {
+          return res.status(403).json({ message: 'Not authorized to access this service' });
+        }
+      }
+      
+      res.json(service);
+    } catch (error) {
+      console.error('Error fetching service:', error);
+      res.status(500).json({ message: 'Error fetching service' });
+    }
+  });
+  
+  // Create a new service
+  app.post('/api/services', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized to create services' });
+    }
+    
+    try {
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      const serviceData = {
+        ...req.body,
+        vendorId: vendor.id,
+        createdAt: new Date()
+      };
+      
+      const service = await storage.createService(serviceData);
+      res.status(201).json(service);
+    } catch (error) {
+      console.error('Error creating service:', error);
+      res.status(500).json({ message: 'Error creating service' });
+    }
+  });
+  
+  // Update a service
+  app.put('/api/services/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'vendor') {
+      return res.status(403).json({ message: 'Not authorized to update services' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      const service = await storage.getService(id);
+      
+      if (!service) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor || service.vendorId !== vendor.id) {
+        return res.status(403).json({ message: 'Not authorized to update this service' });
+      }
+      
+      const updatedService = await storage.updateService(id, {
+        ...req.body,
+        updatedAt: new Date()
+      });
+      
+      res.json(updatedService);
+    } catch (error) {
+      console.error('Error updating service:', error);
+      res.status(500).json({ message: 'Error updating service' });
+    }
+  });
+  
   // Get conversations (distinct users with whom the current user has exchanged messages)
   app.get('/api/conversations', async (req, res) => {
     if (!req.isAuthenticated()) {
