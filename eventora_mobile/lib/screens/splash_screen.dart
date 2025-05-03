@@ -14,17 +14,18 @@ class SplashScreen extends StatelessWidget {
           children: [
             // App logo
             Container(
-              width: 120,
-              height: 120,
+              width: 140,
+              height: 140,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Center(
-                child: Icon(
-                  Icons.event,
-                  size: 72,
-                  color: AppTheme.primaryColor,
+                child: Image.asset(
+                  'assets/images/daoob-logo.jpg',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
