@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:eventora_app/screens/auth/register_screen.dart';
-import 'package:eventora_app/screens/auth/forgot_password_screen.dart';
-import 'package:eventora_app/screens/home/home_screen.dart';
+import 'package:eventora_app/config/theme.dart';
 import 'package:eventora_app/services/auth_service.dart';
-import 'package:eventora_app/widgets/custom_button.dart';
-import 'package:eventora_app/widgets/custom_text_field.dart';
+import 'package:eventora_app/widgets/app_button.dart';
+import 'package:eventora_app/widgets/app_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final VoidCallback onRegisterTap;
+  final VoidCallback onForgotPasswordTap;
+  
+  const LoginScreen({
+    Key? key,
+    required this.onRegisterTap,
+    required this.onForgotPasswordTap,
+  }) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -19,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -35,27 +40,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final success = await authService.login(
+      await authService.login(
         _usernameController.text.trim(),
-        _passwordController.text.trim(),
+        _passwordController.text,
       );
-
-      if (success && mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false,
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
-      }
+      setState(() {
+        _errorMessage = e.toString();
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -68,35 +65,31 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 40),
-                // Logo and Header
-                Center(
+                // Logo and title
+                Container(
+                  alignment: Alignment.center,
                   child: Column(
                     children: [
                       Container(
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: AppTheme.primaryColor,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Center(
-                          child: Text(
-                            'E',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        child: const Icon(
+                          Icons.event,
+                          size: 48,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -105,6 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimaryColor,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -112,112 +106,117 @@ class _LoginScreenState extends State<LoginScreen> {
                         'Sign in to continue to Eventora',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: AppTheme.textSecondaryColor,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 48),
                 
-                // Username/Email field
-                CustomTextField(
-                  controller: _usernameController,
-                  label: 'Username',
-                  hint: 'Enter your username',
-                  prefixIcon: Icons.person_outline,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your username';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 40),
                 
-                // Password field
-                CustomTextField(
-                  controller: _passwordController,
-                  label: 'Password',
-                  hint: 'Enter your password',
-                  prefixIcon: Icons.lock_outline,
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey,
+                // Error message if any
+                if (_errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-                
-                // Forgot password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ForgotPasswordScreen(),
-                        ),
-                      );
-                    },
                     child: Text(
-                      'Forgot Password?',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
+                      _errorMessage!,
+                      style: const TextStyle(
+                        color: AppTheme.errorColor,
+                        fontSize: 14,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
                 
-                // Login button
-                CustomButton(
-                  label: 'Login',
-                  onPressed: _isLoading ? null : _login,
-                  isLoading: _isLoading,
-                ),
-                const SizedBox(height: 24),
+                if (_errorMessage != null)
+                  const SizedBox(height: 24),
                 
-                // Register option
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Don\'t have an account?',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterScreen(),
+                // Login form
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppTextField(
+                        label: 'Username',
+                        hint: 'Enter your username',
+                        controller: _usernameController,
+                        prefixIcon: const Icon(Icons.person_outline),
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your username';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      AppPasswordField(
+                        label: 'Password',
+                        hint: 'Enter your password',
+                        controller: _passwordController,
+                        textInputAction: TextInputAction.done,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Forgot password link
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: widget.onForgotPasswordTap,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 0),
                           ),
-                        );
-                      },
-                      child: Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                          child: const Text('Forgot Password?'),
                         ),
                       ),
-                    ),
-                  ],
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Login button
+                      AppButton(
+                        text: 'Sign In',
+                        onPressed: _login,
+                        isLoading: _isLoading,
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Sign up link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Don\'t have an account? ',
+                            style: TextStyle(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: widget.onRegisterTap,
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                            ),
+                            child: const Text('Sign Up'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
