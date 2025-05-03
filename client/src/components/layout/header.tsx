@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { Bell, User, ChevronLeft, Search, SlidersHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import logoSvg from "@/assets/daoob-logo.svg";
 
 interface HeaderProps {
   title?: string;
@@ -34,7 +35,13 @@ export function Header({
       ) : (
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="font-poppins font-bold text-2xl text-neutral-800">{title || "DAOOB"}</h1>
+            {title ? (
+              <h1 className="font-poppins font-bold text-2xl text-neutral-800">{title}</h1>
+            ) : (
+              <div className="flex items-center">
+                <img src={logoSvg} alt="DAOOB Logo" className="h-10 mr-2" />
+              </div>
+            )}
             {user && (
               <p className="text-sm text-neutral-600">
                 Welcome back, <span>{user.fullName || user.username}</span>!

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { LoginForm, ClientRegistrationForm, VendorRegistrationForm, AccountTypeSelection } from "@/components/auth/auth-forms";
 import { GlassWater, Star, CalendarCheck, UserPlus } from "lucide-react";
+import logoSvg from "@/assets/daoob-logo.svg";
 
 enum AuthView {
   LANDING,
@@ -53,7 +54,9 @@ export default function AuthPage() {
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80')" }}
         ></div>
         <div className="relative z-10 text-center px-6">
-          <h1 className="font-poppins font-bold text-4xl text-white mb-2">DAOOB</h1>
+          <div className="flex flex-col items-center mb-2">
+            <img src={logoSvg} alt="DAOOB Logo" className="h-16 mb-2" />
+          </div>
           <p className="font-inter text-white/90 text-lg mb-8">Your smart event planning partner</p>
           <div className="flex flex-col space-y-3 w-64 mx-auto">
             <button 
