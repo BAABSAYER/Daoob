@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { Bell, User, ChevronLeft, Search, SlidersHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import logoSvg from "@/assets/daoob-logo.svg";
+import logoSvg from "@/assets/daoob-logo-simple.svg";
 
 interface HeaderProps {
   title?: string;

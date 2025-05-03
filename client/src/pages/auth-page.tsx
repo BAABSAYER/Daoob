@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { LoginForm, ClientRegistrationForm, VendorRegistrationForm, AccountTypeSelection } from "@/components/auth/auth-forms";
 import { GlassWater, Star, CalendarCheck, UserPlus } from "lucide-react";
-import logoSvg from "@/assets/daoob-logo.svg";
+import logoSvg from "@/assets/daoob-logo-simple.svg";
 
 enum AuthView {
   LANDING,
