@@ -12,6 +12,7 @@ import VendorDetail from "@/pages/vendor-detail";
 import Bookings from "@/pages/bookings";
 import Messages from "@/pages/messages";
 import Chat from "@/pages/chat";
+import Profile from "@/pages/profile";
 import { ProtectedRoute } from "@/lib/protected-route";
 import "./app.css";
 
@@ -25,6 +26,7 @@ function Router() {
       <ProtectedRoute path="/bookings" component={Bookings} />
       <ProtectedRoute path="/messages" component={Messages} />
       <ProtectedRoute path="/chat/:userId" component={Chat} />
+      <ProtectedRoute path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );

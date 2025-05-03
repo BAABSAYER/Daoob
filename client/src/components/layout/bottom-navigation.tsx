@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Home, Search, Calendar, MessageSquare } from "lucide-react";
+import { Home, Search, Calendar, MessageSquare, User } from "lucide-react";
 
 export function BottomNavigation() {
   const [location, navigate] = useLocation();
@@ -10,6 +10,7 @@ export function BottomNavigation() {
     if (path === "/vendor" && location.startsWith("/vendor")) return true;
     if (path === "/bookings" && location === "/bookings") return true;
     if (path === "/messages" && (location === "/messages" || location.startsWith("/chat"))) return true;
+    if (path === "/profile" && location === "/profile") return true;
     return false;
   };
 
@@ -17,7 +18,7 @@ export function BottomNavigation() {
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 z-40 flex justify-around max-w-md mx-auto">
       <button 
         onClick={() => navigate("/")} 
-        className={`py-3 px-5 flex flex-col items-center ${isActive("/") ? "text-secondary" : "text-neutral-500"}`}
+        className={`py-3 px-2 flex flex-col items-center ${isActive("/") ? "text-secondary" : "text-neutral-500"}`}
       >
         <Home className="h-5 w-5" />
         <span className={`text-xs mt-1 ${isActive("/") ? "font-medium" : ""}`}>Home</span>
@@ -25,7 +26,7 @@ export function BottomNavigation() {
       
       <button 
         onClick={() => navigate("/vendors/all")} 
-        className={`py-3 px-5 flex flex-col items-center ${isActive("/vendors") ? "text-secondary" : "text-neutral-500"}`}
+        className={`py-3 px-2 flex flex-col items-center ${isActive("/vendors") ? "text-secondary" : "text-neutral-500"}`}
       >
         <Search className="h-5 w-5" />
         <span className={`text-xs mt-1 ${isActive("/vendors") ? "font-medium" : ""}`}>Explore</span>
@@ -33,7 +34,7 @@ export function BottomNavigation() {
       
       <button 
         onClick={() => navigate("/bookings")} 
-        className={`py-3 px-5 flex flex-col items-center ${isActive("/bookings") ? "text-secondary" : "text-neutral-500"}`}
+        className={`py-3 px-2 flex flex-col items-center ${isActive("/bookings") ? "text-secondary" : "text-neutral-500"}`}
       >
         <Calendar className="h-5 w-5" />
         <span className={`text-xs mt-1 ${isActive("/bookings") ? "font-medium" : ""}`}>Bookings</span>
@@ -41,10 +42,18 @@ export function BottomNavigation() {
       
       <button 
         onClick={() => navigate("/messages")} 
-        className={`py-3 px-5 flex flex-col items-center ${isActive("/messages") ? "text-secondary" : "text-neutral-500"}`}
+        className={`py-3 px-2 flex flex-col items-center ${isActive("/messages") ? "text-secondary" : "text-neutral-500"}`}
       >
         <MessageSquare className="h-5 w-5" />
         <span className={`text-xs mt-1 ${isActive("/messages") ? "font-medium" : ""}`}>Messages</span>
+      </button>
+      
+      <button 
+        onClick={() => navigate("/profile")} 
+        className={`py-3 px-2 flex flex-col items-center ${isActive("/profile") ? "text-secondary" : "text-neutral-500"}`}
+      >
+        <User className="h-5 w-5" />
+        <span className={`text-xs mt-1 ${isActive("/profile") ? "font-medium" : ""}`}>Profile</span>
       </button>
     </nav>
   );
