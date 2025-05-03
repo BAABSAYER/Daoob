@@ -2,7 +2,8 @@ import { db } from "./db";
 import { 
   users, vendors, services, bookings, messages, reviews,
   User, Vendor, Service, Booking, Message, Review,
-  InsertUser, InsertVendor, InsertService, InsertBooking, InsertMessage, InsertReview
+  InsertUser, InsertVendor, InsertService, InsertBooking, InsertMessage, InsertReview,
+  BOOKING_STATUS
 } from "@shared/schema";
 import { eq, and, or, ilike, desc } from "drizzle-orm";
 import session from "express-session";
@@ -208,8 +209,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const [booking] = await db.insert(bookings).values(insertBooking).returning();
-    return booking;
+    try {
+      console.log("Database - creating booking with data:", JSON.stringify(insertBooking, null, 2));
+      
+      // Ensure all required fields are present
+      if (!insertBooking.clientId) throw new Error("clientId is required");
+      if (!insertBooking.vendorId) throw new Error("vendorId is required");
+      if (!insertBooking.eventType) throw new Error("eventType is required");
+      if (!insertBooking.eventDate) throw new Error("eventDate is required");
+      
+      // Format eventDate properly if it's a string
+      if (typeof insertBooking.eventDate === 'string') {
+        insertBooking.eventDate = new Date(insertBooking.eventDate);
+      }
+      
+      // Convert guestCount to number if it's a string
+      if (typeof insertBooking.guestCount === 'string') {
+        insertBooking.guestCount = parseInt(insertBooking.guestCount, 10);
+      }
+      
+      // Convert totalPrice to number if it's a string
+      if (typeof insertBooking.totalPrice === 'string') {
+        insertBooking.totalPrice = parseFloat(insertBooking.totalPrice);
+      }
+      
+      // Set default values if not provided
+      const bookingToCreate = {
+        ...insertBooking,
+        status: insertBooking.status || BOOKING_STATUS.PENDING,
+        specialRequests: insertBooking.specialRequests || null,
+        serviceId: insertBooking.serviceId || null
+      };
+      
+      console.log("Database - final booking data:", JSON.stringify(bookingToCreate, null, 2));
+      
+      const [booking] = await db.insert(bookings).values(bookingToCreate).returning();
+      return booking;
+    } catch (error) {
+      console.error("Database error in createBooking:", error);
+      throw error;
+    }
   }
 
   async updateBooking(id: number, bookingData: Partial<Booking>): Promise<Booking | undefined> {
