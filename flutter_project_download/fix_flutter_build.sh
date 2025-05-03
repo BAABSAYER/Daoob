@@ -2,6 +2,13 @@
 
 echo "===== FIXING FLUTTER BUILD ISSUES ====="
 
+# Check if eventora_app directory exists
+if [ ! -d "eventora_app" ]; then
+  echo "Error: eventora_app directory not found. You need to run create_and_build_app.sh first."
+  echo "Running create_and_build_app.sh for you..."
+  ./create_and_build_app.sh
+fi
+
 # Navigate to the Flutter project
 cd eventora_app
 
