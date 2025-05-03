@@ -224,9 +224,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: BOOKING_STATUS.PENDING,
           serviceId: req.body.serviceId !== undefined ? req.body.serviceId : null,
         };
-      } catch (parseError) {
+      } catch (parseError: any) {
         console.error("Error parsing booking data:", parseError);
-        return res.status(400).json({ message: 'Invalid booking data', error: parseError.message });
+        return res.status(400).json({ message: 'Invalid booking data', error: parseError?.message || 'Unknown parsing error' });
       }
       
       console.log("Processed booking data:", JSON.stringify(bookingData, null, 2));
@@ -234,13 +234,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const booking = await storage.createBooking(bookingData);
         res.status(201).json(booking);
-      } catch (dbError) {
+      } catch (dbError: any) {
         console.error("Database error creating booking:", dbError);
-        return res.status(500).json({ message: 'Database error creating booking', error: dbError.message });
+        return res.status(500).json({ 
+          message: 'Database error creating booking', 
+          error: dbError?.message || 'Unknown database error'
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Booking creation error:", error);
-      res.status(500).json({ message: 'Error creating booking', error: error.message });
+      res.status(500).json({ 
+        message: 'Error creating booking', 
+        error: error?.message || 'Unknown error during booking creation'
+      });
     }
   });
   
