@@ -3381,6 +3381,142 @@ class _AppWrapperState extends State<AppWrapper> {
 }
 EOL
 
+# Create splash screen
+cat > lib/screens/splash_screen.dart << 'EOL'
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:eventora_mobile/services/auth_service.dart';
+import 'package:eventora_mobile/screens/login_screen.dart';
+import 'package:eventora_mobile/screens/app_wrapper.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    await authService.initialize();
+    
+    // Short delay to show the splash screen
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (authService.isAuthenticated) {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AppWrapper()),
+        );
+      }
+    } else {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF6A3DE8), Color(0xFF8F6FF2)],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo
+              Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(75),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(75),
+                  child: Image.asset(
+                    'assets/images/daoob-logo.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              // App name
+              const Text(
+                'DAOOB',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Event Management Platform',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 50),
+              // Loading indicator
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+              const SizedBox(height: 20),
+              // Toggle for offline mode (development only)
+              Consumer<AuthService>(
+                builder: (context, authService, _) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Offline Mode',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Switch(
+                        value: authService.offlineMode,
+                        onChanged: (value) {
+                          authService.setOfflineMode(value);
+                        },
+                        activeColor: Colors.white,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+EOL
+
 # Create main.dart to connect everything
 cat > lib/main.dart << 'EOL'
 import 'package:flutter/material.dart';
@@ -3526,11 +3662,18 @@ cat > assets/lang/en.json << 'EOL'
 }
 EOL
 
-# Fix Android NDK version in build.gradle
+# Fix Android NDK version in build.gradle files
 if [ -f "android/app/build.gradle" ]; then
   if ! grep -q "ndkVersion" android/app/build.gradle; then
     sed -i '/defaultConfig {/a \        ndkVersion "27.0.12077973"' android/app/build.gradle
     echo "Added ndkVersion to android/app/build.gradle"
+  fi
+fi
+
+if [ -f "android/app/build.gradle.kts" ]; then
+  if ! grep -q "ndkVersion" android/app/build.gradle.kts; then
+    sed -i '/android {/a \    ndkVersion = "27.0.12077973"' android/app/build.gradle.kts
+    echo "Added ndkVersion to android/app/build.gradle.kts"
   fi
 fi
 
