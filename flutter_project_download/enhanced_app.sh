@@ -18,12 +18,17 @@ if [ -d "eventora_mobile" ]; then
     rm -rf eventora_mobile
 fi
 
+if [ -d "daoob_mobile" ]; then
+    echo "Removing existing daoob_mobile directory..."
+    rm -rf daoob_mobile
+fi
+
 # Create the Flutter project from scratch
 echo "Creating a new Flutter project..."
-flutter create --org com.daoob --project-name daoob eventora_mobile
+flutter create --org com.daoob --project-name daoob daoob_mobile
 
 # Navigate to the project
-cd eventora_mobile
+cd daoob_mobile
 
 # Create necessary directories
 mkdir -p assets/images lib/models lib/screens lib/services lib/widgets lib/utils lib/l10n
@@ -4228,7 +4233,7 @@ EOL
 
 # Create pubspec.yaml file
 cat > pubspec.yaml << 'EOL'
-name: eventora_mobile
+name: daoob_mobile
 description: "DAOOB - Smart Event Management Platform"
 publish_to: 'none'
 version: 1.0.0+1
@@ -4349,6 +4354,10 @@ if [ -f "android/app/build.gradle.kts" ]; then
     echo "Added ndkVersion to android/app/build.gradle.kts"
   fi
 fi
+
+# Update all import statements from 'eventora_mobile' to 'daoob_mobile'
+echo "Updating package names from eventora to daoob..."
+find lib -type f -name "*.dart" -exec sed -i 's/package:eventora_mobile/package:daoob_mobile/g' {} \;
 
 # Get dependencies
 echo "Getting dependencies..."
