@@ -5,15 +5,10 @@ class Vendor {
   final String description;
   final String category;
   final double rating;
-  final String? logo;
-  final String? coverImage;
   final double basePrice;
-  final String? location;
-  final String? contactPhone;
-  final String? contactEmail;
-  final String? website;
   final bool isVerified;
-
+  final String? imageUrl;
+  
   Vendor({
     required this.id,
     required this.userId,
@@ -21,16 +16,11 @@ class Vendor {
     required this.description,
     required this.category,
     required this.rating,
-    this.logo,
-    this.coverImage,
     required this.basePrice,
-    this.location,
-    this.contactPhone,
-    this.contactEmail,
-    this.website,
     required this.isVerified,
+    this.imageUrl,
   });
-
+  
   factory Vendor.fromJson(Map<String, dynamic> json) {
     return Vendor(
       id: json['id'],
@@ -39,17 +29,12 @@ class Vendor {
       description: json['description'],
       category: json['category'],
       rating: json['rating'].toDouble(),
-      logo: json['logo'],
-      coverImage: json['coverImage'],
       basePrice: json['basePrice'].toDouble(),
-      location: json['location'],
-      contactPhone: json['contactPhone'],
-      contactEmail: json['contactEmail'],
-      website: json['website'],
-      isVerified: json['isVerified'] ?? false,
+      isVerified: json['isVerified'],
+      imageUrl: json['imageUrl'],
     );
   }
-
+  
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -58,14 +43,9 @@ class Vendor {
       'description': description,
       'category': category,
       'rating': rating,
-      'logo': logo,
-      'coverImage': coverImage,
       'basePrice': basePrice,
-      'location': location,
-      'contactPhone': contactPhone,
-      'contactEmail': contactEmail,
-      'website': website,
       'isVerified': isVerified,
+      'imageUrl': imageUrl,
     };
   }
 }

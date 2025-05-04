@@ -7,8 +7,7 @@ class EventCategory {
   final String description;
   final String descriptionAr;
   final IconData icon;
-  final String imagePath;
-
+  
   EventCategory({
     required this.id,
     required this.name,
@@ -16,79 +15,70 @@ class EventCategory {
     required this.description,
     required this.descriptionAr,
     required this.icon,
-    required this.imagePath,
   });
 }
 
 class EventProvider extends ChangeNotifier {
-  String _selectedCategory = '';
-  
-  String get selectedCategory => _selectedCategory;
-
+  String? _selectedCategory;
   final List<EventCategory> _categories = [
     EventCategory(
       id: 'wedding',
       name: 'Wedding',
       nameAr: 'زفاف',
-      description: 'Plan your perfect wedding day with our premium vendors',
-      descriptionAr: 'خطط ليوم زفافك المثالي مع مزودي خدماتنا المميزين',
+      description: 'Plan your perfect wedding day',
+      descriptionAr: 'خطط ليوم زفافك المثالي',
       icon: Icons.favorite,
-      imagePath: 'assets/images/wedding.jpg',
     ),
     EventCategory(
       id: 'corporate',
       name: 'Corporate',
       nameAr: 'شركات',
-      description: 'Professional event management for business functions',
-      descriptionAr: 'إدارة احترافية للمناسبات التجارية',
+      description: 'Professional events for business',
+      descriptionAr: 'فعاليات احترافية للأعمال',
       icon: Icons.business,
-      imagePath: 'assets/images/corporate.jpg',
     ),
     EventCategory(
       id: 'birthday',
       name: 'Birthday',
       nameAr: 'أعياد ميلاد',
-      description: 'Make your birthday celebration special',
-      descriptionAr: 'اجعل احتفال عيد ميلادك مميزًا',
+      description: 'Celebrate your special day',
+      descriptionAr: 'احتفل بيومك المميز',
       icon: Icons.cake,
-      imagePath: 'assets/images/birthday.jpg',
     ),
     EventCategory(
       id: 'conference',
       name: 'Conference',
-      nameAr: 'مؤتمرات',
-      description: 'Organize successful conferences and seminars',
-      descriptionAr: 'نظم مؤتمرات وندوات ناجحة',
+      nameAr: 'مؤتمر',
+      description: 'Organize professional conferences',
+      descriptionAr: 'نظم مؤتمرات احترافية',
       icon: Icons.people,
-      imagePath: 'assets/images/conference.jpg',
     ),
     EventCategory(
       id: 'party',
       name: 'Party',
-      nameAr: 'حفلات',
-      description: 'Host amazing parties for any occasion',
-      descriptionAr: 'استضف حفلات مذهلة لأي مناسبة',
+      nameAr: 'حفلة',
+      description: 'Host unforgettable parties',
+      descriptionAr: 'استضف حفلات لا تُنسى',
       icon: Icons.celebration,
-      imagePath: 'assets/images/party.jpg',
     ),
     EventCategory(
       id: 'custom',
       name: 'Custom Event',
       nameAr: 'مناسبة مخصصة',
-      description: 'Create a personalized event just for you',
-      descriptionAr: 'أنشئ مناسبة مخصصة خاصة بك',
+      description: 'Create your unique event',
+      descriptionAr: 'أنشئ مناسبتك الفريدة',
       icon: Icons.edit,
-      imagePath: 'assets/images/custom.jpg',
     ),
   ];
-
+  
+  String? get selectedCategory => _selectedCategory;
   List<EventCategory> get categories => _categories;
-
+  
   void selectCategory(String categoryId) {
     _selectedCategory = categoryId;
     notifyListeners();
   }
-
+  
   EventCategory? getCategoryById(String id) {
     try {
       return _categories.firstWhere((category) => category.id == id);

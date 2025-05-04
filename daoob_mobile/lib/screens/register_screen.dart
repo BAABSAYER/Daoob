@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -14,9 +15,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String _userType = 'client';
+  String _selectedUserType = 'client';
   bool _isLoading = false;
-  String? _error;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -28,36 +29,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() {
-        _error = 'Passwords do not match';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Passwords do not match'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
     setState(() {
       _isLoading = true;
-      _error = null;
     });
 
     try {
-      // This is a placeholder for actual registration logic
-      // For now, we're just redirecting to the login page
-      await Future.delayed(const Duration(seconds: 2));
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful! Please login.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final success = await authService.register(
+        _nameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+        _selectedUserType,
+      );
+
+      if (success) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showErrorSnackbar(authService.error ?? 'Registration failed');
       }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      _showErrorSnackbar(e.toString());
     } finally {
       if (mounted) {
         setState(() {
@@ -65,6 +70,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         });
       }
     }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -75,44 +89,135 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isArabic ? 'إنشاء حساب' : 'Register',
+          isArabic ? 'إنشاء حساب' : 'Create Account',
           style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFF6A3DE8),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo
-                Center(
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6A3DE8),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Center(
-                      child: Text(
-                        isArabic ? "دؤوب" : "D",
-                        style: TextStyle(
-                          fontFamily: isArabic ? 'Almarai' : 'Roboto',
-                          fontSize: isArabic ? 36 : 48,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                Text(
+                  isArabic ? 'مرحبًا بك في دؤوب!' : 'Welcome to DAOOB!',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6A3DE8),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isArabic
+                      ? 'أنشئ حسابك للبدء في حجز المناسبات أو تقديم الخدمات'
+                      : 'Create your account to start booking events or providing services',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
+                // Name field
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الاسم' : 'Name',
+                    hintText: isArabic ? 'أدخل اسمك الكامل' : 'Enter your full name',
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return isArabic ? 'يرجى إدخال اسمك' : 'Please enter your name';
+                    }
+                    return null;
+                  },
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+
+                // Email field
+                TextFormField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'البريد الإلكتروني' : 'Email',
+                    hintText: isArabic ? 'أدخل بريدك الإلكتروني' : 'Enter your email',
+                    prefixIcon: const Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return isArabic ? 'يرجى إدخال بريدك الإلكتروني' : 'Please enter your email';
+                    }
+                    if (!value.contains('@')) {
+                      return isArabic ? 'يرجى إدخال بريد إلكتروني صالح' : 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+
+                // Password field
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'كلمة المرور' : 'Password',
+                    hintText: isArabic ? 'أدخل كلمة المرور' : 'Enter your password',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return isArabic ? 'يرجى إدخال كلمة المرور' : 'Please enter your password';
+                    }
+                    if (value.length < 6) {
+                      return isArabic ? 'كلمة المرور قصيرة جدًا (٦ أحرف على الأقل)' : 'Password is too short (min 6 characters)';
+                    }
+                    return null;
+                  },
+                  obscureText: true,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+
+                // Confirm Password field
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'تأكيد كلمة المرور' : 'Confirm Password',
+                    hintText: isArabic ? 'أعد إدخال كلمة المرور' : 'Re-enter your password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return isArabic ? 'يرجى تأكيد كلمة المرور' : 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return isArabic ? 'كلمات المرور غير متطابقة' : 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                  obscureText: true,
+                  textInputAction: TextInputAction.done,
+                ),
+                const SizedBox(height: 24),
+
                 // User type selection
                 Text(
                   isArabic ? 'نوع الحساب' : 'Account Type',
@@ -128,10 +233,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: RadioListTile<String>(
                         title: Text(isArabic ? 'عميل' : 'Client'),
                         value: 'client',
-                        groupValue: _userType,
+                        groupValue: _selectedUserType,
                         onChanged: (value) {
                           setState(() {
-                            _userType = value!;
+                            _selectedUserType = value!;
                           });
                         },
                         activeColor: const Color(0xFF6A3DE8),
@@ -141,10 +246,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: RadioListTile<String>(
                         title: Text(isArabic ? 'مزود خدمة' : 'Vendor'),
                         value: 'vendor',
-                        groupValue: _userType,
+                        groupValue: _selectedUserType,
                         onChanged: (value) {
                           setState(() {
-                            _userType = value!;
+                            _selectedUserType = value!;
                           });
                         },
                         activeColor: const Color(0xFF6A3DE8),
@@ -152,87 +257,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                
-                // Name field
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'الاسم' : 'Name',
-                    hintText: isArabic ? 'أدخل اسمك' : 'Enter your name',
-                    prefixIcon: const Icon(Icons.person),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 16),
-                
-                // Email field
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'البريد الإلكتروني' : 'Email',
-                    hintText: isArabic ? 'أدخل بريدك الإلكتروني' : 'Enter your email',
-                    prefixIcon: const Icon(Icons.email),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 16),
-                
-                // Password field
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'كلمة المرور' : 'Password',
-                    hintText: isArabic ? 'أدخل كلمة المرور' : 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  obscureText: true,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 16),
-                
-                // Confirm password field
-                TextField(
-                  controller: _confirmPasswordController,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'تأكيد كلمة المرور' : 'Confirm Password',
-                    hintText: isArabic ? 'أعد إدخال كلمة المرور' : 'Re-enter your password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  obscureText: true,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _register(),
-                ),
-                
-                // Error message
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Text(
-                      _error!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                
                 const SizedBox(height: 24),
-                
+
                 // Register button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _register,
@@ -246,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          isArabic ? 'تسجيل' : 'Register',
+                          isArabic ? 'إنشاء حساب' : 'Create Account',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -255,16 +281,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Login link
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
                   child: Text(
-                    isArabic 
-                      ? 'لديك حساب بالفعل؟ تسجيل الدخول'
-                      : 'Already have an account? Login',
+                    isArabic
+                        ? 'لديك حساب بالفعل؟ تسجيل الدخول'
+                        : 'Already have an account? Login',
                     style: const TextStyle(color: Color(0xFF6A3DE8)),
                   ),
                 ),
