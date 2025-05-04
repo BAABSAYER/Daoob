@@ -95,7 +95,7 @@ class MyApp extends StatelessWidget {
               useMaterial3: true,
             ),
             locale: languageProvider.locale,
-            textDirection: languageProvider.isRTL ? TextDirection.rtl : TextDirection.ltr,
+            // Directionality will be handled by a wrapper widget
             supportedLocales: const [
               Locale('en', ''),
               Locale('ar', ''),

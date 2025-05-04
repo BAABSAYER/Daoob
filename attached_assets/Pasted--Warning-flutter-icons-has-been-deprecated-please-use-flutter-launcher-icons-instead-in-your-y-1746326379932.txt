@@ -1,0 +1,49 @@
+  
+
+⚠ Warning: flutter_icons has been deprecated please use flutter_launcher_icons instead in your yaml files
+• Creating default icons Android
+• Overwriting the default Android launcher icon with a new icon
+• Overwriting default iOS launcher icon with new icon
+No platform provided
+
+✓ Successfully generated launcher icons
+=== Building APK ===
+
+Your project is configured with Android NDK 26.3.11579264, but the following plugin(s) depend on a different Android NDK version:
+- shared_preferences_android requires Android NDK 27.0.12077973
+Fix this issue by using the highest Android NDK version (they are backward compatible).
+Add the following to /Users/dell/Development/daoob_build_package/daoob_mobile/android/app/build.gradle.kts:
+
+    android {
+        ndkVersion = "27.0.12077973"
+        ...
+    }
+
+lib/main.dart:45:13: Error: No named parameter with the name 'textDirection'.
+            textDirection: languageProvider.isRTL ? TextDirection.rtl : TextDirection.ltr,
+            ^^^^^^^^^^^^^
+../../flutter/packages/flutter/lib/src/material/app.dart:218:9: Context: Found this candidate, but the arguments don't match.
+  const MaterialApp({
+        ^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildRelease'.
+> Process 'command '/Users/dell/Development/flutter/bin/flutter'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 12s
+Running Gradle task 'assembleRelease'...                           13.1s
+Gradle task assembleRelease failed with exit code 1
+=== Setup complete! ===
+APK has been built and is located at:
+/Users/dell/Development/daoob_build_package/daoob_mobile/build/app/outputs/flutter-apk/app-release.apk
+dell@MacBookAir daoob_build_package % 
