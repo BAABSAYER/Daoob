@@ -54,12 +54,12 @@ class Booking {
       additionalVendorIds: json['additionalVendorIds'] != null
         ? (json['additionalVendorIds'] is List 
             ? List<int>.from(json['additionalVendorIds'])
-            : List<int>.from(jsonDecode(json['additionalVendorIds'])))
+            : List<int>.from(jsonDecode(json['additionalVendorIds'].toString())))
         : [],
       additionalVendorNames: json['additionalVendorNames'] != null
         ? (json['additionalVendorNames'] is List
             ? List<String>.from(json['additionalVendorNames'])
-            : List<String>.from(jsonDecode(json['additionalVendorNames'])))
+            : List<String>.from(jsonDecode(json['additionalVendorNames'].toString())))
         : null,
     );
   }
@@ -209,9 +209,16 @@ class BookingService extends ChangeNotifier {
           // Also check for bookings where vendor is in additionalVendorIds
           final allBookings = await _database!.query('bookings');
           for (final booking in allBookings) {
-            final additionalIds = jsonDecode(booking['additionalVendorIds'] ?? '[]') as List;
-            if (additionalIds.contains(userId)) {
-              maps.add(booking);
+            final additionalIdsStr = booking['additionalVendorIds'] as String?;
+            if (additionalIdsStr != null && additionalIdsStr.isNotEmpty) {
+              try {
+                final additionalIds = jsonDecode(additionalIdsStr) as List;
+                if (additionalIds.contains(userId)) {
+                  maps.add(booking);
+                }
+              } catch (e) {
+                print('Error parsing additionalVendorIds: $e');
+              }
             }
           }
         } else {
