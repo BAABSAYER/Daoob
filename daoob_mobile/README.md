@@ -43,6 +43,16 @@ The app fully supports Arabic language and right-to-left (RTL) layout:
 - Arabic translations are in `assets/lang/ar.json`
 - The app name "دؤوب" displays correctly using the Almarai font
 
+## Important Fixes Applied
+
+1. **Fixed circular dependencies**: User and Booking classes now defined inline to avoid circular imports
+
+2. **Moved offline mode toggle**: The toggle has been moved from the splash screen to the login screen
+
+3. **Added Arabic font support**: Using Almarai font for properly displaying "دؤوب"
+
+4. **Fixed splash screen freezing**: The app now properly advances past the splash screen 
+
 ## Development Notes
 
 - Built with Flutter and Provider for state management

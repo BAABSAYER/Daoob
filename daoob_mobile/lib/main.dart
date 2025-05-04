@@ -3,12 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:daoob_mobile/screens/splash_screen.dart';
 import 'package:daoob_mobile/screens/login_screen.dart';
-import "package:daoob_mobile/screens/home_screen.dart";
-import "package:daoob_mobile/screens/register_screen.dart";
-import "package:daoob_mobile/providers/event_provider.dart";
+import 'package:daoob_mobile/screens/home_screen.dart';
+import 'package:daoob_mobile/screens/register_screen.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
+import 'package:daoob_mobile/providers/event_provider.dart';
 
 void main() {
   runApp(
@@ -72,8 +72,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        "/home": (context) => const HomeScreen(),
-        "/register": (context) => const RegisterScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/register': (context) => const RegisterScreen(),
       },
     );
   }
