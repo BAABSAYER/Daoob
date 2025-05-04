@@ -3260,6 +3260,495 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 EOL
 
+# Create event screens
+cat > lib/screens/events/event_category_screen.dart << 'EOL'
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:eventora_mobile/l10n/app_localizations.dart';
+import 'package:eventora_mobile/models/event_category.dart';
+import 'package:eventora_mobile/services/event_provider.dart';
+import 'package:eventora_mobile/screens/events/custom_event_screen.dart';
+import 'package:eventora_mobile/screens/events/vendor_list_screen.dart';
+
+class EventCategoryScreen extends StatelessWidget {
+  const EventCategoryScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final categories = EventCategory.sampleCategories();
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).translate('choose_event_type')),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context).translate('event_type_prompt'),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.9,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  return _buildCategoryCard(context, category);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, EventCategory category) {
+    return InkWell(
+      onTap: () {
+        if (category.isCustom) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CustomEventScreen(),
+            ),
+          );
+        } else {
+          final eventProvider = Provider.of<EventProvider>(context, listen: false);
+          eventProvider.selectCategory(category);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VendorListScreen(category: category),
+            ),
+          );
+        }
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _getIconData(category.icon),
+                size: 48,
+                color: const Color(0xFF6A3DE8),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context).translate(category.name.toLowerCase()),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                category.description,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName) {
+      case 'favorite':
+        return Icons.favorite;
+      case 'business':
+        return Icons.business;
+      case 'cake':
+        return Icons.cake;
+      case 'school':
+        return Icons.school;
+      case 'edit':
+        return Icons.edit;
+      default:
+        return Icons.event;
+    }
+  }
+}
+EOL
+
+cat > lib/screens/events/custom_event_screen.dart << 'EOL'
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:eventora_mobile/l10n/app_localizations.dart';
+import 'package:eventora_mobile/models/event_category.dart';
+import 'package:eventora_mobile/services/event_provider.dart';
+import 'package:eventora_mobile/screens/events/vendor_list_screen.dart';
+
+class CustomEventScreen extends StatefulWidget {
+  const CustomEventScreen({Key? key}) : super(key: key);
+
+  @override
+  _CustomEventScreenState createState() => _CustomEventScreenState();
+}
+
+class _CustomEventScreenState extends State<CustomEventScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final List<String> _selectedVendorTypes = [];
+  
+  final List<String> _availableVendorTypes = [
+    'Event Planner',
+    'Catering',
+    'Photography',
+    'Music & Entertainment',
+    'Venue',
+    'Decoration',
+    'Transportation',
+    'Gifts & Favors'
+  ];
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).translate('create_custom_event')),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).translate('event_name'),
+                  border: const OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an event name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).translate('event_description'),
+                  border: const OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                AppLocalizations.of(context).translate('select_vendors'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...List.generate(_availableVendorTypes.length, (index) {
+                final vendorType = _availableVendorTypes[index];
+                return CheckboxListTile(
+                  title: Text(vendorType),
+                  value: _selectedVendorTypes.contains(vendorType),
+                  onChanged: (selected) {
+                    setState(() {
+                      if (selected == true) {
+                        _selectedVendorTypes.add(vendorType);
+                      } else {
+                        _selectedVendorTypes.remove(vendorType);
+                      }
+                    });
+                  },
+                );
+              }),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _createCustomEvent,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6A3DE8),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text(AppLocalizations.of(context).translate('continue')),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _createCustomEvent() {
+    if (_formKey.currentState!.validate()) {
+      final customEventCategory = EventCategory(
+        id: 999, // Custom ID for custom event
+        name: _nameController.text,
+        description: _descriptionController.text.isNotEmpty 
+            ? _descriptionController.text 
+            : 'Custom event',
+        icon: 'edit',
+        vendorTypes: _selectedVendorTypes.isNotEmpty 
+            ? _selectedVendorTypes 
+            : _availableVendorTypes,
+        isCustom: true,
+      );
+      
+      final eventProvider = Provider.of<EventProvider>(context, listen: false);
+      eventProvider.selectCategory(customEventCategory);
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VendorListScreen(category: customEventCategory),
+        ),
+      );
+    }
+  }
+}
+EOL
+
+cat > lib/screens/events/vendor_list_screen.dart << 'EOL'
+import 'package:flutter/material.dart';
+import 'package:eventora_mobile/l10n/app_localizations.dart';
+import 'package:eventora_mobile/models/event_category.dart';
+import 'package:eventora_mobile/models/vendor.dart';
+import 'package:eventora_mobile/services/api_service.dart';
+import 'package:eventora_mobile/screens/vendor_detail_screen.dart';
+
+class VendorListScreen extends StatefulWidget {
+  final EventCategory category;
+  
+  const VendorListScreen({Key? key, required this.category}) : super(key: key);
+
+  @override
+  _VendorListScreenState createState() => _VendorListScreenState();
+}
+
+class _VendorListScreenState extends State<VendorListScreen> {
+  List<Vendor>? _vendors;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVendors();
+  }
+
+  Future<void> _loadVendors() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+      
+      final allVendors = await ApiService.getVendors();
+      
+      // Filter vendors based on the event category's vendor types
+      if (widget.category.vendorTypes.isNotEmpty) {
+        _vendors = allVendors.where((vendor) => 
+          widget.category.vendorTypes.contains(vendor.category)
+        ).toList();
+      } else {
+        _vendors = allVendors;
+      }
+      
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${AppLocalizations.of(context).translate('vendors_for')} ${widget.category.name}'),
+      ),
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text('Error: $_error'))
+              : _vendors!.isEmpty
+                  ? Center(
+                      child: Text('No vendors found for ${widget.category.name}'),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16.0),
+                      itemCount: _vendors!.length,
+                      itemBuilder: (context, index) {
+                        final vendor = _vendors![index];
+                        return _buildVendorCard(vendor);
+                      },
+                    ),
+    );
+  }
+
+  Widget _buildVendorCard(Vendor vendor) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VendorDetailScreen(vendorId: vendor.id),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Vendor avatar/logo placeholder
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.business,
+                      color: Colors.grey,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          vendor.businessName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          vendor.category,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star,
+                              size: 18,
+                              color: Colors.amber[700],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${vendor.rating ?? 0.0} (${vendor.reviewCount ?? 0})',
+                              style: const TextStyle(
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                vendor.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        vendor.location,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'From \$${vendor.basePrice.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6A3DE8),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+EOL
+
 # Create login screen
 cat > lib/screens/login_screen.dart << 'EOL'
 import 'package:flutter/material.dart';
