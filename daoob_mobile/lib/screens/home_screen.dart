@@ -1,10 +1,10 @@
-import 'package:daoob_mobile/screens/messages_screen.dart';
-import 'package:daoob_mobile/screens/messages_screen.dart';
-import 'package:daoob_mobile/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:daoob_mobile/screens/messages_screen.dart';
+import 'package:daoob_mobile/screens/chat_screen.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/services/booking_service.dart';
+import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,11 +20,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load bookings when the home screen is created
+    // Load data when the home screen is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authService = Provider.of<AuthService>(context, listen: false);
       final bookingService = Provider.of<BookingService>(context, listen: false);
+      final messageService = Provider.of<MessageService>(context, listen: false);
+      
+      // Load bookings
       bookingService.loadBookings(authService);
+      
+      // Initialize message service
+      messageService.initialize(authService);
     });
   }
 
@@ -188,13 +194,8 @@ class _HomeScreenState extends State<HomeScreen> {
       // Bookings page
       _buildBookingsPage(context, bookingService, isArabic, user),
       
-      // Messages page placeholder
-      Center(
-        child: Text(
-          isArabic ? 'الرسائل' : 'Messages',
-          style: const TextStyle(fontSize: 24),
-        ),
-      ),
+      // Messages page
+      const MessagesScreen(),
       
       // Profile page
       _buildProfilePage(context, authService, languageProvider, isArabic),

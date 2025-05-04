@@ -141,14 +141,17 @@ class MessageService extends ChangeNotifier {
   }
   
   Future<void> initialize(AuthService authService) async {
-    if (authService.user == null) {
-      _error = 'User not authenticated';
-      notifyListeners();
-      return;
-    }
+    _isLoading = true;
+    notifyListeners();
     
-    _currentUserId = authService.user!.id;
+    // Always set a default user ID for offline mode testing
+    _currentUserId = authService.user?.id ?? 1;
+    
+    // Load chat users
     await loadChatUsers();
+    
+    _isLoading = false;
+    notifyListeners();
   }
   
   Future<void> loadChatUsers() async {
@@ -156,18 +159,8 @@ class MessageService extends ChangeNotifier {
       await _initDatabase();
     }
     
-    if (_currentUserId == null) {
-      _error = 'User not initialized';
-      notifyListeners();
-      return;
-    }
-    
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-    
     try {
-      // Load from local database
+      // Check if we have any chat users stored
       final List<Map<String, dynamic>> maps = await _database!.query('chat_users');
       
       if (maps.isNotEmpty) {
@@ -185,18 +178,14 @@ class MessageService extends ChangeNotifier {
           );
         }).toList();
       } else {
-        // If no saved chat users, generate sample data in offline mode
+        // No chat users found, generate sample data
         _chatUsers = _generateSampleChatUsers();
         await _saveChatUsersLocally(_chatUsers);
       }
-      
-      _isLoading = false;
-      notifyListeners();
     } catch (e) {
-      _error = 'Database error: ${e.toString()}';
-      _isLoading = false;
-      _chatUsers = _generateSampleChatUsers(); // Fallback to sample data
-      notifyListeners();
+      _error = 'Error loading chat users: ${e.toString()}';
+      // Fallback to sample data
+      _chatUsers = _generateSampleChatUsers();
     }
   }
   
@@ -206,9 +195,7 @@ class MessageService extends ChangeNotifier {
     }
     
     if (_currentUserId == null) {
-      _error = 'User not initialized';
-      notifyListeners();
-      return;
+      _currentUserId = 1; // Default user ID for testing
     }
     
     _isLoading = true;
@@ -242,7 +229,7 @@ class MessageService extends ChangeNotifier {
           );
         }).toList();
       } else {
-        // If no saved messages, generate sample conversation in offline mode
+        // If no saved messages, generate sample conversation
         _messages = _generateSampleMessages(otherUserId);
         await _saveMessagesLocally(_messages);
       }
@@ -426,7 +413,7 @@ class MessageService extends ChangeNotifier {
       // Create new chat user
       final newChatUser = ChatUser(
         id: userId,
-        name: 'User ${userId}',
+        name: 'User $userId',
         userType: currentUserType == 'client' ? 'vendor' : 'client',
         lastMessage: lastMessage,
         lastMessageTime: timestamp,
@@ -556,7 +543,9 @@ class MessageService extends ChangeNotifier {
   }
   
   List<Message> _generateSampleMessages(int otherUserId) {
-    if (_currentUserId == null) return [];
+    if (_currentUserId == null) {
+      _currentUserId = 1; // Default for testing
+    }
     
     final currentUserType = _getCurrentUserType();
     final otherUserName = _getChatUserName(otherUserId);
@@ -634,6 +623,9 @@ class MessageService extends ChangeNotifier {
       return _chatUsers[index].name;
     }
     
-    return 'User $userId';
+    // If not found, generate a vendor name based on the ID
+    final vendorTypes = ['Events', 'Catering', 'Photography', 'Decorations', 'Sound'];
+    final vendorIndex = userId % vendorTypes.length;
+    return 'Vendor ${vendorTypes[vendorIndex]}';
   }
 }
