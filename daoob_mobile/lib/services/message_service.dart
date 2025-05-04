@@ -426,7 +426,7 @@ class MessageService extends ChangeNotifier {
       // Create new chat user
       final newChatUser = ChatUser(
         id: userId,
-        name: 'User $userId',
+        name: 'User ${userId}',
         userType: currentUserType == 'client' ? 'vendor' : 'client',
         lastMessage: lastMessage,
         lastMessageTime: timestamp,
@@ -581,7 +581,7 @@ class MessageService extends ChangeNotifier {
       
       final List<String> vendorMessages = [
         'Hello! Thank you for your interest in our services.',
-        'Our packages start from $500 for basic and go up to $2000 for premium.',
+        'Our packages start from \$500 for basic and go up to \$2000 for premium.',
         'Yes, June 15th is currently available.',
         'Great! We\'d be happy to work with you.',
         'We can meet anytime between 9am and 5pm, what works for you?'
