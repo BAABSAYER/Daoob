@@ -91,8 +91,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageProvider extends ChangeNotifier {
-  Locale _locale = const Locale('en');
-  bool _isRTL = false;
+  Locale _locale = const Locale('ar'); // Arabic as default
+  bool _isRTL = true; // RTL by default
 
   Locale get locale => _locale;
   bool get isRTL => _isRTL;
@@ -107,8 +107,11 @@ class LanguageProvider extends ChangeNotifier {
     if (savedLanguage != null) {
       _locale = Locale(savedLanguage);
       _isRTL = savedLanguage == 'ar';
-      notifyListeners();
+    } else {
+      // Set Arabic as default if no saved preference
+      await prefs.setString('language_code', 'ar');
     }
+    notifyListeners();
   }
 
   Future<void> setLocale(String languageCode) async {
@@ -3020,6 +3023,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildLanguageSelector() {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final currentLanguage = languageProvider.locale.languageCode == 'ar' ? 'Arabic' : 'English';
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3033,7 +3039,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               vertical: 8.0,
             ),
           ),
-          value: _selectedLanguage,
+          value: currentLanguage,
           items: _languages.map((language) {
             return DropdownMenuItem<String>(
               value: language,
@@ -3045,6 +3051,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               setState(() {
                 _selectedLanguage = value;
               });
+              
+              // Change language based on selection
+              String langCode = 'en';
+              if (value == 'Arabic') {
+                langCode = 'ar';
+              } else if (value == 'French') {
+                langCode = 'fr';
+              } else if (value == 'Spanish') {
+                langCode = 'es';
+              }
+              
+              languageProvider.setLocale(langCode);
+              
+              // Show confirmation
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Language changed to $value')),
+              );
             }
           },
         ),
@@ -3630,9 +3653,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AuthService(),
-      child: MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthService()),
+        ChangeNotifierProvider(create: (context) => LanguageProvider()),
+      ],
+      child: Consumer<LanguageProvider>(
+        builder: (context, languageProvider, child) {
+          return MaterialApp(
+            locale: languageProvider.locale,
+            // Set up directionality based on language
+            textDirection: languageProvider.isRTL ? TextDirection.rtl : TextDirection.ltr,
         title: 'DAOOB',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -3645,6 +3676,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         localizationsDelegates: const [
+          AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
