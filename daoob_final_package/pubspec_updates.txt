@@ -1,0 +1,11 @@
+# Add these dependencies to pubspec.yaml
+dependencies:
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  path_provider: ^2.1.1
+  http: ^1.1.0
+  provider: ^6.0.5
+  shared_preferences: ^2.2.0
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.1
