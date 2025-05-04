@@ -19,6 +19,8 @@ class Booking {
   final double totalPrice;
   final String status;
   final String? notes;
+  final List<int> additionalVendorIds; // New: For multiple vendors
+  final List<String>? additionalVendorNames; // New: Names of additional vendors
   
   Booking({
     required this.id,
@@ -32,6 +34,8 @@ class Booking {
     required this.totalPrice,
     required this.status,
     this.notes,
+    this.additionalVendorIds = const [],
+    this.additionalVendorNames,
   });
   
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -47,6 +51,16 @@ class Booking {
       totalPrice: json['totalPrice'].toDouble(),
       status: json['status'],
       notes: json['notes'],
+      additionalVendorIds: json['additionalVendorIds'] != null
+        ? (json['additionalVendorIds'] is List 
+            ? List<int>.from(json['additionalVendorIds'])
+            : List<int>.from(jsonDecode(json['additionalVendorIds'])))
+        : [],
+      additionalVendorNames: json['additionalVendorNames'] != null
+        ? (json['additionalVendorNames'] is List
+            ? List<String>.from(json['additionalVendorNames'])
+            : List<String>.from(jsonDecode(json['additionalVendorNames'])))
+        : null,
     );
   }
   
@@ -63,6 +77,8 @@ class Booking {
       'totalPrice': totalPrice,
       'status': status,
       'notes': notes,
+      'additionalVendorIds': jsonEncode(additionalVendorIds),
+      'additionalVendorNames': additionalVendorNames != null ? jsonEncode(additionalVendorNames) : null,
     };
   }
 }
@@ -101,7 +117,9 @@ class BookingService extends ChangeNotifier {
           packageType TEXT,
           totalPrice REAL,
           status TEXT,
-          notes TEXT
+          notes TEXT,
+          additionalVendorIds TEXT,
+          additionalVendorNames TEXT
         )
         ''');
       },
@@ -119,7 +137,7 @@ class BookingService extends ChangeNotifier {
     
     // If offline mode is active, load from local DB
     if (authService.isOfflineMode) {
-      await _loadOfflineBookings();
+      await _loadOfflineBookings(authService.user?.id, authService.user?.userType);
       return;
     }
     
@@ -163,43 +181,59 @@ class BookingService extends ChangeNotifier {
         notifyListeners();
       } else {
         // If API fails, try to load from local database as fallback
-        await _loadOfflineBookings();
+        await _loadOfflineBookings(user.id, user.userType);
       }
     } catch (e) {
       _error = 'Network error: ${e.toString()}';
       // If network request fails, try to load from local database as fallback
-      await _loadOfflineBookings();
+      await _loadOfflineBookings(authService.user?.id, authService.user?.userType);
     }
   }
   
-  Future<void> _loadOfflineBookings() async {
+  Future<void> _loadOfflineBookings(int? userId, String? userType) async {
     try {
       if (_database == null) {
         await _initDatabase();
       }
       
-      // First check if we have saved bookings
-      final List<Map<String, dynamic>> maps = await _database!.query('bookings');
+      List<Map<String, dynamic>> maps;
+      
+      if (userId != null) {
+        if (userType == 'vendor') {
+          // For vendors, get bookings where vendorId matches or they are in additionalVendorIds
+          maps = await _database!.rawQuery(
+            'SELECT * FROM bookings WHERE vendorId = ?',
+            [userId]
+          );
+          
+          // Also check for bookings where vendor is in additionalVendorIds
+          final allBookings = await _database!.query('bookings');
+          for (final booking in allBookings) {
+            final additionalIds = jsonDecode(booking['additionalVendorIds'] ?? '[]') as List;
+            if (additionalIds.contains(userId)) {
+              maps.add(booking);
+            }
+          }
+        } else {
+          // For clients, get bookings where clientId matches
+          maps = await _database!.query(
+            'bookings',
+            where: 'clientId = ?',
+            whereArgs: [userId],
+          );
+        }
+      } else {
+        // If no user id, get all bookings
+        maps = await _database!.query('bookings');
+      }
       
       if (maps.isNotEmpty) {
         _bookings = maps.map((item) {
-          return Booking(
-            id: item['id'],
-            clientId: item['clientId'],
-            vendorId: item['vendorId'],
-            vendorName: item['vendorName'],
-            clientName: item['clientName'],
-            eventDate: DateTime.parse(item['eventDate']),
-            eventType: item['eventType'],
-            packageType: item['packageType'],
-            totalPrice: item['totalPrice'],
-            status: item['status'],
-            notes: item['notes'],
-          );
+          return Booking.fromJson(item);
         }).toList();
       } else {
         // If no saved bookings, generate some sample data
-        _bookings = _generateSampleBookings();
+        _bookings = _generateSampleBookings(userId, userType);
         await _saveBookingsLocally(_bookings);
       }
       
@@ -208,7 +242,7 @@ class BookingService extends ChangeNotifier {
     } catch (e) {
       _error = 'Database error: ${e.toString()}';
       _isLoading = false;
-      _bookings = _generateSampleBookings(); // Fallback to sample data
+      _bookings = _generateSampleBookings(userId, userType); // Fallback to sample data
       notifyListeners();
     }
   }
@@ -225,74 +259,124 @@ class BookingService extends ChangeNotifier {
     for (var booking in bookings) {
       await _database!.insert(
         'bookings',
-        {
-          'id': booking.id,
-          'clientId': booking.clientId,
-          'vendorId': booking.vendorId,
-          'vendorName': booking.vendorName,
-          'clientName': booking.clientName,
-          'eventDate': booking.eventDate.toIso8601String(),
-          'eventType': booking.eventType,
-          'packageType': booking.packageType,
-          'totalPrice': booking.totalPrice,
-          'status': booking.status,
-          'notes': booking.notes,
-        },
+        booking.toJson(),
       );
     }
   }
   
-  List<Booking> _generateSampleBookings() {
-    return [
+  List<Booking> _generateSampleBookings(int? userId, String? userType) {
+    // Default values if user is not logged in
+    final clientId = userId ?? 1;
+    final isVendor = userType == 'vendor';
+    
+    // Primary vendor IDs
+    const List<int> vendorIds = [101, 102, 103, 104];
+    const List<String> vendorNames = [
+      'Elegant Events', 
+      'Corporate Solutions', 
+      'Party Planners', 
+      'Wedding Paradise'
+    ];
+    
+    // List of booking examples for clients
+    final List<Booking> clientBookings = [
       Booking(
         id: 1,
-        clientId: 1,
-        vendorId: 101,
-        vendorName: 'Elegant Events',
+        clientId: clientId,
+        vendorId: vendorIds[0],
+        vendorName: vendorNames[0],
         eventDate: DateTime.now().add(const Duration(days: 30)),
         eventType: 'wedding',
         packageType: 'Premium',
-        totalPrice: 2500.0,
+        totalPrice: 3500.0,
         status: 'confirmed',
         notes: 'Beach wedding with 100 guests',
+        additionalVendorIds: [vendorIds[2], vendorIds[3]],
+        additionalVendorNames: [vendorNames[2], vendorNames[3]],
       ),
       Booking(
         id: 2,
-        clientId: 1,
-        vendorId: 102,
-        vendorName: 'Corporate Solutions',
+        clientId: clientId,
+        vendorId: vendorIds[1],
+        vendorName: vendorNames[1],
         eventDate: DateTime.now().add(const Duration(days: 15)),
         eventType: 'corporate',
         packageType: 'Standard',
-        totalPrice: 1200.0,
+        totalPrice: 2000.0,
         status: 'pending',
-        notes: 'Annual company meeting',
+        notes: 'Annual company meeting for 50 people',
       ),
       Booking(
         id: 3,
-        clientId: 1,
-        vendorId: 103,
-        vendorName: 'Party Planners',
+        clientId: clientId,
+        vendorId: vendorIds[2],
+        vendorName: vendorNames[2],
         eventDate: DateTime.now().subtract(const Duration(days: 10)),
         eventType: 'birthday',
         packageType: 'Basic',
-        totalPrice: 500.0,
+        totalPrice: 800.0,
         status: 'completed',
         notes: 'Sweet sixteen birthday party',
       ),
       Booking(
         id: 4,
-        clientId: 1,
-        vendorId: 104,
-        vendorName: 'Wedding Paradise',
-        eventDate: DateTime.now().subtract(const Duration(days: 90)),
+        clientId: clientId,
+        vendorId: vendorIds[3],
+        vendorName: vendorNames[3],
+        eventDate: DateTime.now().subtract(const Duration(days: 60)),
         eventType: 'wedding',
         packageType: 'Premium',
-        totalPrice: 3000.0,
+        totalPrice: 4500.0,
         status: 'cancelled',
         notes: 'Canceled due to venue issues',
       ),
     ];
+    
+    // List of booking examples for vendors with different clients
+    final List<Booking> vendorBookings = [
+      Booking(
+        id: 5,
+        clientId: 1001,
+        clientName: 'John Smith',
+        vendorId: userId ?? vendorIds[0],
+        vendorName: userId != null ? null : vendorNames[0],
+        eventDate: DateTime.now().add(const Duration(days: 20)),
+        eventType: 'wedding',
+        packageType: 'Premium',
+        totalPrice: 3800.0,
+        status: 'pending',
+        notes: 'Garden wedding for 80 guests',
+      ),
+      Booking(
+        id: 6,
+        clientId: 1002,
+        clientName: 'Sarah Johnson',
+        vendorId: userId ?? vendorIds[1],
+        vendorName: userId != null ? null : vendorNames[1],
+        eventDate: DateTime.now().add(const Duration(days: 7)),
+        eventType: 'corporate',
+        packageType: 'Standard',
+        totalPrice: 2200.0,
+        status: 'confirmed',
+        notes: 'Product launch event',
+      ),
+      Booking(
+        id: 7,
+        clientId: 1003,
+        clientName: 'Michael Brown',
+        vendorId: userId ?? vendorIds[2],
+        vendorName: userId != null ? null : vendorNames[2],
+        eventDate: DateTime.now().add(const Duration(days: 45)),
+        eventType: 'birthday',
+        packageType: 'Premium',
+        totalPrice: 1200.0,
+        status: 'pending',
+        notes: '40th birthday celebration',
+      ),
+    ];
+    
+    // Return appropriate bookings based on user type
+    return isVendor ? vendorBookings : clientBookings;
   }
   
   Future<bool> createBooking(Booking booking, AuthService authService) async {
@@ -381,6 +465,8 @@ class BookingService extends ChangeNotifier {
       totalPrice: booking.totalPrice,
       status: 'pending', // New bookings are pending by default in offline mode
       notes: booking.notes,
+      additionalVendorIds: booking.additionalVendorIds,
+      additionalVendorNames: booking.additionalVendorNames,
     );
     
     _bookings.add(newBooking);
@@ -397,19 +483,7 @@ class BookingService extends ChangeNotifier {
     
     await _database!.insert(
       'bookings',
-      {
-        'id': booking.id,
-        'clientId': booking.clientId,
-        'vendorId': booking.vendorId,
-        'vendorName': booking.vendorName,
-        'clientName': booking.clientName,
-        'eventDate': booking.eventDate.toIso8601String(),
-        'eventType': booking.eventType,
-        'packageType': booking.packageType,
-        'totalPrice': booking.totalPrice,
-        'status': booking.status,
-        'notes': booking.notes,
-      },
+      booking.toJson(),
     );
   }
   
@@ -465,6 +539,8 @@ class BookingService extends ChangeNotifier {
             totalPrice: _bookings[index].totalPrice,
             status: status,
             notes: _bookings[index].notes,
+            additionalVendorIds: _bookings[index].additionalVendorIds,
+            additionalVendorNames: _bookings[index].additionalVendorNames,
           );
           
           _bookings[index] = updatedBooking;
@@ -509,6 +585,8 @@ class BookingService extends ChangeNotifier {
         totalPrice: _bookings[index].totalPrice,
         status: status,
         notes: _bookings[index].notes,
+        additionalVendorIds: _bookings[index].additionalVendorIds,
+        additionalVendorNames: _bookings[index].additionalVendorNames,
       );
       
       _bookings[index] = updatedBooking;
@@ -528,19 +606,7 @@ class BookingService extends ChangeNotifier {
     
     await _database!.update(
       'bookings',
-      {
-        'id': booking.id,
-        'clientId': booking.clientId,
-        'vendorId': booking.vendorId,
-        'vendorName': booking.vendorName,
-        'clientName': booking.clientName,
-        'eventDate': booking.eventDate.toIso8601String(),
-        'eventType': booking.eventType,
-        'packageType': booking.packageType,
-        'totalPrice': booking.totalPrice,
-        'status': booking.status,
-        'notes': booking.notes,
-      },
+      booking.toJson(),
       where: 'id = ?',
       whereArgs: [booking.id],
     );

@@ -2,53 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
-import 'package:daoob_mobile/models/vendor.dart';
+import 'package:daoob_mobile/services/vendor_service.dart';
+import 'package:daoob_mobile/services/auth_service.dart';
+import 'package:daoob_mobile/screens/vendor_detail_screen.dart';
 
-class VendorsScreen extends StatelessWidget {
+class VendorsScreen extends StatefulWidget {
   final String categoryId;
   
   const VendorsScreen({super.key, required this.categoryId});
 
   @override
+  State<VendorsScreen> createState() => _VendorsScreenState();
+}
+
+class _VendorsScreenState extends State<VendorsScreen> {
+  final _searchController = TextEditingController();
+  bool _isLoading = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadVendors();
+  }
+  
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _loadVendors() async {
+    final vendorService = Provider.of<VendorService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    await vendorService.loadVendors(authService, category: widget.categoryId);
+    
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
     final eventProvider = Provider.of<EventProvider>(context);
-    final category = eventProvider.getCategoryById(categoryId);
+    final vendorService = Provider.of<VendorService>(context);
+    final category = eventProvider.getCategoryById(widget.categoryId);
     final bool isArabic = languageProvider.locale.languageCode == 'ar';
-
-    // Mock vendors list
-    final vendors = [
-      Vendor(
-        id: 1,
-        userId: 101,
-        name: 'Elegant Events',
-        description: 'Premium event planning service for all occasions',
-        category: categoryId,
-        rating: 4.8,
-        basePrice: 1200,
-        isVerified: true,
-      ),
-      Vendor(
-        id: 2,
-        userId: 102,
-        name: 'Delicious Catering',
-        description: 'Gourmet food catering services for events of all sizes',
-        category: categoryId,
-        rating: 4.6,
-        basePrice: 800,
-        isVerified: true,
-      ),
-      Vendor(
-        id: 3,
-        userId: 103,
-        name: 'Photography Masters',
-        description: 'Capturing your special moments with artistic photography',
-        category: categoryId,
-        rating: 4.9,
-        basePrice: 600,
-        isVerified: true,
-      ),
-    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -68,45 +70,80 @@ class VendorsScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF6A3DE8),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isArabic
-                  ? 'اختر مزود الخدمة المناسب'
-                  : 'Choose the right vendor',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: isArabic ? 'البحث عن مزودي الخدمة' : 'Search vendors',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
+              onChanged: (value) {
+                vendorService.setSearchQuery(value);
+              },
             ),
-            const SizedBox(height: 8),
-            Text(
-              isArabic
-                  ? 'استعرض قائمة مزودي الخدمات المميزين'
-                  : 'Browse our list of premium vendors',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: ListView.builder(
-                itemCount: vendors.length,
-                itemBuilder: (context, index) {
-                  final vendor = vendors[index];
-                  return _buildVendorCard(context, vendor, isArabic);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+          
+          // Vendor listings
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : vendorService.vendors.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              isArabic
+                                  ? 'لا توجد نتائج'
+                                  : 'No results found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              isArabic
+                                  ? 'حاول البحث بكلمات مختلفة'
+                                  : 'Try searching with different terms',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: vendorService.vendors.length,
+                        itemBuilder: (context, index) {
+                          final vendor = vendorService.vendors[index];
+                          
+                          return _buildVendorCard(context, vendor, isArabic);
+                        },
+                      ),
+          ),
+        ],
       ),
     );
   }
-
+  
   Widget _buildVendorCard(BuildContext context, Vendor vendor, bool isArabic) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -116,12 +153,18 @@ class VendorsScreen extends StatelessWidget {
       elevation: 3,
       child: InkWell(
         onTap: () {
-          // Navigate to vendor detail page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VendorDetailScreen(vendor: vendor),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Vendor image area
             Container(
               height: 120,
               width: double.infinity,
@@ -132,19 +175,38 @@ class VendorsScreen extends StatelessWidget {
                   topRight: Radius.circular(12),
                 ),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.business,
-                  size: 60,
-                  color: const Color(0xFF6A3DE8).withOpacity(0.7),
-                ),
-              ),
+              child: vendor.imageUrl != null
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                      ),
+                      child: Image.network(
+                        vendor.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.business,
+                          size: 60,
+                          color: Color(0xFF6A3DE8),
+                        ),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(
+                        Icons.business,
+                        size: 60,
+                        color: Color(0xFF6A3DE8),
+                      ),
+                    ),
             ),
+            
+            // Vendor details
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Name and rating
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -176,6 +238,8 @@ class VendorsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
+                  
+                  // Description
                   Text(
                     vendor.description,
                     style: TextStyle(
@@ -186,11 +250,45 @@ class VendorsScreen extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 16),
+                  
+                  // Services chips
+                  SizedBox(
+                    height: 32,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: vendor.services.length > 3 
+                          ? 3 
+                          : vendor.services.length,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8, 
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6A3DE8).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            vendor.services[index],
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF6A3DE8),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Price and booking
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${isArabic ? 'يبدأ من' : 'Starting at'} \$${vendor.basePrice}',
+                        '${isArabic ? 'يبدأ من' : 'Starting at'} \$${vendor.basePrice.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF6A3DE8),
@@ -198,7 +296,12 @@ class VendorsScreen extends StatelessWidget {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          // Book now
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VendorDetailScreen(vendor: vendor),
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF6A3DE8),

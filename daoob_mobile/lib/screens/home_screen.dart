@@ -1,3 +1,4 @@
+import 'package:daoob_mobile/screens/bookings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:daoob_mobile/screens/messages_screen.dart';
@@ -192,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       
       // Bookings page
-      _buildBookingsPage(context, bookingService, isArabic, user),
+      const BookingsScreen(),
       
       // Messages page
       const MessagesScreen(),
