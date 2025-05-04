@@ -20,7 +20,7 @@ fi
 
 # Create the Flutter project from scratch
 echo "Creating a new Flutter project..."
-flutter create --org com.daoob eventora_mobile
+flutter create --org com.daoob --project-name daoob eventora_mobile
 
 # Navigate to the project
 cd eventora_mobile
@@ -128,6 +128,89 @@ EOL
 
 # Create model files
 echo "Creating model files..."
+
+# Event Category Model
+cat > lib/models/event_category.dart << 'EOL'
+class EventCategory {
+  final int id;
+  final String name;
+  final String description;
+  final String icon;
+  final List<String> vendorTypes;
+  final bool isCustom;
+
+  EventCategory({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.vendorTypes,
+    this.isCustom = false,
+  });
+
+  factory EventCategory.fromJson(Map<String, dynamic> json) {
+    return EventCategory(
+      id: json['id'],
+      name: json['name'],
+      description: json['description'],
+      icon: json['icon'],
+      vendorTypes: List<String>.from(json['vendorTypes']),
+      isCustom: json['isCustom'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'icon': icon,
+      'vendorTypes': vendorTypes,
+      'isCustom': isCustom,
+    };
+  }
+
+  static List<EventCategory> sampleCategories() {
+    return [
+      EventCategory(
+        id: 1,
+        name: 'Wedding',
+        description: 'Plan your perfect wedding day with selected vendors',
+        icon: 'favorite',
+        vendorTypes: ['Event Planner', 'Catering', 'Photography', 'Music & Entertainment', 'Venue'],
+      ),
+      EventCategory(
+        id: 2,
+        name: 'Corporate',
+        description: 'Business events, conferences, and professional meetings',
+        icon: 'business',
+        vendorTypes: ['Event Planner', 'Catering', 'Venue'],
+      ),
+      EventCategory(
+        id: 3,
+        name: 'Birthday',
+        description: 'Celebrate birthdays with the perfect planning and services',
+        icon: 'cake',
+        vendorTypes: ['Event Planner', 'Catering', 'Photography', 'Music & Entertainment'],
+      ),
+      EventCategory(
+        id: 4,
+        name: 'Graduation',
+        description: 'Celebrate academic achievements with family and friends',
+        icon: 'school',
+        vendorTypes: ['Event Planner', 'Catering', 'Photography'],
+      ),
+      EventCategory(
+        id: 5,
+        name: 'Custom Event',
+        description: 'Create your own custom event with specific requirements',
+        icon: 'edit',
+        vendorTypes: [],
+        isCustom: true,
+      ),
+    ];
+  }
+}
 
 # Booking Model
 cat > lib/models/booking.dart << 'EOL'
@@ -678,6 +761,27 @@ class Message {
     // Sort conversations by latest message
     latestMessages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return latestMessages;
+  }
+}
+EOL
+
+# Event Provider
+cat > lib/services/event_provider.dart << 'EOL'
+import 'package:flutter/material.dart';
+import '../models/event_category.dart';
+
+class EventProvider extends ChangeNotifier {
+  EventCategory? _selectedCategory;
+  EventCategory? get selectedCategory => _selectedCategory;
+
+  void selectCategory(EventCategory category) {
+    _selectedCategory = category;
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedCategory = null;
+    notifyListeners();
   }
 }
 EOL
@@ -3709,7 +3813,7 @@ EOL
 # Create pubspec.yaml file
 cat > pubspec.yaml << 'EOL'
 name: eventora_mobile
-description: "DAOOB Event Management Platform"
+description: "DAOOB - Smart Event Management Platform"
 publish_to: 'none'
 version: 1.0.0+1
 
