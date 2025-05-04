@@ -28,6 +28,7 @@ cd eventora_mobile
 # Create necessary directories
 mkdir -p assets/images lib/models lib/screens lib/services lib/widgets lib/utils lib/l10n
 mkdir -p assets/lang
+mkdir -p lib/screens/events
 
 # Copy the logo
 echo "Setting up app logo..."
@@ -3741,6 +3742,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:eventora_mobile/services/auth_service.dart';
+import 'package:eventora_mobile/services/event_provider.dart';
 import 'package:eventora_mobile/screens/splash_screen.dart';
 import 'package:eventora_mobile/screens/login_screen.dart';
 import 'package:eventora_mobile/screens/app_wrapper.dart';
@@ -3761,6 +3763,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthService()),
         ChangeNotifierProvider(create: (context) => LanguageProvider()),
+        ChangeNotifierProvider(create: (context) => EventProvider()),
       ],
       child: Consumer<LanguageProvider>(
         builder: (context, languageProvider, child) {
@@ -3867,7 +3870,21 @@ cat > assets/lang/ar.json << 'EOL'
   "settings": "الإعدادات",
   "language": "اللغة",
   "offline_mode": "الوضع دون اتصال",
-  "logout": "تسجيل الخروج"
+  "logout": "تسجيل الخروج",
+  "choose_event_type": "اختر نوع الحدث",
+  "event_type_prompt": "ما نوع الحدث الذي تخطط له؟",
+  "wedding": "زفاف",
+  "corporate": "شركة",
+  "birthday": "عيد ميلاد",
+  "graduation": "تخرج",
+  "custom_event": "حدث مخصص",
+  "create_custom_event": "إنشاء حدث مخصص",
+  "event_name": "اسم الحدث",
+  "event_description": "وصف الحدث",
+  "select_vendors": "اختر المزودين",
+  "continue": "متابعة",
+  "back": "رجوع",
+  "vendors_for": "المزودين لـ"
 }
 EOL
 
@@ -3887,7 +3904,21 @@ cat > assets/lang/en.json << 'EOL'
   "settings": "Settings",
   "language": "Language",
   "offline_mode": "Offline Mode",
-  "logout": "Logout"
+  "logout": "Logout",
+  "choose_event_type": "Choose Event Type",
+  "event_type_prompt": "What type of event are you planning?",
+  "wedding": "Wedding",
+  "corporate": "Corporate",
+  "birthday": "Birthday",
+  "graduation": "Graduation",
+  "custom_event": "Custom Event",
+  "create_custom_event": "Create Custom Event",
+  "event_name": "Event Name",
+  "event_description": "Event Description",
+  "select_vendors": "Select Vendors",
+  "continue": "Continue",
+  "back": "Back",
+  "vendors_for": "Vendors for"
 }
 EOL
 
