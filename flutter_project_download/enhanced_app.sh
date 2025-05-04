@@ -1363,8 +1363,7 @@ echo "Creating enhanced screens..."
 # Create basic vendor listing screen
 cat > lib/screens/vendor_listing_screen.dart << 'EOL'
 import 'package:flutter/material.dart';
-import 'package:eventora_mobile/models/vendor.dart';
-import 'package:eventora_mobile/services/api_service.dart';
+import 'package:eventora_mobile/screens/events/event_category_screen.dart';
 
 class VendorListingScreen extends StatefulWidget {
   const VendorListingScreen({super.key});
