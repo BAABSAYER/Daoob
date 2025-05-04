@@ -1,14 +1,29 @@
 import 'package:flutter/material.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:provider/provider.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:flutter_localizations/flutter_localizations.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/screens/splash_screen.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/screens/login_screen.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/screens/home_screen.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/screens/register_screen.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
+import 'package:daoob_mobile/screens/categories_screen.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
+import 'package:daoob_mobile/screens/custom_event_screen.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/services/auth_service.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/services/booking_service.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/l10n/language_provider.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 import 'package:daoob_mobile/providers/event_provider.dart';
+import "package:daoob_mobile/screens/vendors_screen.dart";
 
 void main() {
   runApp(
@@ -70,10 +85,13 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
+        "/vendors": (context) => VendorsScreen(categoryId: ModalRoute.of(context)!.settings.arguments as String),
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/categories': (context) => const CategoriesScreen(),
+        '/custom-event': (context) => const CustomEventScreen(),
       },
     );
   }
