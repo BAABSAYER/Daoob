@@ -1373,101 +1373,26 @@ class VendorListingScreen extends StatefulWidget {
 }
 
 class _VendorListingScreenState extends State<VendorListingScreen> {
-  List<Vendor> _vendors = [];
-  bool _isLoading = true;
-  String? _selectedCategory;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVendors();
-  }
-
-  Future<void> _loadVendors() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final vendors = await ApiService.getVendors(category: _selectedCategory);
-      setState(() {
-        _vendors = vendors;
-        _isLoading = false;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading vendors: $e')),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildCategoryFilter(),
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _vendors.isEmpty
-                  ? const Center(child: Text('No vendors found'))
-                  : ListView.builder(
-                      itemCount: _vendors.length,
-                      itemBuilder: (context, index) {
-                        final vendor = _vendors[index];
-                        return _buildVendorCard(vendor);
-                      },
-                    ),
-        ),
-      ],
-    );
+    return const EventCategoryScreen();
   }
+}
+EOL
 
-  Widget _buildCategoryFilter() {
-    const categories = [
-      'All',
-      'Event Planner',
-      'Catering',
-      'Photography',
-      'Music & Entertainment',
-      'Venue',
-    ];
+# Create basic vendor card widget (helper)
+cat > lib/widgets/vendor_card.dart << 'EOL'
+import 'package:flutter/material.dart';
+import 'package:eventora_mobile/models/vendor.dart';
+import 'package:eventora_mobile/screens/vendor_detail_screen.dart';
 
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      color: Colors.grey[100],
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: categories.map((category) {
-            final isSelected = category == 'All'
-                ? _selectedCategory == null
-                : _selectedCategory == category;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: FilterChip(
-                selected: isSelected,
-                label: Text(category),
-                onSelected: (_) {
-                  setState(() {
-                    _selectedCategory = category == 'All' ? null : category;
-                  });
-                  _loadVendors();
-                },
-                selectedColor: const Color(0xFF6A3DE8).withOpacity(0.2),
-                checkmarkColor: const Color(0xFF6A3DE8),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVendorCard(Vendor vendor) {
+class VendorCard extends StatelessWidget {
+  final Vendor vendor;
+  
+  const VendorCard({Key? key, required this.vendor}) : super(key: key);
+  
+  @override
+  Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
