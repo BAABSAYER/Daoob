@@ -26,11 +26,102 @@ flutter create --org com.daoob eventora_mobile
 cd eventora_mobile
 
 # Create necessary directories
-mkdir -p assets/images assets/lang lib/models lib/screens lib/services lib/widgets lib/utils
+mkdir -p assets/images lib/models lib/screens lib/services lib/widgets lib/utils lib/l10n
+mkdir -p assets/lang
 
 # Copy the logo
 echo "Setting up app logo..."
 cp "../WhatsApp Image 2025-04-06 at 21.40.44_8e7cb969.jpg" assets/images/daoob-logo.jpg
+
+# Add a localization utility class to handle language switching
+cat > lib/l10n/app_localizations.dart << 'EOL'
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+class AppLocalizations {
+  final Locale locale;
+  Map<String, String> _localizedStrings = {};
+
+  AppLocalizations(this.locale);
+
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  Future<bool> load() async {
+    String jsonString = await rootBundle.loadString('assets/lang/${locale.languageCode}.json');
+    Map<String, dynamic> jsonMap = json.decode(jsonString);
+    _localizedStrings = jsonMap.map((key, value) {
+      return MapEntry(key, value.toString());
+    });
+    return true;
+  }
+
+  String translate(String key) {
+    return _localizedStrings[key] ?? key;
+  }
+}
+
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) {
+    return ['en', 'ar'].contains(locale.languageCode);
+  }
+
+  @override
+  Future<AppLocalizations> load(Locale locale) async {
+    AppLocalizations localizations = AppLocalizations(locale);
+    await localizations.load();
+    return localizations;
+  }
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+EOL
+
+# Add a language selection provider
+cat > lib/l10n/language_provider.dart << 'EOL'
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class LanguageProvider extends ChangeNotifier {
+  Locale _locale = const Locale('en');
+  bool _isRTL = false;
+
+  Locale get locale => _locale;
+  bool get isRTL => _isRTL;
+
+  LanguageProvider() {
+    _loadSavedLanguage();
+  }
+
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('language_code');
+    if (savedLanguage != null) {
+      _locale = Locale(savedLanguage);
+      _isRTL = savedLanguage == 'ar';
+      notifyListeners();
+    }
+  }
+
+  Future<void> setLocale(String languageCode) async {
+    _locale = Locale(languageCode);
+    _isRTL = languageCode == 'ar';
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language_code', languageCode);
+    
+    notifyListeners();
+  }
+}
+EOL
 
 # Create model files
 echo "Creating model files..."
@@ -3527,6 +3618,8 @@ import 'package:eventora_mobile/screens/splash_screen.dart';
 import 'package:eventora_mobile/screens/login_screen.dart';
 import 'package:eventora_mobile/screens/app_wrapper.dart';
 import 'package:eventora_mobile/screens/vendor_detail_screen.dart';
+import 'package:eventora_mobile/l10n/app_localizations.dart';
+import 'package:eventora_mobile/l10n/language_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -3621,7 +3714,7 @@ flutter_icons:
   adaptive_icon_background: "#6A3DE8"
 EOL
 
-# Add AR locale file
+# Add localization files
 mkdir -p assets/lang
 cat > assets/lang/ar.json << 'EOL'
 {
