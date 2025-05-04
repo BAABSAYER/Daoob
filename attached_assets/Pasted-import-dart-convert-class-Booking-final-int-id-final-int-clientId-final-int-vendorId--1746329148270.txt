@@ -1,0 +1,177 @@
+import 'dart:convert';
+
+class Booking {
+  final int id;
+  final int clientId;
+  final int vendorId;
+  final String status; // 'pending', 'confirmed', 'canceled', 'completed'
+  final DateTime bookingDate;
+  final DateTime eventDate;
+  final String packageType; // 'basic', 'standard', 'premium'
+  final double totalPrice;
+  final String notes;
+  final DateTime createdAt;
+  final String? vendorName;
+  final String? clientName;
+
+  Booking({
+    required this.id,
+    required this.clientId,
+    required this.vendorId,
+    required this.status,
+    required this.bookingDate,
+    required this.eventDate,
+    required this.packageType,
+    required this.totalPrice,
+    required this.notes,
+    required this.createdAt,
+    this.vendorName,
+    this.clientName,
+  });
+
+  factory Booking.fromJson(Map<String, dynamic> json) {
+    return Booking(
+      id: json['id'],
+      clientId: json['clientId'],
+      vendorId: json['vendorId'],
+      status: json['status'],
+      bookingDate: DateTime.parse(json['bookingDate']),
+      eventDate: DateTime.parse(json['eventDate']),
+      packageType: json['packageType'],
+      totalPrice: json['totalPrice'].toDouble(),
+      notes: json['notes'] ?? '',
+      createdAt: DateTime.parse(json['createdAt']),
+      vendorName: json['vendorName'],
+      clientName: json['clientName'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'clientId': clientId,
+      'vendorId': vendorId,
+      'status': status,
+      'bookingDate': bookingDate.toIso8601String(),
+      'eventDate': eventDate.toIso8601String(),
+      'packageType': packageType,
+      'totalPrice': totalPrice,
+      'notes': notes,
+      'createdAt': createdAt.toIso8601String(),
+      'vendorName': vendorName,
+      'clientName': clientName,
+    };
+  }
+
+  // Generator for mock bookings
+  static List<Booking> getMockBookings({bool isVendor = false, int userId = 1}) {
+    final now = DateTime.now();
+    
+    // Sample vendors and clients for mock data
+    final vendors = [
+      {'id': 101, 'name': 'Elegant Events'},
+      {'id': 102, 'name': 'Premier Catering'},
+      {'id': 103, 'name': 'Deluxe Photography'},
+    ];
+    
+    final clients = [
+      {'id': 1, 'name': 'John Smith'},
+      {'id': 2, 'name': 'Sarah Johnson'},
+      {'id': 3, 'name': 'Mohammed Ali'},
+    ];
+    
+    // Generate different bookings based on user role
+    List<Map<String, dynamic>> bookingsData = [];
+    
+    if (isVendor) {
+      // Mock bookings for vendors - showing different clients
+      bookingsData = [
+        {
+          'id': 1001,
+          'clientId': 1,
+          'vendorId': userId,
+          'status': 'confirmed',
+          'bookingDate': now.subtract(const Duration(days: 7)),
+          'eventDate': now.add(const Duration(days: 30)),
+          'packageType': 'premium',
+          'totalPrice': 2500.0,
+          'notes': 'Wedding reception for 200 guests',
+          'createdAt': now.subtract(const Duration(days: 7)),
+          'clientName': 'John Smith',
+        },
+        {
+          'id': 1002,
+          'clientId': 2,
+          'vendorId': userId,
+          'status': 'pending',
+          'bookingDate': now.subtract(const Duration(days: 2)),
+          'eventDate': now.add(const Duration(days: 45)),
+          'packageType': 'standard',
+          'totalPrice': 1800.0,
+          'notes': 'Corporate event with 50 attendees',
+          'createdAt': now.subtract(const Duration(days: 2)),
+          'clientName': 'Sarah Johnson',
+        },
+        {
+          'id': 1003,
+          'clientId': 3,
+          'vendorId': userId,
+          'status': 'completed',
+          'bookingDate': now.subtract(const Duration(days: 30)),
+          'eventDate': now.subtract(const Duration(days: 5)),
+          'packageType': 'basic',
+          'totalPrice': 1200.0,
+          'notes': 'Birthday party with 30 guests',
+          'createdAt': now.subtract(const Duration(days: 30)),
+          'clientName': 'Mohammed Ali',
+        },
+      ];
+    } else {
+      // Mock bookings for clients - showing different vendors
+      bookingsData = [
+        {
+          'id': 1001,
+          'clientId': userId,
+          'vendorId': 101,
+          'status': 'confirmed',
+          'bookingDate': now.subtract(const Duration(days: 7)),
+          'eventDate': now.add(const Duration(days: 30)),
+          'packageType': 'premium',
+          'totalPrice': 2500.0,
+          'notes': 'Wedding reception for 200 guests',
+          'createdAt': now.subtract(const Duration(days: 7)),
+          'vendorName': 'Elegant Events',
+        },
+        {
+          'id': 1002,
+          'clientId': userId,
+          'vendorId': 102,
+          'status': 'pending',
+          'bookingDate': now.subtract(const Duration(days: 2)),
+          'eventDate': now.add(const Duration(days: 45)),
+          'packageType': 'standard',
+          'totalPrice': 1800.0,
+          'notes': 'Corporate event with 50 attendees',
+          'createdAt': now.subtract(const Duration(days: 2)),
+          'vendorName': 'Premier Catering',
+        },
+        {
+          'id': 1003,
+          'clientId': userId,
+          'vendorId': 103,
+          'status': 'completed',
+          'bookingDate': now.subtract(const Duration(days: 30)),
+          'eventDate': now.subtract(const Duration(days: 5)),
+          'packageType': 'basic',
+          'totalPrice': 1200.0,
+          'notes': 'Birthday party with 30 guests',
+          'createdAt': now.subtract(const Duration(days: 30)),
+          'vendorName': 'Deluxe Photography',
+        },
+      ];
+    }
+    
+    // Convert the mock data to Booking objects
+    return bookingsData.map((data) => Booking.fromJson(data)).toList();
+  }
+}

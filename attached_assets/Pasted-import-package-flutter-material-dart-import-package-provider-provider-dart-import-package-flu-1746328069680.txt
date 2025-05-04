@@ -1,0 +1,69 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+// Local services
+import 'package:daoob_mobile/services/auth_service.dart';
+import 'package:daoob_mobile/services/event_provider.dart';
+import 'package:daoob_mobile/l10n/app_localizations.dart';
+import 'package:daoob_mobile/l10n/language_provider.dart';
+
+// Screens
+import 'package:daoob_mobile/screens/splash_screen.dart';
+import 'package:daoob_mobile/screens/login_screen.dart';
+import 'package:daoob_mobile/screens/app_wrapper.dart';
+import 'package:daoob_mobile/screens/vendor_detail_screen.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthService()),
+        ChangeNotifierProvider(create: (context) => LanguageProvider()),
+        ChangeNotifierProvider(create: (context) => EventProvider()),
+      ],
+      child: Consumer<LanguageProvider>(
+        builder: (context, languageProvider, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'DAOOB',
+            theme: ThemeData(
+              primaryColor: const Color(0xFF6A3DE8),
+              primarySwatch: Colors.deepPurple,
+              colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6A3DE8)),
+              fontFamily: 'Roboto',
+              useMaterial3: true,
+            ),
+            locale: languageProvider.locale,
+            // Directionality will be handled by a wrapper widget
+            supportedLocales: const [
+              Locale('en', ''),
+              Locale('ar', ''),
+            ],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            initialRoute: '/',
+            routes: {
+              '/': (context) => const SplashScreen(),
+              '/login': (context) => const LoginScreen(),
+              '/home': (context) => const AppWrapper(),
+              '/vendor-details': (context) => VendorDetailScreen(
+                  vendorId: ModalRoute.of(context)!.settings.arguments as int),
+            },
+          );
+        },
+      ),
+    );
+  }
+}
