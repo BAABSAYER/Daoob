@@ -56,6 +56,7 @@ export interface IStorage {
   getBooking(id: number): Promise<Booking | undefined>;
   getBookingsByClient(clientId: number): Promise<Booking[]>;
   getBookingsByVendor(vendorId: number): Promise<Booking[]>;
+  getAllBookings(): Promise<Booking[]>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: number, booking: Partial<Booking>): Promise<Booking | undefined>;
   
@@ -206,6 +207,10 @@ export class DatabaseStorage implements IStorage {
 
   async getBookingsByVendor(vendorId: number): Promise<Booking[]> {
     return await db.select().from(bookings).where(eq(bookings.vendorId, vendorId));
+  }
+  
+  async getAllBookings(): Promise<Booking[]> {
+    return await db.select().from(bookings);
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {

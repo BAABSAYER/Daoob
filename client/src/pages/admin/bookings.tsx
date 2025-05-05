@@ -277,10 +277,10 @@ export default function AdminBookings() {
                 </div>
               </div>
               
-              {selectedBooking.notes && (
+              {selectedBooking.specialRequests && (
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Notes</h4>
-                  <p className="text-sm">{selectedBooking.notes}</p>
+                  <h4 className="text-sm font-medium mb-1">Special Requests</h4>
+                  <p className="text-sm">{selectedBooking.specialRequests}</p>
                 </div>
               )}
               

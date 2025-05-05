@@ -330,7 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.put('/api/bookings/:id', async (req, res) => {
+  app.patch('/api/bookings/:id', async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
@@ -343,9 +343,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Booking not found' });
       }
       
-      // Only allow updates by client who made booking or vendor who received it
+      // Check authorization: client who made booking, vendor who received it, or admin
       const vendor = await storage.getVendorByUserId(req.user.id);
-      if (booking.clientId !== req.user.id && (!vendor || booking.vendorId !== vendor.id)) {
+      const isAdmin = req.user.userType === 'admin';
+      const isClient = booking.clientId === req.user.id;
+      const isVendor = vendor && booking.vendorId === vendor.id;
+      
+      if (!isAdmin && !isClient && !isVendor) {
         return res.status(403).json({ message: 'Not authorized to update this booking' });
       }
       

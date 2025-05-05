@@ -1,5 +1,8 @@
 import { db } from "./server/db";
-import { insertUserSchema, users, USER_TYPES } from "./shared/schema";
+import { 
+  users, 
+  USER_TYPES,
+} from "./shared/schema";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -21,24 +24,26 @@ async function main() {
     });
     
     if (existingAdmin) {
-      console.log("Admin user already exists.");
+      console.log("Admin user already exists!");
       process.exit(0);
     }
     
     // Create admin user
-    const adminUser = {
+    const [adminUser] = await db.insert(users).values({
       username: "admin",
       password: await hashPassword("password"),
-      email: "admin@example.com",
-      fullName: "Admin User",
+      email: "admin@daoob.com",
+      fullName: "System Administrator",
       userType: USER_TYPES.ADMIN,
-      phone: null,
+      phone: "+1-000-000-0000",
       createdAt: new Date(),
       updatedAt: new Date()
-    };
+    }).returning();
     
-    const result = await db.insert(users).values(adminUser).returning();
-    console.log("Admin user created:", result[0]);
+    console.log("Admin user created successfully!");
+    console.log("Username: admin");
+    console.log("Password: password");
+    console.log("User ID:", adminUser.id);
     
   } catch (error) {
     console.error("Error creating admin user:", error);
