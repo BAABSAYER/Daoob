@@ -34,6 +34,7 @@ function Router() {
       <AdminRoute path="/admin" component={AdminDashboard} />
       <AdminRoute path="/admin/vendors" component={AdminVendors} />
       <AdminRoute path="/admin/bookings" component={AdminBookings} />
+      <AdminRoute path="/admin/users" component={AdminUsers} />
       <AdminRoute path="/admin/chat/:userId" component={AdminChat} />
       <AdminRoute path="/admin/profile" component={Profile} />
       
