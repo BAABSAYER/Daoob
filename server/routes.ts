@@ -25,6 +25,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   
+  // Add a simple test endpoint
+  app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working!' });
+  });
+  
+  // Admin routes
+  app.get('/api/admin/bookings', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      // Get all bookings for admin
+      const bookings = await storage.getAllBookings();
+      
+      // Enhance bookings with vendor/client data
+      const enhancedBookings = await Promise.all(
+        bookings.map(async booking => {
+          const vendor = await storage.getVendor(booking.vendorId);
+          const client = await storage.getUser(booking.clientId);
+          
+          return {
+            ...booking,
+            vendor,
+            clientName: client?.fullName || client?.username
+          };
+        })
+      );
+      
+      res.json(enhancedBookings);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching bookings for admin' });
+    }
+  });
+  
   const httpServer = createServer(app);
   
   // Set up WebSocket server

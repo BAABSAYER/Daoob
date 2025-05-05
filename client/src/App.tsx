@@ -8,16 +8,16 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 
 // Admin Dashboard Pages
-import AdminDashboard from "@/pages/admin/dashboard";
-import AdminVendors from "@/pages/admin/vendors";
-import AdminBookings from "@/pages/admin/bookings";
-import AdminChat from "@/pages/admin/chat";
+import AdminDashboard from "./pages/admin/dashboard";
+import AdminVendors from "./pages/admin/vendors";
+import AdminBookings from "./pages/admin/bookings";
+import AdminChat from "./pages/admin/chat";
 
 // Shared Pages
-import Profile from "@/pages/profile";
+import Profile from "./pages/profile";
 
-import { ProtectedRoute } from "@/lib/protected-route";
-import { AdminRoute } from "@/lib/admin-route";
+import { ProtectedRoute } from "./lib/protected-route";
+import { AdminRoute } from "./lib/admin-route";
 import "./app.css";
 
 function Router() {
