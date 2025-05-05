@@ -1,11 +1,11 @@
 import { db } from "./db";
 import { 
-  users, vendors, services, bookings, messages, reviews,
-  User, Vendor, Service, Booking, Message, Review,
-  InsertUser, InsertVendor, InsertService, InsertBooking, InsertMessage, InsertReview,
-  BOOKING_STATUS
+  users, vendors, services, bookings, messages, reviews, adminPermissions,
+  User, Vendor, Service, Booking, Message, Review, AdminPermission,
+  InsertUser, InsertVendor, InsertService, InsertBooking, InsertMessage, InsertReview, InsertAdminPermission,
+  BOOKING_STATUS, USER_TYPES, ADMIN_PERMISSIONS
 } from "@shared/schema";
-import { eq, and, or, ilike, desc } from "drizzle-orm";
+import { eq, and, or, ilike, desc, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -36,6 +36,17 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<void>;
+  
+  // Admin Users
+  getAdminUsers(): Promise<User[]>;
+  
+  // Admin Permissions
+  getUserPermissions(userId: number): Promise<string[]>;
+  checkAdminPermission(userId: number, permission: string): Promise<boolean>;
+  addAdminPermission(permission: InsertAdminPermission): Promise<AdminPermission>;
+  removeAdminPermission(userId: number, permission: string): Promise<void>;
+  removeAllUserPermissions(userId: number): Promise<void>;
   
   // Vendors
   getVendor(id: number): Promise<Vendor | undefined>;
@@ -321,6 +332,93 @@ export class DatabaseStorage implements IStorage {
   async createReview(insertReview: InsertReview): Promise<Review> {
     const [review] = await db.insert(reviews).values(insertReview).returning();
     return review;
+  }
+
+  // Admin Users
+  async getAdminUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.userType, USER_TYPES.ADMIN));
+  }
+  
+  // Admin Permissions
+  async getUserPermissions(userId: number): Promise<string[]> {
+    const perms = await db
+      .select()
+      .from(adminPermissions)
+      .where(
+        and(
+          eq(adminPermissions.userId, userId),
+          eq(adminPermissions.granted, true)
+        )
+      );
+    
+    return perms.map(p => p.permission);
+  }
+  
+  async checkAdminPermission(userId: number, permission: string): Promise<boolean> {
+    // First check if user is an admin
+    const user = await this.getUser(userId);
+    if (!user || user.userType !== USER_TYPES.ADMIN) {
+      return false;
+    }
+    
+    // Super admin has all permissions by default
+    const permissions = await this.getUserPermissions(userId);
+    
+    // If user has no permissions but is the first admin, grant all permissions (super admin)
+    if (permissions.length === 0) {
+      // Check if this is the first admin user
+      const adminUsers = await this.getAdminUsers();
+      if (adminUsers.length === 1 && adminUsers[0].id === userId) {
+        // First admin is automatically a super admin
+        return true;
+      }
+      return false;
+    }
+    
+    return permissions.includes(permission);
+  }
+  
+  async addAdminPermission(permission: InsertAdminPermission): Promise<AdminPermission> {
+    try {
+      const [adminPermission] = await db
+        .insert(adminPermissions)
+        .values(permission)
+        .returning();
+      return adminPermission;
+    } catch (error) {
+      console.error("Error adding admin permission:", error);
+      throw error;
+    }
+  }
+  
+  async removeAdminPermission(userId: number, permission: string): Promise<void> {
+    await db
+      .delete(adminPermissions)
+      .where(
+        and(
+          eq(adminPermissions.userId, userId),
+          eq(adminPermissions.permission, permission)
+        )
+      );
+  }
+  
+  async removeAllUserPermissions(userId: number): Promise<void> {
+    await db
+      .delete(adminPermissions)
+      .where(eq(adminPermissions.userId, userId));
+  }
+  
+  async deleteUser(id: number): Promise<void> {
+    // Delete all permissions first to avoid foreign key constraints
+    await this.removeAllUserPermissions(id);
+    
+    // Delete user
+    await db
+      .delete(users)
+      .where(eq(users.id, id));
   }
 
   // Password verification

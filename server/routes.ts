@@ -65,6 +65,229 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin Users Management Endpoints
+  
+  // Get all admin users
+  app.get('/api/admin/users', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      // Check if current admin has permission to manage admins
+      const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_admins');
+      if (!hasPermission) {
+        return res.status(403).json({ message: 'You do not have permission to manage admin users' });
+      }
+      
+      // Get all admin users
+      const adminUsers = await storage.getAdminUsers();
+      
+      // Enhance admin users with their permissions
+      const enhancedAdmins = await Promise.all(
+        adminUsers.map(async admin => {
+          const permissions = await storage.getUserPermissions(admin.id);
+          
+          // Don't include password in the response
+          const { password, ...adminWithoutPassword } = admin;
+          
+          return {
+            ...adminWithoutPassword,
+            permissions
+          };
+        })
+      );
+      
+      res.json(enhancedAdmins);
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      res.status(500).json({ message: 'Error fetching admin users' });
+    }
+  });
+  
+  // Create a new admin user
+  app.post('/api/admin/users', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      // Check if current admin has permission to manage admins
+      const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_admins');
+      if (!hasPermission) {
+        return res.status(403).json({ message: 'You do not have permission to manage admin users' });
+      }
+      
+      const { username, password, email, fullName, phone, permissions = [] } = req.body;
+      
+      // Create the new admin user
+      const newAdmin = await storage.createUser({
+        username,
+        password,
+        email,
+        fullName,
+        phone,
+        userType: USER_TYPES.ADMIN,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      // Add permissions for the new admin
+      if (permissions.length > 0) {
+        await Promise.all(
+          permissions.map(permission => 
+            storage.addAdminPermission({
+              userId: newAdmin.id,
+              permission,
+              granted: true,
+              grantedBy: req.user.id,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+          )
+        );
+      }
+      
+      // Don't return the password
+      const { password: _, ...adminWithoutPassword } = newAdmin;
+      
+      res.status(201).json({
+        ...adminWithoutPassword,
+        permissions
+      });
+    } catch (error) {
+      console.error('Error creating admin user:', error);
+      res.status(500).json({ message: 'Error creating admin user' });
+    }
+  });
+  
+  // Update an admin user's permissions
+  app.put('/api/admin/users/:id/permissions', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      // Check if current admin has permission to manage admins
+      const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_admins');
+      if (!hasPermission) {
+        return res.status(403).json({ message: 'You do not have permission to manage admin users' });
+      }
+      
+      const adminId = parseInt(req.params.id);
+      
+      // Can't modify your own permissions
+      if (adminId === req.user.id) {
+        return res.status(403).json({ message: 'You cannot modify your own permissions' });
+      }
+      
+      const { permissions } = req.body;
+      
+      // Verify the user exists and is an admin
+      const adminUser = await storage.getUser(adminId);
+      if (!adminUser) {
+        return res.status(404).json({ message: 'Admin user not found' });
+      }
+      
+      if (adminUser.userType !== USER_TYPES.ADMIN) {
+        return res.status(400).json({ message: 'User is not an admin' });
+      }
+      
+      // Delete current permissions
+      await storage.removeAllUserPermissions(adminId);
+      
+      // Add new permissions
+      if (permissions && permissions.length > 0) {
+        await Promise.all(
+          permissions.map(permission => 
+            storage.addAdminPermission({
+              userId: adminId,
+              permission,
+              granted: true,
+              grantedBy: req.user.id,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+          )
+        );
+      }
+      
+      // Return updated user with permissions
+      const updatedPermissions = await storage.getUserPermissions(adminId);
+      
+      res.json({
+        id: adminId,
+        permissions: updatedPermissions
+      });
+    } catch (error) {
+      console.error('Error updating admin permissions:', error);
+      res.status(500).json({ message: 'Error updating admin permissions' });
+    }
+  });
+  
+  // Delete an admin user
+  app.delete('/api/admin/users/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      // Check if current admin has permission to manage admins
+      const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_admins');
+      if (!hasPermission) {
+        return res.status(403).json({ message: 'You do not have permission to manage admin users' });
+      }
+      
+      const adminId = parseInt(req.params.id);
+      
+      // Can't delete yourself
+      if (adminId === req.user.id) {
+        return res.status(403).json({ message: 'You cannot delete your own account' });
+      }
+      
+      // Verify the user exists and is an admin
+      const adminUser = await storage.getUser(adminId);
+      if (!adminUser) {
+        return res.status(404).json({ message: 'Admin user not found' });
+      }
+      
+      if (adminUser.userType !== USER_TYPES.ADMIN) {
+        return res.status(400).json({ message: 'User is not an admin' });
+      }
+      
+      // Delete permissions first
+      await storage.removeAllUserPermissions(adminId);
+      
+      // Delete the admin user
+      await storage.deleteUser(adminId);
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting admin user:', error);
+      res.status(500).json({ message: 'Error deleting admin user' });
+    }
+  });
+  
   const httpServer = createServer(app);
   
   // Set up WebSocket server
