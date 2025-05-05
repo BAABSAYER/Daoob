@@ -2,50 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+/* DAOOB Font Families */
+@font-face {
+  font-family: 'Almarai';
+  src: url('/src/assets/fonts/Almarai-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Almarai';
+  src: url('/src/assets/fonts/Almarai-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/src/assets/fonts/Roboto-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/src/assets/fonts/Roboto-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 :root {
-      --background: 0 0% 100%;
---foreground: 20 14.3% 4.1%;
---muted: 60 4.8% 95.9%;
---muted-foreground: 25 5.3% 44.7%;
---popover: 0 0% 100%;
---popover-foreground: 20 14.3% 4.1%;
---card: 0 0% 100%;
---card-foreground: 20 14.3% 4.1%;
---border: 20 5.9% 90%;
---input: 20 5.9% 90%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 60 4.8% 95.9%;
---secondary-foreground: 24 9.8% 10%;
---accent: 60 4.8% 95.9%;
---accent-foreground: 24 9.8% 10%;
---destructive: 0 84.2% 60.2%;
---destructive-foreground: 60 9.1% 97.8%;
---ring: 20 14.3% 4.1%;
---radius: 0.5rem;
-  }
-  .dark {
-      --background: 240 10% 3.9%;
---foreground: 0 0% 98%;
---muted: 240 3.7% 15.9%;
---muted-foreground: 240 5% 64.9%;
---popover: 240 10% 3.9%;
---popover-foreground: 0 0% 98%;
---card: 240 10% 3.9%;
---card-foreground: 0 0% 98%;
---border: 240 3.7% 15.9%;
---input: 240 3.7% 15.9%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 240 3.7% 15.9%;
---secondary-foreground: 0 0% 98%;
---accent: 240 3.7% 15.9%;
---accent-foreground: 0 0% 98%;
---destructive: 0 62.8% 30.6%;
---destructive-foreground: 0 0% 98%;
---ring: 240 4.9% 83.9%;
---radius: 0.5rem;
-  }
+  /* DAOOB Color Scheme based on Flutter app */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 20%; /* #333333 */
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 40%; /* #666666 */
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 20%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  
+  /* Primary: #6A3DE8 (purple) */
+  --primary: 260 78% 57%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Secondary: #5735B5 (darker purple) */
+  --secondary: 260 55% 46%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --accent: 260 78% 95%;
+  --accent-foreground: 260 78% 57%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --ring: 260 78% 57%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 0 0% 7%;
+  --foreground: 0 0% 98%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 65%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 98%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 98%;
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  
+  /* Primary: #6A3DE8 (purple) */
+  --primary: 260 78% 57%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Secondary: #5735B5 (darker purple) */
+  --secondary: 260 55% 46%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --accent: 260 55% 20%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 260 78% 57%;
+  --radius: 0.5rem;
+}
 
 @layer base {
   * {
@@ -53,6 +94,12 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Almarai', 'Roboto', sans-serif;
+    @apply antialiased bg-background text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Almarai', 'Roboto', sans-serif;
+    font-weight: bold;
   }
 }
