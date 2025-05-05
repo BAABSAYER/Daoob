@@ -88,7 +88,7 @@ export default function AdminBookings() {
   };
 
   const getCanceledCount = () => {
-    return bookings.filter(b => b.status === BOOKING_STATUS.CANCELED).length;
+    return bookings.filter(b => b.status === BOOKING_STATUS.CANCELLED).length;
   };
 
   const handleStatusChange = (status: string) => {
@@ -106,7 +106,7 @@ export default function AdminBookings() {
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
       case BOOKING_STATUS.CONFIRMED:
         return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Confirmed</Badge>;
-      case BOOKING_STATUS.CANCELED:
+      case BOOKING_STATUS.CANCELLED:
         return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">Canceled</Badge>;
       case BOOKING_STATUS.COMPLETED:
         return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">Completed</Badge>;
@@ -152,8 +152,8 @@ export default function AdminBookings() {
             </CardContent>
           </Card>
           
-          <Card onClick={() => setStatusFilter(BOOKING_STATUS.CANCELED)} 
-                className={`cursor-pointer ${statusFilter === BOOKING_STATUS.CANCELED ? 'border-primary' : ''}`}>
+          <Card onClick={() => setStatusFilter(BOOKING_STATUS.CANCELLED)} 
+                className={`cursor-pointer ${statusFilter === BOOKING_STATUS.CANCELLED ? 'border-primary' : ''}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Canceled Bookings</CardTitle>
             </CardHeader>
@@ -297,7 +297,7 @@ export default function AdminBookings() {
                   <SelectContent>
                     <SelectItem value={BOOKING_STATUS.PENDING}>Pending</SelectItem>
                     <SelectItem value={BOOKING_STATUS.CONFIRMED}>Confirm</SelectItem>
-                    <SelectItem value={BOOKING_STATUS.CANCELED}>Cancel</SelectItem>
+                    <SelectItem value={BOOKING_STATUS.CANCELLED}>Cancel</SelectItem>
                     <SelectItem value={BOOKING_STATUS.COMPLETED}>Complete</SelectItem>
                   </SelectContent>
                 </Select>

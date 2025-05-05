@@ -17,7 +17,7 @@ export default function Profile() {
   const [profileData, setProfileData] = useState({
     fullName: user?.fullName || "",
     email: user?.email || "",
-    phoneNumber: user?.phoneNumber || "",
+    phone: user?.phone || "",
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -151,12 +151,12 @@ export default function Profile() {
                   </div>
                   
                   <div className="grid gap-2">
-                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Label htmlFor="phone">Phone Number</Label>
                     <Input
-                      id="phoneNumber"
-                      value={profileData.phoneNumber}
+                      id="phone"
+                      value={profileData.phone}
                       onChange={(e) =>
-                        setProfileData({ ...profileData, phoneNumber: e.target.value })
+                        setProfileData({ ...profileData, phone: e.target.value })
                       }
                     />
                   </div>
