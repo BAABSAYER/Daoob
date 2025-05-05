@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import '../config/api_config.dart';
 
 class Booking {
   final int id;
@@ -153,21 +154,13 @@ class BookingService extends ChangeNotifier {
     }
     
     try {
-      // Determine base URL based on platform
-      String baseUrl = Platform.isIOS 
-          ? 'http://localhost:5000' 
-          : 'http://10.0.2.2:5000';
-      
       final endpoint = user.userType == 'vendor'
-          ? '$baseUrl/api/vendor/bookings'
-          : '$baseUrl/api/client/bookings';
+          ? '${ApiConfig.apiUrl}/vendor/bookings'
+          : '${ApiConfig.apiUrl}/client/bookings';
       
       final response = await http.get(
         Uri.parse(endpoint),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        headers: ApiConfig.authHeaders(token),
       ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode == 200) {
@@ -408,17 +401,9 @@ class BookingService extends ChangeNotifier {
     }
     
     try {
-      // Determine base URL based on platform
-      String baseUrl = Platform.isIOS 
-          ? 'http://localhost:5000' 
-          : 'http://10.0.2.2:5000';
-      
       final response = await http.post(
-        Uri.parse('$baseUrl/api/bookings'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        Uri.parse(ApiConfig.bookingsEndpoint),
+        headers: ApiConfig.authHeaders(token),
         body: json.encode(booking.toJson()),
       ).timeout(const Duration(seconds: 10));
       
@@ -516,17 +501,9 @@ class BookingService extends ChangeNotifier {
     }
     
     try {
-      // Determine base URL based on platform
-      String baseUrl = Platform.isIOS 
-          ? 'http://localhost:5000' 
-          : 'http://10.0.2.2:5000';
-      
       final response = await http.put(
-        Uri.parse('$baseUrl/api/bookings/$bookingId/status'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        Uri.parse('${ApiConfig.bookingsEndpoint}/$bookingId/status'),
+        headers: ApiConfig.authHeaders(token),
         body: json.encode({'status': status}),
       ).timeout(const Duration(seconds: 10));
       

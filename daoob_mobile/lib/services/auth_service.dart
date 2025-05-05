@@ -171,14 +171,9 @@ class AuthService extends ChangeNotifier {
     }
     
     try {
-      // Determine the base URL based on the platform (for simulator/emulator)
-      String baseUrl = Platform.isIOS 
-          ? 'http://localhost:5000' 
-          : 'http://10.0.2.2:5000';
-      
       final response = await http.post(
-        Uri.parse('$baseUrl/api/register'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(ApiConfig.registerEndpoint),
+        headers: ApiConfig.jsonHeaders,
         body: json.encode({
           'name': name,
           'email': email,
@@ -217,6 +212,19 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    if (!_isOfflineMode && _token != null) {
+      try {
+        // Call the logout endpoint
+        await http.post(
+          Uri.parse(ApiConfig.logoutEndpoint),
+          headers: ApiConfig.authHeaders(_token!),
+        ).timeout(const Duration(seconds: 5));
+      } catch (e) {
+        // Ignore errors during logout
+        print('Error during logout: $e');
+      }
+    }
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user');
     await prefs.remove('token');
