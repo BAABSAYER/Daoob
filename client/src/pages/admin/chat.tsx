@@ -30,15 +30,33 @@ export default function AdminChat() {
   const [selectedUser, setSelectedUser] = useState<number | null>(userId ? parseInt(userId) : null);
   
   // Get all user/client chats for the admin
-  const { data: clients, isLoading: isLoadingClients } = useQuery({
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ["/api/admin/clients"],
     enabled: !!user,
+    // Placeholder until the endpoint is implemented
+    queryFn: async () => {
+      // Demo placeholder data
+      return [
+        { id: 1, username: 'client1', fullName: 'Demo Client 1', unreadCount: 2, lastMessage: 'Hello, I need help with my event.' },
+        { id: 2, username: 'client2', fullName: 'Demo Client 2', unreadCount: 0, lastMessage: 'Thank you for your assistance.' },
+      ];
+    }
   });
   
   // Get the selected user's details
   const { data: selectedUserDetails, isLoading: isLoadingUserDetails } = useQuery({
     queryKey: ["/api/users", selectedUser],
     enabled: !!selectedUser,
+    // Placeholder until the endpoint is implemented
+    queryFn: async () => {
+      // Return demo placeholder data for the selected user
+      if (selectedUser === 1) {
+        return { id: 1, username: 'client1', fullName: 'Demo Client 1' };
+      } else if (selectedUser === 2) {
+        return { id: 2, username: 'client2', fullName: 'Demo Client 2' };
+      }
+      return { id: selectedUser, username: `client${selectedUser}`, fullName: `Demo Client ${selectedUser}` };
+    }
   });
   
   // Send a message
@@ -137,9 +155,7 @@ export default function AdminChat() {
                       <AvatarFallback>
                         {getInitials(client.fullName || client.username)}
                       </AvatarFallback>
-                      {client.avatarUrl && (
-                        <AvatarImage src={client.avatarUrl} />
-                      )}
+                      {/* Avatar image would go here if available */}
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center">
@@ -189,9 +205,7 @@ export default function AdminChat() {
                         selectedUserDetails?.fullName || selectedUserDetails?.username || "User"
                       )}
                     </AvatarFallback>
-                    {selectedUserDetails?.avatarUrl && (
-                      <AvatarImage src={selectedUserDetails.avatarUrl} />
-                    )}
+                    {/* Avatar image would go here if available */}
                   </Avatar>
                   
                   <div>

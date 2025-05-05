@@ -135,7 +135,7 @@ export default function AdminVendors() {
     const matchesSearch = !searchTerm || 
       vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = !categoryFilter || vendor.category === categoryFilter;
+    const matchesCategory = !categoryFilter || categoryFilter === "all" || vendor.category === categoryFilter;
     
     return matchesSearch && matchesCategory;
   });
@@ -173,7 +173,7 @@ export default function AdminVendors() {
                     <SelectValue placeholder="Filter by category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {Object.entries(SERVICE_CATEGORIES).map(([key, value]) => (
                       <SelectItem key={key} value={key}>{value}</SelectItem>
                     ))}

@@ -205,7 +205,7 @@ export default function AdminBookings() {
                   <TableRow key={booking.id} id={`booking-${booking.id}`}>
                     <TableCell>#{booking.id}</TableCell>
                     <TableCell>{booking.clientName || `Client #${booking.clientId}`}</TableCell>
-                    <TableCell>{booking.vendor?.name || `Vendor #${booking.vendorId}`}</TableCell>
+                    <TableCell>{booking.vendor?.businessName || `Vendor #${booking.vendorId}`}</TableCell>
                     <TableCell>{EVENT_TYPES[booking.eventType as keyof typeof EVENT_TYPES] || booking.eventType}</TableCell>
                     <TableCell>{new Date(booking.eventDate).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(booking.status)}</TableCell>
@@ -262,7 +262,7 @@ export default function AdminBookings() {
                 </div>
                 <div>
                   <h4 className="text-sm font-medium mb-1">Vendor</h4>
-                  <p>{selectedBooking.vendor?.name || `Vendor #${selectedBooking.vendorId}`}</p>
+                  <p>{selectedBooking.vendor?.businessName || `Vendor #${selectedBooking.vendorId}`}</p>
                 </div>
               </div>
               

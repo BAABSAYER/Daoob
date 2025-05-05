@@ -27,7 +27,7 @@ export default function AdminDashboard() {
   
   // Fetch bookings
   const { data: bookings = [], isLoading: isLoadingBookings } = useQuery({
-    queryKey: ["/api/bookings"],
+    queryKey: ["/api/admin/bookings"],
   });
   
   // Fetch vendors
@@ -36,8 +36,9 @@ export default function AdminDashboard() {
   });
   
   // Fetch messages (last 10)
-  const { data: recentMessages = [], isLoading: isLoadingMessages } = useQuery({
-    queryKey: ["/api/messages/recent"],
+  const { data: recentMessages = [], isLoading: isLoadingMessages, error: messagesError } = useQuery({
+    queryKey: ["/api/admin/messages/recent"],
+    enabled: false, // Disable this query for now as the endpoint is not implemented yet
   });
 
   // Calculate statistics
