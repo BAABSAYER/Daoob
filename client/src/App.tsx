@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/admin/dashboard";
 import AdminVendors from "./pages/admin/vendors";
 import AdminBookings from "./pages/admin/bookings";
 import AdminChat from "./pages/admin/chat";
+import AdminUsers from "./pages/admin/users";
 
 // Shared Pages
 import Profile from "./pages/profile";

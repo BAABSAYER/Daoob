@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { db } from "./db";
 import { setupAuth } from "./auth";
-import { InsertVendor, InsertBooking, InsertMessage, BOOKING_STATUS, messages } from "@shared/schema";
+import { InsertVendor, InsertBooking, InsertMessage, BOOKING_STATUS, USER_TYPES, messages } from "@shared/schema";
 import { z } from "zod";
 import { eq, or, and } from "drizzle-orm";
 
@@ -31,6 +31,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Admin routes
+  app.get('/api/admin/check-permission', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      const { permission } = req.query;
+      if (!permission) {
+        return res.status(400).json({ message: 'Permission parameter is required' });
+      }
+      
+      const hasPermission = await storage.checkAdminPermission(req.user.id, permission as string);
+      res.json(hasPermission);
+    } catch (error) {
+      console.error('Error checking admin permission:', error);
+      res.status(500).json({ message: 'Error checking admin permission' });
+    }
+  });
+  
   app.get('/api/admin/bookings', async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -137,22 +161,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         fullName,
         phone,
-        userType: USER_TYPES.ADMIN,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        userType: USER_TYPES.ADMIN
       });
       
       // Add permissions for the new admin
       if (permissions.length > 0) {
         await Promise.all(
-          permissions.map(permission => 
+          permissions.map((permission: string) => 
             storage.addAdminPermission({
               userId: newAdmin.id,
               permission,
               granted: true,
-              grantedBy: req.user.id,
-              createdAt: new Date(),
-              updatedAt: new Date()
+              grantedBy: req.user.id
             })
           )
         );
@@ -214,14 +234,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add new permissions
       if (permissions && permissions.length > 0) {
         await Promise.all(
-          permissions.map(permission => 
+          permissions.map((permission: string) => 
             storage.addAdminPermission({
               userId: adminId,
               permission,
               granted: true,
-              grantedBy: req.user.id,
-              createdAt: new Date(),
-              updatedAt: new Date()
+              grantedBy: req.user.id
             })
           )
         );
