@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import '../config/api_config.dart';
 
 class User {
   final int id;
@@ -102,14 +103,9 @@ class AuthService extends ChangeNotifier {
     }
     
     try {
-      // Determine the base URL based on the platform (for simulator/emulator)
-      String baseUrl = Platform.isIOS 
-          ? 'http://localhost:5000' 
-          : 'http://10.0.2.2:5000';
-      
       final response = await http.post(
-        Uri.parse('$baseUrl/api/login'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(ApiConfig.loginEndpoint),
+        headers: ApiConfig.jsonHeaders,
         body: json.encode({
           'email': email,
           'password': password,
