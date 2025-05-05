@@ -35,6 +35,15 @@ export const BOOKING_STATUS = {
   COMPLETED: 'completed',
 } as const;
 
+export const ADMIN_PERMISSIONS = {
+  MANAGE_USERS: 'manage_users',
+  MANAGE_VENDORS: 'manage_vendors',
+  MANAGE_BOOKINGS: 'manage_bookings',
+  MANAGE_ADMINS: 'manage_admins',
+  VIEW_ANALYTICS: 'view_analytics',
+  MANAGE_SETTINGS: 'manage_settings',
+} as const;
+
 // Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -114,6 +123,17 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Admin Permissions table
+export const adminPermissions = pgTable("admin_permissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  permission: text("permission").notNull(),
+  granted: boolean("granted").default(true),
+  grantedBy: integer("granted_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -143,6 +163,7 @@ export const insertServiceSchema = createInsertSchema(services);
 export const insertBookingSchema = createInsertSchema(bookings);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertReviewSchema = createInsertSchema(reviews);
+export const insertAdminPermissionSchema = createInsertSchema(adminPermissions);
 
 // Relation definitions
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -150,7 +171,9 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   sentMessages: many(messages, { relationName: "sender" }),
   receivedMessages: many(messages, { relationName: "receiver" }),
   clientBookings: many(bookings, { relationName: "client" }),
-  reviews: many(reviews, { relationName: "client" })
+  reviews: many(reviews, { relationName: "client" }),
+  permissions: many(adminPermissions, { relationName: "user_permissions" }),
+  grantedPermissions: many(adminPermissions, { relationName: "grantor" })
 }));
 
 export const vendorsRelations = relations(vendors, ({ one, many }) => ({
@@ -201,3 +224,6 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+
+export type AdminPermission = typeof adminPermissions.$inferSelect;
+export type InsertAdminPermission = z.infer<typeof insertAdminPermissionSchema>;
