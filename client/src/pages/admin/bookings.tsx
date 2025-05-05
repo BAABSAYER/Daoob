@@ -244,7 +244,7 @@ export default function AdminBookings() {
           <DialogHeader>
             <DialogTitle>Booking Details</DialogTitle>
             <DialogDescription>
-              {selectedBooking ? `Booking #${selectedBooking.id} - ${EVENT_TYPES[selectedBooking.eventType as keyof typeof EVENT_TYPES] || selectedBooking.eventType} Event` : ''}
+              {selectedBooking ? `Booking #${selectedBooking.id} - ${EVENT_TYPES[selectedBooking.eventType as keyof typeof EVENT_TYPES] || selectedBooking.eventType} Event` : 'View and manage booking details'}
             </DialogDescription>
           </DialogHeader>
           

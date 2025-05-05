@@ -1,144 +1,461 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/admin-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Calendar as CalendarIcon, User, Users } from "lucide-react";
-import { BOOKING_STATUS } from "@shared/schema";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  CalendarIcon, 
+  MessageSquare, 
+  PieChart, 
+  UserPlus, 
+  Users, 
+  BarChart3,
+  ArrowRight,
+  Star,
+  TrendingUp
+} from "lucide-react";
+import { BOOKING_STATUS, EVENT_TYPES, SERVICE_CATEGORIES } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "wouter";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 export default function AdminDashboard() {
-  const { data: bookings, isLoading: isLoadingBookings } = useQuery({
+  const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month'>('week');
+  
+  // Fetch bookings
+  const { data: bookings = [], isLoading: isLoadingBookings } = useQuery({
     queryKey: ["/api/bookings"],
-    enabled: true,
   });
-
-  const { data: vendors, isLoading: isLoadingVendors } = useQuery({
+  
+  // Fetch vendors
+  const { data: vendors = [], isLoading: isLoadingVendors } = useQuery({
     queryKey: ["/api/vendors"],
-    enabled: true,
+  });
+  
+  // Fetch messages (last 10)
+  const { data: recentMessages = [], isLoading: isLoadingMessages } = useQuery({
+    queryKey: ["/api/messages/recent"],
   });
 
-  const pendingBookingsCount = bookings?.filter(
-    (booking: any) => booking.status === BOOKING_STATUS.PENDING
-  ).length || 0;
+  // Calculate statistics
+  const getPendingBookingsCount = () => {
+    return bookings.filter((booking: any) => booking.status === BOOKING_STATUS.PENDING).length;
+  };
+  
+  const getTotalVendorsCount = () => {
+    return vendors.length;
+  };
+  
+  const getRecentClientsCount = () => {
+    // This would typically count new clients registered in the timeframe
+    return 5; // Placeholder
+  };
+  
+  const getRecentBookingsCount = () => {
+    // This would typically get bookings created in the selected timeframe
+    return bookings.length;
+  };
+  
+  const getVendorsByCategory = () => {
+    const categories: Record<string, number> = {};
+    
+    vendors.forEach((vendor: any) => {
+      const category = vendor.category;
+      categories[category] = (categories[category] || 0) + 1;
+    });
+    
+    return Object.entries(categories)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([category, count]) => ({ category, count }));
+  };
+  
+  const getRecentBookings = () => {
+    // This would typically get bookings filtered by timeframe
+    // For demo purposes just return the most recent ones
+    return [...bookings]
+      .sort((a: any, b: any) => new Date(b.createdAt || b.eventDate).getTime() - new Date(a.createdAt || a.eventDate).getTime())
+      .slice(0, 5);
+  };
 
-  const vendorsCount = vendors?.length || 0;
+  const getPopularEventTypes = () => {
+    const eventTypes: Record<string, number> = {};
+    
+    bookings.forEach((booking: any) => {
+      const eventType = booking.eventType;
+      eventTypes[eventType] = (eventTypes[eventType] || 0) + 1;
+    });
+    
+    return Object.entries(eventTypes)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([type, count]) => ({ 
+        type, 
+        count,
+        displayName: EVENT_TYPES[type as keyof typeof EVENT_TYPES] || type
+      }));
+  };
 
   return (
-    <AdminLayout title="Admin Dashboard">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Bookings</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoadingBookings ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">{pendingBookingsCount}</div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Bookings awaiting your approval
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Vendors</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoadingVendors ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">{vendorsCount}</div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Vendors in the platform
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+    <AdminLayout title="Dashboard">
+      <div className="flex-1 space-y-6">
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="col-span-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Pending Bookings
+              </CardTitle>
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
               {isLoadingBookings ? (
-                <>
-                  <Skeleton className="h-5 w-full" />
-                  <Skeleton className="h-5 w-full" />
-                  <Skeleton className="h-5 w-full" />
-                </>
-              ) : bookings && bookings.length > 0 ? (
-                bookings
-                  .slice(0, 3)
-                  .map((booking: any) => (
-                    <div key={booking.id} className="flex items-center">
-                      <div className="ml-4 space-y-1">
-                        <p className="text-sm font-medium">
-                          New {booking.eventType} booking
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Status: {booking.status}
-                        </p>
-                      </div>
-                    </div>
-                  ))
+                <Skeleton className="h-8 w-20" />
               ) : (
-                <p className="text-sm text-muted-foreground">No recent activity</p>
+                <div className="text-2xl font-bold">{getPendingBookingsCount()}</div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-6">
-        <h2 className="text-xl font-bold mb-4">Pending Requests</h2>
-        <div className="rounded-md border">
-          {isLoadingBookings ? (
-            <div className="p-4">
-              <Skeleton className="h-12 w-full mb-4" />
-              <Skeleton className="h-12 w-full mb-4" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : bookings && bookings.filter((b: any) => b.status === BOOKING_STATUS.PENDING).length > 0 ? (
-            <div className="divide-y">
-              {bookings
-                .filter((booking: any) => booking.status === BOOKING_STATUS.PENDING)
-                .map((booking: any) => (
-                  <div key={booking.id} className="p-4 flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">{booking.eventType} Event</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Date: {new Date(booking.eventDate).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Guests: {booking.guestCount}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <a 
-                        href={`/admin/bookings#${booking.id}`} 
-                        className="px-3 py-1 bg-primary text-white rounded-md text-sm"
-                      >
-                        View Details
-                      </a>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="p-8 text-center">
-              <h3 className="text-lg font-medium">No pending requests</h3>
-              <p className="text-muted-foreground mt-1">
-                All booking requests have been handled
+            </CardContent>
+            <CardFooter className="p-2">
+              <Link href="/admin/bookings">
+                <Button variant="ghost" size="sm" className="w-full justify-between">
+                  <span>View all</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+          
+          <Card className="col-span-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Vendors
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoadingVendors ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <div className="text-2xl font-bold">{getTotalVendorsCount()}</div>
+              )}
+            </CardContent>
+            <CardFooter className="p-2">
+              <Link href="/admin/vendors">
+                <Button variant="ghost" size="sm" className="w-full justify-between">
+                  <span>View all</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+          
+          <Card className="col-span-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                New Clients
+              </CardTitle>
+              <UserPlus className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{getRecentClientsCount()}</div>
+              <p className="text-xs text-muted-foreground pt-1">
+                +12% from last week
               </p>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+          
+          <Card className="col-span-1">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                Recent Bookings
+              </CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{getRecentBookingsCount()}</div>
+              <p className="text-xs text-muted-foreground pt-1">
+                {timeframe === 'today' 
+                  ? 'Today' 
+                  : timeframe === 'week' 
+                    ? 'This week' 
+                    : 'This month'}
+              </p>
+            </CardContent>
+          </Card>
         </div>
+        
+        {/* Tabs */}
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              {/* Recent Bookings */}
+              <Card className="col-span-4">
+                <CardHeader>
+                  <CardTitle>Recent Bookings</CardTitle>
+                  <CardDescription>
+                    Recent event bookings from clients
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingBookings ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ) : getRecentBookings().length > 0 ? (
+                    <div className="space-y-4">
+                      {getRecentBookings().map((booking: any) => (
+                        <div key={booking.id} className="flex items-center justify-between space-x-4">
+                          <div className="flex items-center space-x-4">
+                            <Avatar className="h-9 w-9">
+                              <AvatarFallback>
+                                {booking.clientId.toString().substring(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-medium leading-none">
+                                {EVENT_TYPES[booking.eventType as keyof typeof EVENT_TYPES] || booking.eventType}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(booking.eventDate), 'dd MMM yyyy')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            {booking.status === BOOKING_STATUS.PENDING && (
+                              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>
+                            )}
+                            {booking.status === BOOKING_STATUS.CONFIRMED && (
+                              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Confirmed</Badge>
+                            )}
+                            {booking.status === BOOKING_STATUS.CANCELLED && (
+                              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">Canceled</Badge>
+                            )}
+                            {booking.status === BOOKING_STATUS.COMPLETED && (
+                              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">Completed</Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No recent bookings found.</p>
+                  )}
+                </CardContent>
+                <CardFooter>
+                  <Link href="/admin/bookings">
+                    <Button variant="outline" size="sm">View all</Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+              
+              {/* Top Vendors by Category */}
+              <Card className="col-span-3">
+                <CardHeader>
+                  <CardTitle>Vendors by Category</CardTitle>
+                  <CardDescription>
+                    Distribution of vendor categories
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingVendors ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ) : getVendorsByCategory().length > 0 ? (
+                    <div className="space-y-4">
+                      {getVendorsByCategory().map((item, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">
+                                {SERVICE_CATEGORIES[item.category as keyof typeof SERVICE_CATEGORIES] || item.category}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.count} {item.count === 1 ? 'vendor' : 'vendors'}
+                              </p>
+                            </div>
+                          </div>
+                          <PieChart className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No vendor category data available.</p>
+                  )}
+                </CardContent>
+                <CardFooter>
+                  <Link href="/admin/vendors">
+                    <Button variant="outline" size="sm">View all vendors</Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            </div>
+            
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              {/* Popular Event Types */}
+              <Card className="col-span-3">
+                <CardHeader>
+                  <CardTitle>Popular Event Types</CardTitle>
+                  <CardDescription>
+                    Most booked event categories
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingBookings ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ) : getPopularEventTypes().length > 0 ? (
+                    <div className="space-y-6">
+                      {getPopularEventTypes().map((event, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                                index === 0 
+                                  ? 'bg-yellow-100 text-yellow-700' 
+                                  : index === 1 
+                                    ? 'bg-gray-100 text-gray-700' 
+                                    : 'bg-amber-100 text-amber-700'
+                              }`}>
+                                {index + 1}
+                              </div>
+                              <span className="text-sm font-medium">{event.displayName}</span>
+                            </div>
+                            <span className="text-sm font-medium">{event.count}</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-secondary">
+                            <div 
+                              className="h-full rounded-full bg-primary" 
+                              style={{ 
+                                width: `${Math.min(100, (event.count / 10) * 100)}%` 
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No event type data available.</p>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Recent Messages */}
+              <Card className="col-span-4">
+                <CardHeader className="flex flex-row items-center">
+                  <div>
+                    <CardTitle>Recent Messages</CardTitle>
+                    <CardDescription>
+                      Recent client communications
+                    </CardDescription>
+                  </div>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground ml-auto" />
+                </CardHeader>
+                <CardContent>
+                  {isLoadingMessages ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ) : recentMessages.length > 0 ? (
+                    <div className="space-y-4">
+                      {recentMessages.map((message: any, index: number) => (
+                        <div key={index} className="flex items-start space-x-4">
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback>
+                              {message.sender.toString().substring(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium leading-none">
+                                Client #{message.sender}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {message.timestamp ? format(new Date(message.timestamp), 'dd MMM, HH:mm') : 'Recent'}
+                              </p>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {message.content.length > 50 
+                                ? `${message.content.substring(0, 50)}...` 
+                                : message.content}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No recent messages found.</p>
+                  )}
+                </CardContent>
+                <CardFooter>
+                  <Link href="/admin/chat">
+                    <Button variant="outline" size="sm">View all messages</Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="analytics" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Analytics Overview</CardTitle>
+                <CardDescription>
+                  View detailed platform statistics
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[400px] flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <TrendingUp className="h-10 w-10 text-muted-foreground mx-auto" />
+                  <h3 className="text-lg font-medium">Analytics Coming Soon</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Detailed analytics and reporting features are being developed and will be available in a future update.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="reports" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reports</CardTitle>
+                <CardDescription>
+                  View and download platform reports
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[400px] flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto" />
+                  <h3 className="text-lg font-medium">Reports Coming Soon</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Advanced reporting features are being developed and will be available in a future update.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );

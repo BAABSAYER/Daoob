@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from './use-auth';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
-type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error';
+export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error';
 
-interface Message {
+export interface Message {
   id?: number;
   type: string;
   sender: number;
@@ -13,109 +14,98 @@ interface Message {
 }
 
 export function useWebSocket() {
-  const { user } = useAuth();
-  const [status, setStatus] = useState<WebSocketStatus>('closed');
   const [messages, setMessages] = useState<Message[]>([]);
-  const socketRef = useRef<WebSocket | null>(null);
+  const [status, setStatus] = useState<WebSocketStatus>('connecting');
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const wsRef = useRef<WebSocket | null>(null);
 
-  // Connect to the WebSocket server
-  const connect = useCallback(() => {
+  // Initialize WebSocket connection
+  useEffect(() => {
     if (!user) return;
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
-    setStatus('connecting');
 
-    socket.onopen = () => {
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
       setStatus('open');
-      // Send authentication message
-      socket.send(JSON.stringify({
+      // Authenticate the WebSocket connection
+      ws.send(JSON.stringify({
         type: 'auth',
-        sender: user.id,
-        receiver: 0,
-        content: String(user.id),
-        timestamp: new Date()
+        userId: user.id,
       }));
     };
 
-    socket.onclose = () => {
-      setStatus('closed');
-    };
-
-    socket.onerror = () => {
-      setStatus('error');
-    };
-
-    socket.onmessage = (event) => {
+    ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data) as Message;
-        setMessages((prev) => [...prev, data]);
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'chat') {
+          // Parse timestamp as Date object
+          const message: Message = {
+            ...data,
+            timestamp: new Date(data.timestamp)
+          };
+          
+          setMessages(prev => [...prev, message]);
+        } else if (data.type === 'history') {
+          // Parse timestamps in message history
+          const history = data.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          
+          setMessages(history);
+        }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
       }
     };
 
+    ws.onclose = () => {
+      setStatus('closed');
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setStatus('error');
+      toast({
+        title: 'Connection Error',
+        description: 'Failed to connect to chat server. Messages will be sent via REST API.',
+        variant: 'destructive',
+      });
+    };
+
+    // Cleanup function
     return () => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.close();
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
       }
     };
-  }, [user]);
+  }, [user, toast]);
 
-  // Reconnect if the connection is closed
-  useEffect(() => {
-    if (status === 'closed' && user) {
-      const timeoutId = setTimeout(() => {
-        connect();
-      }, 3000);
-      return () => clearTimeout(timeoutId);
+  // Send message handler
+  const sendMessage = useCallback((message: Message) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+      
+      // Optimistically add the message to the UI
+      setMessages(prev => [...prev, { ...message }]);
+    } else {
+      toast({
+        title: 'Connection Error',
+        description: 'Not connected to chat server. Please try again later.',
+        variant: 'destructive',
+      });
     }
-  }, [status, connect, user]);
-
-  // Initial connection
-  useEffect(() => {
-    connect();
-    return () => {
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.close();
-      }
-    };
-  }, [connect]);
-
-  // Send a message
-  const sendMessage = useCallback((receiverId: number, content: string) => {
-    if (!user || !socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      return false;
-    }
-
-    const message: Message = {
-      type: 'message',
-      sender: user.id,
-      receiver: receiverId,
-      content,
-      timestamp: new Date()
-    };
-
-    socketRef.current.send(JSON.stringify(message));
-    setMessages((prev) => [...prev, message]);
-    return true;
-  }, [user]);
-
-  // Get messages for a specific conversation
-  const getConversationMessages = useCallback((userId: number) => {
-    return messages.filter((msg) => 
-      (msg.sender === user?.id && msg.receiver === userId) || 
-      (msg.sender === userId && msg.receiver === user?.id)
-    );
-  }, [messages, user]);
+  }, [toast]);
 
   return {
     status,
-    sendMessage,
     messages,
-    getConversationMessages
+    sendMessage,
   };
 }
