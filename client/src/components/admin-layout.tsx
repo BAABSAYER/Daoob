@@ -10,6 +10,7 @@ import {
   Menu,
   X
 } from "lucide-react";
+import appIcon from '@/assets/images/app_icon.svg';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,7 +45,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card">
         <div className="flex items-center justify-center h-16 border-b border-border p-4">
           <img 
-            src="/src/assets/images/app_icon.png" 
+            src={appIcon} 
             alt="DAOOB" 
             className="h-8"
           />
@@ -93,7 +94,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
         <SheetContent side="left" className="p-0 w-64">
           <div className="flex items-center justify-center h-16 border-b border-border p-4">
             <img 
-              src="/src/assets/images/app_icon.png" 
+              src={appIcon} 
               alt="DAOOB" 
               className="h-8" 
             />
@@ -103,9 +104,9 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
           <nav className="flex flex-col flex-1 p-4 space-y-1">
             {menuItems.map((item) => (
               <Link key={item.path} href={item.path}>
-                <a 
+                <div 
                   className={cn(
-                    "flex items-center px-4 py-3 rounded-md transition-colors",
+                    "flex items-center px-4 py-3 rounded-md transition-colors cursor-pointer",
                     location === item.path
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
@@ -114,7 +115,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
                 >
                   {item.icon}
                   <span className="ml-3">{item.name}</span>
-                </a>
+                </div>
               </Link>
             ))}
           </nav>
