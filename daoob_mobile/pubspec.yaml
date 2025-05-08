@@ -1,54 +1,71 @@
 name: daoob_mobile
-description: DAOOB - Smart Event Management Platform
-publish_to: 'none'
+description: DAOOB mobile app for event management
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=2.18.0 <3.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  cupertino_icons: ^1.0.2
+  # UI
+  cupertino_icons: ^1.0.5
+  flutter_svg: ^2.0.5
+  cached_network_image: ^3.2.3
+  shimmer: ^3.0.0
+  intl: ^0.18.0
+  flutter_staggered_grid_view: ^0.6.2
+  
+  # State management
   provider: ^6.0.5
-  shared_preferences: ^2.2.0
+  
+  # Data & storage
   http: ^1.1.0
-  sqflite: ^2.3.0
+  shared_preferences: ^2.1.1
+  sqflite: ^2.2.8+4
   path: ^1.8.3
-  intl: ^0.19.0
-  flutter_svg: ^2.0.7
-  flutter_launcher_icons: ^0.13.1
+  
+  # Web Socket
+  web_socket_channel: ^2.4.0
+  
+  # Image handling
+  image_picker: ^1.0.0
+  path_provider: ^2.0.15
+  permission_handler: ^10.3.0
+  
+  # Location
+  geolocator: ^9.0.2
+  geocoding: ^2.1.0
+  
+  # Other utilities
+  url_launcher: ^6.1.12
+  share_plus: ^7.0.2
+  package_info_plus: ^4.0.2
+  flutter_local_notifications: ^14.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
-
+  flutter_lints: ^2.0.1
+  
 flutter:
   uses-material-design: true
-  assets:
-    - assets/lang/
-    - assets/images/
   
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+    
   fonts:
     - family: Almarai
       fonts:
+        - asset: assets/fonts/Almarai-Light.ttf
+          weight: 300
         - asset: assets/fonts/Almarai-Regular.ttf
+          weight: 400
         - asset: assets/fonts/Almarai-Bold.ttf
           weight: 700
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/Roboto-Regular.ttf
-        - asset: assets/fonts/Roboto-Bold.ttf
-          weight: 700
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/images/full_logo.jpg"
-  adaptive_icon_background: "#6A3DE8"
-  adaptive_icon_foreground: "assets/images/full_logo.jpg"
-  min_sdk_android: 21
-  remove_alpha_ios: true
+        - asset: assets/fonts/Almarai-ExtraBold.ttf
+          weight: 800
