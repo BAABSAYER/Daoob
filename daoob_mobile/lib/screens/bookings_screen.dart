@@ -4,6 +4,7 @@ import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/screens/booking_management_screen.dart';
+import 'package:daoob_mobile/models/booking.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
