@@ -25,6 +25,18 @@ class EventProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   
+  // Get a category by ID
+  EventCategory? getCategoryById(String id) {
+    return _categories.firstWhere(
+      (category) => category.id == id,
+      orElse: () => EventCategory(
+        id: id,
+        name: id.substring(0, 1).toUpperCase() + id.substring(1).replaceAll('-', ' '),
+        icon: '📅',
+      ),
+    );
+  }
+  
   // Initialize with some default categories
   EventProvider() {
     _categories = [

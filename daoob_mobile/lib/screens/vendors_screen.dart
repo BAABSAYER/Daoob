@@ -55,10 +55,8 @@ class _VendorsScreenState extends State<VendorsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          category != null
-              ? isArabic
-                  ? category.nameAr
-                  : category.name
+          category != null 
+              ? category.name
               : isArabic
                   ? 'مزودي الخدمات'
                   : 'Vendors',
