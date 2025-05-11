@@ -30,6 +30,9 @@ export const EVENT_TYPES = {
 
 export const BOOKING_STATUS = {
   PENDING: 'pending',
+  QUOTATION_SENT: 'quotation_sent',
+  QUOTATION_ACCEPTED: 'quotation_accepted',
+  QUOTATION_REJECTED: 'quotation_rejected',
   CONFIRMED: 'confirmed',
   CANCELLED: 'cancelled',
   COMPLETED: 'completed',
@@ -134,6 +137,59 @@ export const adminPermissions = pgTable("admin_permissions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Event Types table (managed by admin)
+export const eventTypes = pgTable("event_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Questionnaire table (questions for each event type)
+export const questionnaireItems = pgTable("questionnaire_items", {
+  id: serial("id").primaryKey(),
+  eventTypeId: integer("event_type_id").notNull().references(() => eventTypes.id),
+  questionText: text("question_text").notNull(),
+  questionType: text("question_type").notNull(), // text, single_choice, multiple_choice, number, date
+  options: jsonb("options"), // For choice questions, array of options
+  required: boolean("required").default(false),
+  displayOrder: integer("display_order"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Event Requests table (client requests for events)
+export const eventRequests = pgTable("event_requests", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  eventTypeId: integer("event_type_id").notNull().references(() => eventTypes.id),
+  status: text("status").notNull().default(BOOKING_STATUS.PENDING),
+  responses: jsonb("responses").notNull(), // JSON of question IDs and answers
+  eventDate: timestamp("event_date"),
+  budget: doublePrecision("budget"),
+  specialRequests: text("special_requests"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Quotations table (admin responses to event requests)
+export const quotations = pgTable("quotations", {
+  id: serial("id").primaryKey(),
+  eventRequestId: integer("event_request_id").notNull().references(() => eventRequests.id),
+  adminId: integer("admin_id").notNull().references(() => users.id),
+  totalPrice: doublePrecision("total_price").notNull(),
+  details: jsonb("details").notNull(), // Breakdown of services and costs
+  notes: text("notes"),
+  expiryDate: timestamp("expiry_date"),
+  status: text("status").notNull().default(BOOKING_STATUS.QUOTATION_SENT),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -165,6 +221,12 @@ export const insertMessageSchema = createInsertSchema(messages);
 export const insertReviewSchema = createInsertSchema(reviews);
 export const insertAdminPermissionSchema = createInsertSchema(adminPermissions);
 
+// New schemas for the event flow
+export const insertEventTypeSchema = createInsertSchema(eventTypes);
+export const insertQuestionnaireItemSchema = createInsertSchema(questionnaireItems);
+export const insertEventRequestSchema = createInsertSchema(eventRequests);
+export const insertQuotationSchema = createInsertSchema(quotations);
+
 // Relation definitions
 export const usersRelations = relations(users, ({ many, one }) => ({
   vendor: one(vendors, { fields: [users.id], references: [vendors.userId] }),
@@ -173,7 +235,11 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   clientBookings: many(bookings, { relationName: "client" }),
   reviews: many(reviews, { relationName: "client" }),
   permissions: many(adminPermissions, { relationName: "user_permissions" }),
-  grantedPermissions: many(adminPermissions, { relationName: "grantor" })
+  grantedPermissions: many(adminPermissions, { relationName: "grantor" }),
+  eventRequests: many(eventRequests),
+  createdEventTypes: many(eventTypes),
+  createdQuestionnaireItems: many(questionnaireItems),
+  createdQuotations: many(quotations)
 }));
 
 export const vendorsRelations = relations(vendors, ({ one, many }) => ({
@@ -206,6 +272,29 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   booking: one(bookings, { fields: [reviews.bookingId], references: [bookings.id] })
 }));
 
+// Relations for new tables
+export const eventTypesRelations = relations(eventTypes, ({ one, many }) => ({
+  creator: one(users, { fields: [eventTypes.createdBy], references: [users.id] }),
+  questionnaireItems: many(questionnaireItems),
+  eventRequests: many(eventRequests)
+}));
+
+export const questionnaireItemsRelations = relations(questionnaireItems, ({ one }) => ({
+  eventType: one(eventTypes, { fields: [questionnaireItems.eventTypeId], references: [eventTypes.id] }),
+  creator: one(users, { fields: [questionnaireItems.createdBy], references: [users.id] })
+}));
+
+export const eventRequestsRelations = relations(eventRequests, ({ one, many }) => ({
+  client: one(users, { fields: [eventRequests.clientId], references: [users.id] }),
+  eventType: one(eventTypes, { fields: [eventRequests.eventTypeId], references: [eventTypes.id] }),
+  quotations: many(quotations)
+}));
+
+export const quotationsRelations = relations(quotations, ({ one }) => ({
+  eventRequest: one(eventRequests, { fields: [quotations.eventRequestId], references: [eventRequests.id] }),
+  admin: one(users, { fields: [quotations.adminId], references: [users.id] })
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -227,3 +316,16 @@ export type InsertReview = z.infer<typeof insertReviewSchema>;
 
 export type AdminPermission = typeof adminPermissions.$inferSelect;
 export type InsertAdminPermission = z.infer<typeof insertAdminPermissionSchema>;
+
+// New type exports for the event flow
+export type EventType = typeof eventTypes.$inferSelect;
+export type InsertEventType = z.infer<typeof insertEventTypeSchema>;
+
+export type QuestionnaireItem = typeof questionnaireItems.$inferSelect;
+export type InsertQuestionnaireItem = z.infer<typeof insertQuestionnaireItemSchema>;
+
+export type EventRequest = typeof eventRequests.$inferSelect;
+export type InsertEventRequest = z.infer<typeof insertEventRequestSchema>;
+
+export type Quotation = typeof quotations.$inferSelect;
+export type InsertQuotation = z.infer<typeof insertQuotationSchema>;

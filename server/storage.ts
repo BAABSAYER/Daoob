@@ -87,6 +87,35 @@ export interface IStorage {
   
   // Password verification
   verifyPassword(plaintext: string, hashed: string): Promise<boolean>;
+  
+  // Event Types Management (Admin)
+  getEventType(id: number): Promise<EventType | undefined>;
+  getAllEventTypes(): Promise<EventType[]>;
+  getActiveEventTypes(): Promise<EventType[]>;
+  createEventType(eventType: InsertEventType): Promise<EventType>;
+  updateEventType(id: number, eventType: Partial<EventType>): Promise<EventType | undefined>;
+  deleteEventType(id: number): Promise<void>;
+  
+  // Questionnaire Items Management
+  getQuestionnaireItem(id: number): Promise<QuestionnaireItem | undefined>;
+  getQuestionnaireItemsByEventType(eventTypeId: number): Promise<QuestionnaireItem[]>;
+  createQuestionnaireItem(questionnaireItem: InsertQuestionnaireItem): Promise<QuestionnaireItem>;
+  updateQuestionnaireItem(id: number, questionnaireItem: Partial<QuestionnaireItem>): Promise<QuestionnaireItem | undefined>;
+  deleteQuestionnaireItem(id: number): Promise<void>;
+  
+  // Event Requests (Client)
+  getEventRequest(id: number): Promise<EventRequest | undefined>;
+  getEventRequestsByClient(clientId: number): Promise<EventRequest[]>;
+  getEventRequestsByEventType(eventTypeId: number): Promise<EventRequest[]>;
+  getAllEventRequests(): Promise<EventRequest[]>;
+  createEventRequest(eventRequest: InsertEventRequest): Promise<EventRequest>;
+  updateEventRequest(id: number, eventRequest: Partial<EventRequest>): Promise<EventRequest | undefined>;
+  
+  // Quotations (Admin)
+  getQuotation(id: number): Promise<Quotation | undefined>;
+  getQuotationsByEventRequest(eventRequestId: number): Promise<Quotation[]>;
+  createQuotation(quotation: InsertQuotation): Promise<Quotation>;
+  updateQuotation(id: number, quotation: Partial<Quotation>): Promise<Quotation | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
