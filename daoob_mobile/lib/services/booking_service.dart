@@ -7,8 +7,11 @@ import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../config/api_config.dart';
+import 'package:daoob_mobile/models/booking.dart';
 
-class Booking {
+// Using the Booking model from models/booking.dart instead of redefining it here
+/* Commented out to avoid conflict
+class BookingOld {
   final int id;
   final int clientId;
   final int vendorId;
@@ -83,6 +86,7 @@ class Booking {
     };
   }
 }
+*/
 
 class BookingService extends ChangeNotifier {
   List<Booking> _bookings = [];
