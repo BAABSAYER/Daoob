@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash, PenLine, X, Check, Eye, EyeOff, ListPlus } from "lucide-react";
+import { AdminLayout } from "@/components/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -108,9 +109,7 @@ export default function EventsAdminPage() {
   const [activeTab, setActiveTab] = useState("event-types");
   
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Event Management</h1>
-      
+    <AdminLayout title="Event Management">
       <Tabs
         defaultValue="event-types"
         value={activeTab}
@@ -130,7 +129,7 @@ export default function EventsAdminPage() {
           <RequestsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </AdminLayout>
   );
 }
 
