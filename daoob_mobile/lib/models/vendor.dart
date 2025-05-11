@@ -65,4 +65,33 @@ class Vendor {
       'isSelected': isSelected,
     };
   }
+  
+  // Helper method to create a copy with some updated fields
+  Vendor copyWith({
+    int? id,
+    int? userId,
+    String? name,
+    String? description,
+    String? category,
+    double? rating,
+    double? basePrice,
+    bool? isVerified,
+    String? imageUrl,
+    List<String>? services,
+    bool? isSelected,
+  }) {
+    return Vendor(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      rating: rating ?? this.rating,
+      basePrice: basePrice ?? this.basePrice,
+      isVerified: isVerified ?? this.isVerified,
+      imageUrl: imageUrl ?? this.imageUrl,
+      services: services ?? this.services,
+      isSelected: isSelected ?? this.isSelected,
+    );
+  }
 }
