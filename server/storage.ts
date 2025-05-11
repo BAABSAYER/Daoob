@@ -1,8 +1,11 @@
 import { db } from "./db";
 import { 
   users, vendors, services, bookings, messages, reviews, adminPermissions,
+  eventTypes, questionnaireItems, eventRequests, quotations,
   User, Vendor, Service, Booking, Message, Review, AdminPermission,
+  EventType, QuestionnaireItem, EventRequest, Quotation,
   InsertUser, InsertVendor, InsertService, InsertBooking, InsertMessage, InsertReview, InsertAdminPermission,
+  InsertEventType, InsertQuestionnaireItem, InsertEventRequest, InsertQuotation,
   BOOKING_STATUS, USER_TYPES, ADMIN_PERMISSIONS
 } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql } from "drizzle-orm";
@@ -453,6 +456,141 @@ export class DatabaseStorage implements IStorage {
   // Password verification
   async verifyPassword(plaintext: string, hashed: string): Promise<boolean> {
     return comparePasswords(plaintext, hashed);
+  }
+
+  // Event Types Management methods
+  async getEventType(id: number): Promise<EventType | undefined> {
+    const [eventType] = await db.select().from(eventTypes).where(eq(eventTypes.id, id));
+    return eventType;
+  }
+
+  async getAllEventTypes(): Promise<EventType[]> {
+    return db.select().from(eventTypes).orderBy(eventTypes.name);
+  }
+
+  async getActiveEventTypes(): Promise<EventType[]> {
+    return db.select().from(eventTypes).where(eq(eventTypes.isActive, true)).orderBy(eventTypes.name);
+  }
+
+  async createEventType(eventTypeData: InsertEventType): Promise<EventType> {
+    const [eventType] = await db.insert(eventTypes).values(eventTypeData).returning();
+    return eventType;
+  }
+
+  async updateEventType(id: number, eventTypeData: Partial<EventType>): Promise<EventType | undefined> {
+    const [updatedEventType] = await db
+      .update(eventTypes)
+      .set({ ...eventTypeData, updatedAt: new Date() })
+      .where(eq(eventTypes.id, id))
+      .returning();
+    return updatedEventType;
+  }
+
+  async deleteEventType(id: number): Promise<void> {
+    await db.delete(eventTypes).where(eq(eventTypes.id, id));
+  }
+
+  // Questionnaire Items Management methods
+  async getQuestionnaireItem(id: number): Promise<QuestionnaireItem | undefined> {
+    const [item] = await db.select().from(questionnaireItems).where(eq(questionnaireItems.id, id));
+    return item;
+  }
+
+  async getQuestionnaireItemsByEventType(eventTypeId: number): Promise<QuestionnaireItem[]> {
+    return db
+      .select()
+      .from(questionnaireItems)
+      .where(eq(questionnaireItems.eventTypeId, eventTypeId))
+      .orderBy(questionnaireItems.displayOrder);
+  }
+
+  async createQuestionnaireItem(itemData: InsertQuestionnaireItem): Promise<QuestionnaireItem> {
+    const [item] = await db.insert(questionnaireItems).values(itemData).returning();
+    return item;
+  }
+
+  async updateQuestionnaireItem(
+    id: number, 
+    itemData: Partial<QuestionnaireItem>
+  ): Promise<QuestionnaireItem | undefined> {
+    const [updatedItem] = await db
+      .update(questionnaireItems)
+      .set(itemData)
+      .where(eq(questionnaireItems.id, id))
+      .returning();
+    return updatedItem;
+  }
+
+  async deleteQuestionnaireItem(id: number): Promise<void> {
+    await db.delete(questionnaireItems).where(eq(questionnaireItems.id, id));
+  }
+
+  // Event Requests methods
+  async getEventRequest(id: number): Promise<EventRequest | undefined> {
+    const [request] = await db.select().from(eventRequests).where(eq(eventRequests.id, id));
+    return request;
+  }
+
+  async getEventRequestsByClient(clientId: number): Promise<EventRequest[]> {
+    return db
+      .select()
+      .from(eventRequests)
+      .where(eq(eventRequests.clientId, clientId))
+      .orderBy(desc(eventRequests.createdAt));
+  }
+
+  async getEventRequestsByEventType(eventTypeId: number): Promise<EventRequest[]> {
+    return db
+      .select()
+      .from(eventRequests)
+      .where(eq(eventRequests.eventTypeId, eventTypeId))
+      .orderBy(desc(eventRequests.createdAt));
+  }
+
+  async getAllEventRequests(): Promise<EventRequest[]> {
+    return db.select().from(eventRequests).orderBy(desc(eventRequests.createdAt));
+  }
+
+  async createEventRequest(requestData: InsertEventRequest): Promise<EventRequest> {
+    const [request] = await db.insert(eventRequests).values(requestData).returning();
+    return request;
+  }
+
+  async updateEventRequest(id: number, requestData: Partial<EventRequest>): Promise<EventRequest | undefined> {
+    const [updatedRequest] = await db
+      .update(eventRequests)
+      .set({ ...requestData, updatedAt: new Date() })
+      .where(eq(eventRequests.id, id))
+      .returning();
+    return updatedRequest;
+  }
+
+  // Quotations methods
+  async getQuotation(id: number): Promise<Quotation | undefined> {
+    const [quotation] = await db.select().from(quotations).where(eq(quotations.id, id));
+    return quotation;
+  }
+
+  async getQuotationsByEventRequest(eventRequestId: number): Promise<Quotation[]> {
+    return db
+      .select()
+      .from(quotations)
+      .where(eq(quotations.eventRequestId, eventRequestId))
+      .orderBy(desc(quotations.createdAt));
+  }
+
+  async createQuotation(quotationData: InsertQuotation): Promise<Quotation> {
+    const [quotation] = await db.insert(quotations).values(quotationData).returning();
+    return quotation;
+  }
+
+  async updateQuotation(id: number, quotationData: Partial<Quotation>): Promise<Quotation | undefined> {
+    const [updatedQuotation] = await db
+      .update(quotations)
+      .set({ ...quotationData, updatedAt: new Date() })
+      .where(eq(quotations.id, id))
+      .returning();
+    return updatedQuotation;
   }
 }
 

@@ -4,7 +4,10 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { db } from "./db";
 import { setupAuth } from "./auth";
-import { InsertVendor, InsertBooking, InsertMessage, BOOKING_STATUS, USER_TYPES, messages } from "@shared/schema";
+import { 
+  InsertVendor, InsertBooking, InsertMessage, InsertEventType, InsertQuestionnaireItem, 
+  InsertEventRequest, InsertQuotation, BOOKING_STATUS, USER_TYPES, messages 
+} from "@shared/schema";
 import { z } from "zod";
 import { eq, or, and } from "drizzle-orm";
 
