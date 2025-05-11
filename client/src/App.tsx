@@ -13,6 +13,7 @@ import AdminVendors from "./pages/admin/vendors";
 import AdminBookings from "./pages/admin/bookings";
 import AdminChat from "./pages/admin/chat";
 import AdminUsers from "./pages/admin/users";
+import AdminEvents from "./pages/admin/events";
 
 // Shared Pages
 import Profile from "./pages/profile";
@@ -34,6 +35,7 @@ function Router() {
       <AdminRoute path="/admin" component={AdminDashboard} />
       <AdminRoute path="/admin/vendors" component={AdminVendors} />
       <AdminRoute path="/admin/bookings" component={AdminBookings} />
+      <AdminRoute path="/admin/events" component={AdminEvents} />
       <AdminRoute path="/admin/users" component={AdminUsers} />
       <AdminRoute path="/admin/chat/:userId" component={AdminChat} />
       <AdminRoute path="/admin/profile" component={Profile} />

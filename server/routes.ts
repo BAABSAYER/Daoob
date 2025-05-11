@@ -33,6 +33,528 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: 'API is working!' });
   });
   
+  // Event Type routes
+  app.get('/api/event-types', async (req, res) => {
+    try {
+      const eventTypes = await storage.getAllEventTypes();
+      res.json(eventTypes);
+    } catch (error) {
+      console.error('Error fetching event types:', error);
+      res.status(500).json({ message: 'Failed to fetch event types' });
+    }
+  });
+  
+  app.get('/api/event-types/active', async (req, res) => {
+    try {
+      const eventTypes = await storage.getActiveEventTypes();
+      res.json(eventTypes);
+    } catch (error) {
+      console.error('Error fetching active event types:', error);
+      res.status(500).json({ message: 'Failed to fetch active event types' });
+    }
+  });
+  
+  app.get('/api/event-types/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid event type ID' });
+      }
+      
+      const eventType = await storage.getEventType(id);
+      if (!eventType) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      res.json(eventType);
+    } catch (error) {
+      console.error('Error fetching event type:', error);
+      res.status(500).json({ message: 'Failed to fetch event type' });
+    }
+  });
+  
+  app.post('/api/event-types', async (req, res) => {
+    // Only admin can create event types
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_event_types');
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+    
+    try {
+      const eventTypeData: InsertEventType = {
+        name: req.body.name,
+        description: req.body.description,
+        icon: req.body.icon,
+        isActive: req.body.isActive ?? true,
+      };
+      
+      const eventType = await storage.createEventType(eventTypeData);
+      res.status(201).json(eventType);
+    } catch (error) {
+      console.error('Error creating event type:', error);
+      res.status(500).json({ message: 'Failed to create event type' });
+    }
+  });
+  
+  app.patch('/api/event-types/:id', async (req, res) => {
+    // Only admin can update event types
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_event_types');
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid event type ID' });
+      }
+      
+      const eventType = await storage.updateEventType(id, req.body);
+      if (!eventType) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      res.json(eventType);
+    } catch (error) {
+      console.error('Error updating event type:', error);
+      res.status(500).json({ message: 'Failed to update event type' });
+    }
+  });
+  
+  // Questionnaire Item routes
+  app.get('/api/questionnaire-items', async (req, res) => {
+    try {
+      // You'd need to add a method to get all questionnaire items
+      // This is an admin function, so we could add permissions check here
+      const questionnaireItems = await db.query.questionnaireItems.findMany();
+      res.json(questionnaireItems);
+    } catch (error) {
+      console.error('Error fetching questionnaire items:', error);
+      res.status(500).json({ message: 'Failed to fetch questionnaire items' });
+    }
+  });
+  
+  app.get('/api/event-types/:eventTypeId/questions', async (req, res) => {
+    try {
+      const eventTypeId = parseInt(req.params.eventTypeId);
+      if (isNaN(eventTypeId)) {
+        return res.status(400).json({ message: 'Invalid event type ID' });
+      }
+      
+      const questions = await storage.getQuestionnaireItemsByEventType(eventTypeId);
+      res.json(questions);
+    } catch (error) {
+      console.error('Error fetching questions for event type:', error);
+      res.status(500).json({ message: 'Failed to fetch questions' });
+    }
+  });
+  
+  app.post('/api/questionnaire-items', async (req, res) => {
+    // Only admin can create questionnaire items
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_event_types');
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+    
+    try {
+      const questionnaireItemData: InsertQuestionnaireItem = {
+        eventTypeId: req.body.eventTypeId,
+        questionText: req.body.questionText,
+        questionType: req.body.questionType,
+        options: req.body.options,
+        required: req.body.required ?? false,
+        displayOrder: req.body.displayOrder,
+      };
+      
+      const questionnaireItem = await storage.createQuestionnaireItem(questionnaireItemData);
+      res.status(201).json(questionnaireItem);
+    } catch (error) {
+      console.error('Error creating questionnaire item:', error);
+      res.status(500).json({ message: 'Failed to create questionnaire item' });
+    }
+  });
+  
+  app.patch('/api/questionnaire-items/:id', async (req, res) => {
+    // Only admin can update questionnaire items
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_event_types');
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid questionnaire item ID' });
+      }
+      
+      const questionnaireItem = await storage.updateQuestionnaireItem(id, req.body);
+      if (!questionnaireItem) {
+        return res.status(404).json({ message: 'Questionnaire item not found' });
+      }
+      
+      res.json(questionnaireItem);
+    } catch (error) {
+      console.error('Error updating questionnaire item:', error);
+      res.status(500).json({ message: 'Failed to update questionnaire item' });
+    }
+  });
+  
+  app.delete('/api/questionnaire-items/:id', async (req, res) => {
+    // Only admin can delete questionnaire items
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_event_types');
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid questionnaire item ID' });
+      }
+      
+      await storage.deleteQuestionnaireItem(id);
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting questionnaire item:', error);
+      res.status(500).json({ message: 'Failed to delete questionnaire item' });
+    }
+  });
+  
+  // Event Request routes
+  app.get('/api/event-requests', async (req, res) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      let eventRequests;
+      
+      // If admin, can see all requests, optionally filtered by status
+      const isAdmin = await storage.checkAdminPermission(req.user.id, 'view_event_requests');
+      if (isAdmin) {
+        if (req.query.status) {
+          // Filter by status if provided
+          eventRequests = await db.query.eventRequests.findMany({
+            where: eq(eventRequests.status, req.query.status as string)
+          });
+        } else {
+          eventRequests = await storage.getAllEventRequests();
+        }
+      } else {
+        // Regular clients can only see their own requests
+        eventRequests = await storage.getEventRequestsByClient(req.user.id);
+      }
+      
+      res.json(eventRequests);
+    } catch (error) {
+      console.error('Error fetching event requests:', error);
+      res.status(500).json({ message: 'Failed to fetch event requests' });
+    }
+  });
+  
+  app.get('/api/event-requests/:id', async (req, res) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid event request ID' });
+      }
+      
+      const eventRequest = await storage.getEventRequest(id);
+      if (!eventRequest) {
+        return res.status(404).json({ message: 'Event request not found' });
+      }
+      
+      // Check permissions: either admin or the client who created the request
+      const isAdmin = await storage.checkAdminPermission(req.user.id, 'view_event_requests');
+      if (!isAdmin && eventRequest.clientId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden: You do not have permission to view this request' });
+      }
+      
+      res.json(eventRequest);
+    } catch (error) {
+      console.error('Error fetching event request:', error);
+      res.status(500).json({ message: 'Failed to fetch event request' });
+    }
+  });
+  
+  app.post('/api/event-requests', async (req, res) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const eventRequestData: InsertEventRequest = {
+        clientId: req.user.id,
+        eventTypeId: req.body.eventTypeId,
+        status: 'pending',
+        responses: req.body.responses || {},
+        eventDate: req.body.eventDate,
+        budget: req.body.budget,
+        specialRequests: req.body.specialRequests,
+      };
+      
+      const eventRequest = await storage.createEventRequest(eventRequestData);
+      res.status(201).json(eventRequest);
+    } catch (error) {
+      console.error('Error creating event request:', error);
+      res.status(500).json({ message: 'Failed to create event request' });
+    }
+  });
+  
+  app.patch('/api/event-requests/:id', async (req, res) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid event request ID' });
+      }
+      
+      const eventRequest = await storage.getEventRequest(id);
+      if (!eventRequest) {
+        return res.status(404).json({ message: 'Event request not found' });
+      }
+      
+      // Check permissions: either admin or the client who created the request
+      const isAdmin = await storage.checkAdminPermission(req.user.id, 'manage_event_requests');
+      if (!isAdmin && eventRequest.clientId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden: You do not have permission to update this request' });
+      }
+      
+      // For clients, only allow updating to 'cancelled' status
+      if (!isAdmin && req.body.status && req.body.status !== 'cancelled') {
+        return res.status(403).json({ message: 'Forbidden: You do not have permission to update the status to this value' });
+      }
+      
+      const updatedEventRequest = await storage.updateEventRequest(id, req.body);
+      res.json(updatedEventRequest);
+    } catch (error) {
+      console.error('Error updating event request:', error);
+      res.status(500).json({ message: 'Failed to update event request' });
+    }
+  });
+  
+  // Quotation routes
+  app.get('/api/quotations', async (req, res) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const isAdmin = await storage.checkAdminPermission(req.user.id, 'view_quotations');
+      
+      // If admin, can see all quotations
+      if (isAdmin) {
+        // Get all quotations
+        const quotations = await db.query.quotations.findMany();
+        return res.json(quotations);
+      }
+      
+      // For clients, fetch their event requests first
+      const eventRequests = await storage.getEventRequestsByClient(req.user.id);
+      const requestIds = eventRequests.map(request => request.id);
+      
+      // Then fetch quotations for those requests
+      const quotations = [];
+      for (const requestId of requestIds) {
+        const requestQuotations = await storage.getQuotationsByEventRequest(requestId);
+        quotations.push(...requestQuotations);
+      }
+      
+      res.json(quotations);
+    } catch (error) {
+      console.error('Error fetching quotations:', error);
+      res.status(500).json({ message: 'Failed to fetch quotations' });
+    }
+  });
+  
+  app.get('/api/event-requests/:requestId/quotations', async (req, res) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const requestId = parseInt(req.params.requestId);
+      if (isNaN(requestId)) {
+        return res.status(400).json({ message: 'Invalid event request ID' });
+      }
+      
+      const eventRequest = await storage.getEventRequest(requestId);
+      if (!eventRequest) {
+        return res.status(404).json({ message: 'Event request not found' });
+      }
+      
+      // Check permissions: either admin or the client who created the request
+      const isAdmin = await storage.checkAdminPermission(req.user.id, 'view_quotations');
+      if (!isAdmin && eventRequest.clientId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden: You do not have permission to view quotations for this request' });
+      }
+      
+      const quotations = await storage.getQuotationsByEventRequest(requestId);
+      res.json(quotations);
+    } catch (error) {
+      console.error('Error fetching quotations for event request:', error);
+      res.status(500).json({ message: 'Failed to fetch quotations' });
+    }
+  });
+  
+  app.post('/api/quotations', async (req, res) => {
+    // Only admins can create quotations
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const hasPermission = await storage.checkAdminPermission(req.user.id, 'manage_quotations');
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+    
+    try {
+      const quotationData: InsertQuotation = {
+        eventRequestId: req.body.eventRequestId,
+        adminId: req.user.id,
+        totalAmount: req.body.totalAmount,
+        description: req.body.description,
+        status: 'pending',
+        expiryDate: req.body.expiryDate,
+      };
+      
+      const quotation = await storage.createQuotation(quotationData);
+      
+      // Also update the event request status to 'quoted'
+      await storage.updateEventRequest(req.body.eventRequestId, { status: 'quoted' });
+      
+      res.status(201).json(quotation);
+    } catch (error) {
+      console.error('Error creating quotation:', error);
+      res.status(500).json({ message: 'Failed to create quotation' });
+    }
+  });
+  
+  app.patch('/api/quotations/:id', async (req, res) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid quotation ID' });
+      }
+      
+      const quotation = await storage.getQuotation(id);
+      if (!quotation) {
+        return res.status(404).json({ message: 'Quotation not found' });
+      }
+      
+      // Get the associated event request
+      const eventRequest = await storage.getEventRequest(quotation.eventRequestId);
+      if (!eventRequest) {
+        return res.status(404).json({ message: 'Associated event request not found' });
+      }
+      
+      // Check permissions
+      const isAdmin = await storage.checkAdminPermission(req.user.id, 'manage_quotations');
+      
+      // For clients, only allow updating the status to 'accepted' or 'declined'
+      if (!isAdmin) {
+        if (eventRequest.clientId !== req.user.id) {
+          return res.status(403).json({ message: 'Forbidden: You do not have permission to update this quotation' });
+        }
+        
+        if (!req.body.status || (req.body.status !== 'accepted' && req.body.status !== 'declined')) {
+          return res.status(403).json({ message: 'Forbidden: You can only accept or decline a quotation' });
+        }
+        
+        // Only allow fields the client can change
+        const allowedFields = { status: req.body.status };
+        const updatedQuotation = await storage.updateQuotation(id, allowedFields);
+        
+        // Also update the event request status
+        await storage.updateEventRequest(quotation.eventRequestId, { status: req.body.status });
+        
+        return res.json(updatedQuotation);
+      }
+      
+      // For admins, allow updating any field
+      const updatedQuotation = await storage.updateQuotation(id, req.body);
+      res.json(updatedQuotation);
+    } catch (error) {
+      console.error('Error updating quotation:', error);
+      res.status(500).json({ message: 'Failed to update quotation' });
+    }
+  });
+  
+  // Users map for admin dashboard
+  app.get('/api/users/map', async (req, res) => {
+    // Only admins can access user map
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    const hasPermission = await storage.checkAdminPermission(req.user.id, 'view_users');
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+    
+    try {
+      const users = await db.query.users.findMany({
+        columns: {
+          id: true,
+          username: true,
+          email: true,
+        }
+      });
+      
+      // Convert to a map
+      const userMap = users.reduce((acc, user) => {
+        acc[user.id] = {
+          username: user.username,
+          email: user.email
+        };
+        return acc;
+      }, {} as Record<number, { username: string; email: string }>);
+      
+      res.json(userMap);
+    } catch (error) {
+      console.error('Error creating user map:', error);
+      res.status(500).json({ message: 'Failed to create user map' });
+    }
+  });
+  
   // Admin routes
   app.get('/api/admin/check-permission', async (req, res) => {
     if (!req.isAuthenticated()) {
