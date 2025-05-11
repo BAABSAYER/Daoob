@@ -58,6 +58,7 @@ class Vendor {
       'basePrice': basePrice,
       'isVerified': isVerified,
       'imageUrl': imageUrl,
+      'services': services,
     };
   }
 }
