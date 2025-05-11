@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, Phone, Video } from "lucide-react";
 import { useLocation } from "wouter";
 import { ChatWindow } from "@/components/chat/chat-window";
@@ -30,7 +30,7 @@ export default function Chat() {
   const [isOnline, setIsOnline] = useState(false);
   
   // Set online status when the component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     setIsOnline(Math.random() > 0.5);
   }, []);
   
@@ -80,7 +80,7 @@ export default function Chat() {
           {getUserAvatar()}
           <div>
             <p className="font-medium text-neutral-800">
-              {isLoading ? "Loading..." : recipient?.fullName || recipient?.username || "User"}
+              {isLoading ? "Loading..." : (recipient && (recipient.fullName || recipient.username)) || "User"}
             </p>
             <p className={`text-xs ${isOnline ? 'text-green-500' : 'text-neutral-500'}`}>
               {isOnline ? 'Online' : 'Offline'}
