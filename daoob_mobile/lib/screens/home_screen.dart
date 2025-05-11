@@ -9,6 +9,7 @@ import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
+import 'package:daoob_mobile/models/booking.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

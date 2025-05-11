@@ -111,7 +111,7 @@ class EventCategoryScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    isArabic ? category.nameAr : category.name,
+                    category.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -120,7 +120,7 @@ class EventCategoryScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isArabic ? category.descriptionAr : category.description,
+                    category.description ?? '',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
