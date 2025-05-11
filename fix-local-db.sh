@@ -19,7 +19,7 @@ fi
 echo "Creating local database connection file..."
 cat > server/db.ts << EOF
 import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/pg-pool';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
@@ -39,6 +39,7 @@ export const pool = new Pool({
   connectionString: process.env.DATABASE_URL 
 });
 
+// Initialize Drizzle with the PostgreSQL pool
 export const db = drizzle(pool, { schema });
 EOF
 echo "✅ server/db.ts updated for local PostgreSQL"
@@ -119,23 +120,10 @@ EOF
 chmod +x start-local-server.sh
 echo "✅ start-local-server.sh created"
 
-# Check and install pg if needed
-if ! npm list pg | grep -q pg; then
-  echo "Installing PostgreSQL client (pg)..."
-  npm install pg
-  echo "✅ pg installed"
-else
-  echo "PostgreSQL client (pg) already installed"
-fi
-
-# Install dotenv if needed
-if ! npm list dotenv | grep -q dotenv; then
-  echo "Installing dotenv..."
-  npm install dotenv
-  echo "✅ dotenv installed"
-else 
-  echo "dotenv already installed"
-fi
+# Install required dependencies
+echo "Installing required dependencies..."
+npm install pg dotenv
+echo "✅ PostgreSQL packages installed"
 
 echo ""
 echo "🎉 All files updated successfully!"
