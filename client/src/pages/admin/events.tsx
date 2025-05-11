@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash, PenLine, X, Check, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Trash, PenLine, X, Check, Eye, EyeOff, ListPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -106,6 +106,7 @@ type Quotation = {
 // Define the page component
 export default function EventsAdminPage() {
   const [activeTab, setActiveTab] = useState("event-types");
+  const [selectedEventTypeForQuestions, setSelectedEventTypeForQuestions] = useState<number | null>(null);
   
   return (
     <div className="container mx-auto py-8">
@@ -124,11 +125,11 @@ export default function EventsAdminPage() {
         </TabsList>
         
         <TabsContent value="event-types" className="space-y-4">
-          <EventTypesTab />
+          <EventTypesTab setActiveTab={setActiveTab} />
         </TabsContent>
         
         <TabsContent value="questions" className="space-y-4">
-          <QuestionsTab />
+          <QuestionsTab eventTypeFilter={selectedEventTypeForQuestions} />
         </TabsContent>
         
         <TabsContent value="requests" className="space-y-4">
@@ -140,11 +141,13 @@ export default function EventsAdminPage() {
 }
 
 // Event Types Tab
-function EventTypesTab() {
+function EventTypesTab({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isQuestionsDialogOpen, setIsQuestionsDialogOpen] = useState(false);
   const [currentEventType, setCurrentEventType] = useState<EventType | null>(null);
+  const [selectedEventTypeForQuestions, setSelectedEventTypeForQuestions] = useState<number | null>(null);
   
   // Form state
   const [eventTypeName, setEventTypeName] = useState("");
@@ -265,6 +268,11 @@ function EventTypesTab() {
     setEventTypeIcon(eventType.icon || "");
     setEventTypeIsActive(eventType.isActive);
     setIsEditDialogOpen(true);
+  };
+  
+  const handleManageQuestions = (eventTypeId: number) => {
+    // Change to the Questions tab and filter by this event type
+    setActiveTab("questions");
   };
   
   const resetForm = () => {
@@ -429,8 +437,17 @@ function EventTypesTab() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(eventType)}
+                          title="Edit event type"
                         >
                           <PenLine className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleManageQuestions(eventType.id)}
+                          title="Manage questions"
+                        >
+                          <ListPlus className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -521,7 +538,7 @@ function EventTypesTab() {
 }
 
 // Questions Tab
-function QuestionsTab() {
+function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
