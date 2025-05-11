@@ -6,11 +6,13 @@ export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error';
 
 export interface Message {
   id?: number;
-  type: string;
-  sender: number;
-  receiver: number;
+  senderId: number;
+  receiverId: number;
   content: string;
-  timestamp: Date;
+  timestamp?: Date;
+  createdAt?: string;
+  read?: boolean;
+  type?: string;
 }
 
 export function useWebSocket() {
@@ -19,6 +21,7 @@ export function useWebSocket() {
   const { user } = useAuth();
   const { toast } = useToast();
   const wsRef = useRef<WebSocket | null>(null);
+  const conversationsRef = useRef<Map<number, Message[]>>(new Map());
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -35,7 +38,10 @@ export function useWebSocket() {
       // Authenticate the WebSocket connection
       ws.send(JSON.stringify({
         type: 'auth',
-        userId: user.id,
+        sender: user.id,
+        receiver: 0,
+        content: user.id.toString(),
+        timestamp: new Date()
       }));
     };
 
@@ -43,20 +49,44 @@ export function useWebSocket() {
       try {
         const data = JSON.parse(event.data);
         
-        if (data.type === 'chat') {
+        if (data.type === 'message') {
           // Parse timestamp as Date object
           const message: Message = {
-            ...data,
-            timestamp: new Date(data.timestamp)
+            id: data.id,
+            senderId: data.sender,
+            receiverId: data.receiver,
+            content: data.content,
+            timestamp: new Date(data.timestamp),
+            read: data.read || false
           };
+          
+          // Store message in the appropriate conversation
+          const conversationId = message.senderId === user.id 
+            ? message.receiverId 
+            : message.senderId;
+            
+          const existingConversation = conversationsRef.current.get(conversationId) || [];
+          conversationsRef.current.set(conversationId, [...existingConversation, message]);
           
           setMessages(prev => [...prev, message]);
         } else if (data.type === 'history') {
           // Parse timestamps in message history
           const history = data.messages.map((msg: any) => ({
             ...msg,
-            timestamp: new Date(msg.timestamp)
+            senderId: msg.senderId || msg.sender_id,
+            receiverId: msg.receiverId || msg.receiver_id,
+            timestamp: new Date(msg.timestamp || msg.createdAt || msg.created_at)
           }));
+          
+          // Group messages by conversation
+          history.forEach((message: Message) => {
+            const conversationId = message.senderId === user.id 
+              ? message.receiverId 
+              : message.senderId;
+              
+            const existingConversation = conversationsRef.current.get(conversationId) || [];
+            conversationsRef.current.set(conversationId, [...existingConversation, message]);
+          });
           
           setMessages(history);
         }
@@ -87,25 +117,54 @@ export function useWebSocket() {
     };
   }, [user, toast]);
 
+  // Get conversation messages for a specific user
+  const getConversationMessages = useCallback((recipientId: number) => {
+    if (!user) return [];
+    
+    return messages.filter(msg => 
+      (msg.senderId === user.id && msg.receiverId === recipientId) || 
+      (msg.senderId === recipientId && msg.receiverId === user.id)
+    ).sort((a, b) => {
+      const dateA = a.timestamp ? a.timestamp.getTime() : a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.timestamp ? b.timestamp.getTime() : b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
+  }, [user, messages]);
+
   // Send message handler
-  const sendMessage = useCallback((message: Message) => {
+  const sendMessage = useCallback((recipientId: number, content: string) => {
+    if (!user) return;
+    
+    const message: Message = {
+      senderId: user.id,
+      receiverId: recipientId,
+      content,
+      timestamp: new Date(),
+      type: 'message'
+    };
+    
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
       
       // Optimistically add the message to the UI
-      setMessages(prev => [...prev, { ...message }]);
+      const conversationId = recipientId;
+      const existingConversation = conversationsRef.current.get(conversationId) || [];
+      conversationsRef.current.set(conversationId, [...existingConversation, message]);
+      
+      setMessages(prev => [...prev, message]);
     } else {
       toast({
         title: 'Connection Error',
-        description: 'Not connected to chat server. Please try again later.',
+        description: 'Not connected to chat server. Message will be sent via REST API only.',
         variant: 'destructive',
       });
     }
-  }, [toast]);
+  }, [user, toast]);
 
   return {
     status,
     messages,
     sendMessage,
+    getConversationMessages,
   };
 }

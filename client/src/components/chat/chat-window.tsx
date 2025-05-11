@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useWebSocket } from "@/hooks/use-websocket";
+import { useWebSocket, Message as WebSocketMessage } from "@/hooks/use-websocket";
 import { formatRelative } from "date-fns";
 import { Loader2, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,13 @@ interface ChatWindowProps {
 }
 
 interface Message {
-  id: number;
+  id?: number;
   senderId: number;
   receiverId: number;
   content: string;
-  read: boolean;
-  createdAt: string;
+  read?: boolean;
+  createdAt?: string;
+  timestamp?: Date;
 }
 
 interface MessageInputProps {
@@ -78,28 +79,56 @@ export function ChatWindow({ recipientId }: ChatWindowProps) {
     queryKey: [`/api/messages/${recipientId}`],
   });
   
-  // Combine API messages with WebSocket messages
+  // Get WebSocket messages
   const wsMessages = getConversationMessages(recipientId);
-  const combinedMessages = [...(apiMessages || [])];
   
-  // Deduplicate messages (WebSocket might have some of the same messages)
-  const messageMap = new Map();
-  combinedMessages.forEach(msg => messageMap.set(msg.id, msg));
-  wsMessages.forEach(msg => {
-    if (msg.id && !messageMap.has(msg.id)) {
+  // Combine and deduplicate messages from both sources
+  const allMessages = [...(apiMessages || [])];
+  
+  // Create a map to deduplicate by ID
+  const messageMap = new Map<string | number, Message>();
+  
+  // Add API messages to the map
+  allMessages.forEach(msg => {
+    if (msg.id) {
       messageMap.set(msg.id, msg);
-    } else if (!msg.id) {
-      // Local messages without an ID (not yet saved to server)
-      combinedMessages.push(msg as unknown as Message);
     }
   });
   
-  // Sort messages by creation time
-  const sortedMessages = [...messageMap.values()].sort((a, b) => {
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  // Add WebSocket messages, avoiding duplicates
+  wsMessages.forEach(msg => {
+    if (msg.id && !messageMap.has(msg.id)) {
+      messageMap.set(msg.id, {
+        id: msg.id,
+        senderId: msg.senderId,
+        receiverId: msg.receiverId,
+        content: msg.content,
+        read: msg.read,
+        createdAt: msg.createdAt,
+        timestamp: msg.timestamp
+      });
+    } else if (!msg.id) {
+      // For messages without IDs (temporary/local ones), use a timestamp-based key
+      const tempKey = `temp-${msg.timestamp?.getTime() || Date.now()}-${Math.random()}`;
+      messageMap.set(tempKey, {
+        senderId: msg.senderId,
+        receiverId: msg.receiverId,
+        content: msg.content,
+        timestamp: msg.timestamp
+      });
+    }
   });
   
-  // Mutation for sending messages
+  // Convert the map back to an array and sort by time
+  const sortedMessages = Array.from(messageMap.values()).sort((a, b) => {
+    const timeA = a.timestamp ? a.timestamp.getTime() : 
+                 a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.timestamp ? b.timestamp.getTime() : 
+                 b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return timeA - timeB;
+  });
+  
+  // Mutation for sending messages via REST API
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       const result = await apiRequest("POST", "/api/messages", {
@@ -132,9 +161,11 @@ export function ChatWindow({ recipientId }: ChatWindowProps) {
     }
   }, [sortedMessages]);
   
-  const formatMessageTime = (timestamp: string) => {
+  const formatMessageTime = (message: Message) => {
     try {
-      return formatRelative(new Date(timestamp), new Date());
+      const time = message.timestamp ? message.timestamp : 
+                  message.createdAt ? new Date(message.createdAt) : new Date();
+      return formatRelative(time, new Date());
     } catch (error) {
       return 'now';
     }
@@ -176,7 +207,7 @@ export function ChatWindow({ recipientId }: ChatWindowProps) {
                   <p className={`text-right text-xs mt-1 ${
                     isSender ? 'text-white/80' : 'text-neutral-500'
                   }`}>
-                    {formatMessageTime(message.createdAt)}
+                    {formatMessageTime(message)}
                   </p>
                 </div>
               </div>

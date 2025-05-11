@@ -15,6 +15,10 @@ import AdminChat from "./pages/admin/chat";
 import AdminUsers from "./pages/admin/users";
 import AdminEvents from "./pages/admin/events-new";
 
+// Client Pages
+import Messages from "./pages/messages";
+import Chat from "./pages/chat";
+
 // Shared Pages
 import Profile from "./pages/profile";
 
@@ -27,6 +31,10 @@ function Router() {
     <Switch>
       {/* Auth Route */}
       <Route path="/auth" component={AuthPage} />
+      
+      {/* Client Routes */}
+      <ProtectedRoute path="/messages" component={Messages} />
+      <ProtectedRoute path="/chat/:userId" component={Chat} />
       
       {/* Admin Dashboard Routes */}
       <Route path="/">
