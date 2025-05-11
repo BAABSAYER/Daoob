@@ -5,6 +5,7 @@ import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/services/vendor_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/models/vendor.dart';
+import 'package:daoob_mobile/models/booking.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Vendor primaryVendor;
