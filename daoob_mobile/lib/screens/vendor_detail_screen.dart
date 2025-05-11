@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:daoob_mobile/services/vendor_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/screens/booking_form.dart';
+import 'package:daoob_mobile/models/vendor.dart';
 
 class VendorDetailScreen extends StatelessWidget {
   final Vendor vendor;
