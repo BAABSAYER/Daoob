@@ -8,6 +8,7 @@ class Vendor {
   final double basePrice;
   final bool isVerified;
   final String? imageUrl;
+  final List<String> services;
   
   Vendor({
     required this.id,
@@ -19,9 +20,19 @@ class Vendor {
     required this.basePrice,
     required this.isVerified,
     this.imageUrl,
+    this.services = const [],
   });
   
   factory Vendor.fromJson(Map<String, dynamic> json) {
+    List<String> servicesList = [];
+    if (json['services'] != null) {
+      if (json['services'] is List) {
+        servicesList = List<String>.from(json['services'].map((s) => s.toString()));
+      } else if (json['services'] is String) {
+        servicesList = [json['services']];
+      }
+    }
+    
     return Vendor(
       id: json['id'],
       userId: json['userId'],
@@ -32,6 +43,7 @@ class Vendor {
       basePrice: json['basePrice'].toDouble(),
       isVerified: json['isVerified'],
       imageUrl: json['imageUrl'],
+      services: servicesList,
     );
   }
   

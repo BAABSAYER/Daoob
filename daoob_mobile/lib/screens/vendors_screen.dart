@@ -5,6 +5,7 @@ import 'package:daoob_mobile/providers/event_provider.dart';
 import 'package:daoob_mobile/services/vendor_service.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/screens/vendor_detail_screen.dart';
+import 'package:daoob_mobile/models/vendor.dart';
 
 class VendorsScreen extends StatefulWidget {
   final String categoryId;
