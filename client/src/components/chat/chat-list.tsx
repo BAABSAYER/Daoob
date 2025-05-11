@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Building, User, Camera, Utensils, Gift } from "lucide-react";
+import { Search, Building, User, Camera, Utensils, Gift, MessageSquareMore, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Conversation {
   userId: number;
@@ -24,18 +25,32 @@ export function ChatList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   
-  const { data: conversations, isLoading } = useQuery<Conversation[]>({
+  const { data: conversations, isLoading, error } = useQuery<Conversation[]>({
     queryKey: ['/api/conversations'],
+    retry: 1,
+    staleTime: 30000,
   });
   
-  const filteredConversations = conversations?.filter(conv => {
+  // Show toast on error
+  if (error) {
+    toast({
+      title: "Failed to load conversations",
+      description: "There was an error loading your messages. Please try again later.",
+      variant: "destructive",
+    });
+    console.error("Error loading conversations:", error);
+  }
+  
+  const filteredConversations = conversations ? conversations.filter((conv: Conversation) => {
+    if (!conv) return false;
     const fullName = conv.fullName?.toLowerCase() || "";
-    const username = conv.username.toLowerCase();
+    const username = conv.username?.toLowerCase() || "";
     const search = searchTerm.toLowerCase();
     
     return fullName.includes(search) || username.includes(search);
-  });
+  }) : [];
 
   const handleUserSelect = (userId: number) => {
     navigate(`/chat/${userId}`);
@@ -67,6 +82,9 @@ export function ChatList() {
         return <User className="text-neutral-500" />;
     }
   };
+
+  // Determine if we have no data because of an error
+  const hasError = error !== null;
   
   return (
     <div className="bg-neutral-100 min-h-screen pb-20">
@@ -91,13 +109,23 @@ export function ChatList() {
           </>
         )}
 
-        {!isLoading && filteredConversations?.length === 0 && (
-          <div className="p-10 text-center">
-            <p className="text-neutral-500">No conversations found</p>
+        {hasError && (
+          <div className="p-10 flex flex-col items-center justify-center text-center">
+            <AlertCircle className="text-red-500 h-10 w-10 mb-3" />
+            <p className="text-neutral-700 font-medium">Could not load conversations</p>
+            <p className="text-neutral-500 text-sm mt-1">Please try again later</p>
           </div>
         )}
 
-        {filteredConversations?.map((conversation) => (
+        {!isLoading && !hasError && (!filteredConversations || filteredConversations.length === 0) && (
+          <div className="p-10 flex flex-col items-center justify-center text-center">
+            <MessageSquareMore className="text-neutral-400 h-10 w-10 mb-3" />
+            <p className="text-neutral-700 font-medium">No conversations yet</p>
+            <p className="text-neutral-500 text-sm mt-1">Messages from vendors and client will appear here</p>
+          </div>
+        )}
+
+        {filteredConversations?.map((conversation: Conversation) => (
           <button 
             key={conversation.userId}
             className="block w-full bg-white p-4 text-left hover:bg-neutral-50"
@@ -113,7 +141,7 @@ export function ChatList() {
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-1">
                   <p className="font-medium text-neutral-800">
-                    {conversation.fullName || conversation.username}
+                    {conversation.fullName || conversation.username || "Unknown User"}
                   </p>
                   {conversation.lastMessage && (
                     <p className="text-xs text-neutral-500">
