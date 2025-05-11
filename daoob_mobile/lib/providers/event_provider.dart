@@ -25,6 +25,9 @@ class EventProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   
+  // Currently selected category ID
+  String? _selectedCategoryId;
+  
   // Get a category by ID
   EventCategory? getCategoryById(String id) {
     return _categories.firstWhere(
@@ -35,6 +38,18 @@ class EventProvider with ChangeNotifier {
         icon: '📅',
       ),
     );
+  }
+  
+  // Get the selected category
+  EventCategory? get selectedCategory {
+    if (_selectedCategoryId == null) return null;
+    return getCategoryById(_selectedCategoryId!);
+  }
+  
+  // Select a category
+  void selectCategory(String id) {
+    _selectedCategoryId = id;
+    notifyListeners();
   }
   
   // Initialize with some default categories
