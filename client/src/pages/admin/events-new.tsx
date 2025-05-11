@@ -106,7 +106,6 @@ type Quotation = {
 // Define the page component
 export default function EventsAdminPage() {
   const [activeTab, setActiveTab] = useState("event-types");
-  const [selectedEventTypeForQuestions, setSelectedEventTypeForQuestions] = useState<number | null>(null);
   
   return (
     <div className="container mx-auto py-8">
@@ -528,17 +527,37 @@ function EventTypesTab() {
           </form>
         </DialogContent>
       </Dialog>
+      
+      {/* Questions Dialog */}
+      <Dialog open={isQuestionsDialogOpen} onOpenChange={setIsQuestionsDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              {eventTypes?.find(et => et.id === selectedEventTypeForQuestions)?.name || "Event"} Questions
+            </DialogTitle>
+            <DialogDescription>
+              Manage questionnaire items for this event type
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <EventTypeQuestions 
+              eventTypeId={selectedEventTypeForQuestions}
+              onClose={() => setIsQuestionsDialogOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-// Questions Tab
-function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
+// Component to manage questions for a specific event type
+function EventTypeQuestions({ eventTypeId, onClose }: { eventTypeId: number | null, onClose: () => void }) {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionnaireItem | null>(null);
-  const [selectedEventTypeId, setSelectedEventTypeId] = useState<number | null>(null);
   
   // Form state
   const [questionText, setQuestionText] = useState("");
@@ -546,34 +565,25 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
   const [questionOptions, setQuestionOptions] = useState("");
   const [questionRequired, setQuestionRequired] = useState(false);
   const [questionDisplayOrder, setQuestionDisplayOrder] = useState("");
-  const [questionEventTypeId, setQuestionEventTypeId] = useState<number | null>(null);
   
-  // Queries
-  const {
-    data: eventTypes,
-    isLoading: isLoadingEventTypes,
-  } = useQuery<EventType[]>({
-    queryKey: ["/api/event-types"],
-  });
-  
+  // Fetch questions for this event type
   const {
     data: questions,
-    isLoading: isLoadingQuestions,
-    error: questionsError,
+    isLoading,
+    error,
+    refetch
   } = useQuery<QuestionnaireItem[]>({
-    queryKey: ["/api/questionnaire-items", selectedEventTypeId],
+    queryKey: ["/api/event-types", eventTypeId, "questions"],
     queryFn: async () => {
-      const url = selectedEventTypeId 
-        ? `/api/event-types/${selectedEventTypeId}/questions` 
-        : '/api/questionnaire-items';
-      const res = await fetch(`/api${url}`);
-      if (!res.ok) throw new Error('Failed to fetch questionnaire items');
+      if (!eventTypeId) return [];
+      const res = await fetch(`/api/event-types/${eventTypeId}/questions`);
+      if (!res.ok) throw new Error('Failed to fetch questions');
       return await res.json();
     },
-    enabled: true,
+    enabled: eventTypeId !== null,
   });
   
-  // Mutations
+  // Create question mutation
   const createQuestionMutation = useMutation({
     mutationFn: async (newQuestion: Omit<QuestionnaireItem, "id" | "createdAt">) => {
       const res = await apiRequest("POST", "/api/questionnaire-items", newQuestion);
@@ -584,9 +594,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
         title: "Question created",
         description: "The questionnaire item has been created successfully.",
       });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/questionnaire-items", questionEventTypeId] 
-      });
+      refetch();
       resetForm();
       setIsCreateDialogOpen(false);
     },
@@ -599,6 +607,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
     },
   });
   
+  // Update question mutation
   const updateQuestionMutation = useMutation({
     mutationFn: async (question: Partial<QuestionnaireItem> & { id: number }) => {
       const { id, ...data } = question;
@@ -610,9 +619,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
         title: "Question updated",
         description: "The questionnaire item has been updated successfully.",
       });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/questionnaire-items", selectedEventTypeId] 
-      });
+      refetch();
       resetForm();
       setIsEditDialogOpen(false);
     },
@@ -625,6 +632,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
     },
   });
   
+  // Delete question mutation
   const deleteQuestionMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/questionnaire-items/${id}`);
@@ -634,9 +642,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
         title: "Question deleted",
         description: "The questionnaire item has been deleted successfully.",
       });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/questionnaire-items", selectedEventTypeId] 
-      });
+      refetch();
     },
     onError: (error: Error) => {
       toast({
@@ -649,17 +655,10 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
   
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!questionEventTypeId) {
-      toast({
-        title: "Event type required",
-        description: "Please select an event type for this question.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!eventTypeId) return;
     
     createQuestionMutation.mutate({
-      eventTypeId: questionEventTypeId,
+      eventTypeId,
       questionText,
       questionType,
       options: questionType === "text" || questionType === "number" || questionType === "date" 
@@ -676,7 +675,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
     
     updateQuestionMutation.mutate({
       id: currentQuestion.id,
-      eventTypeId: questionEventTypeId!,
+      eventTypeId: currentQuestion.eventTypeId,
       questionText,
       questionType,
       options: questionType === "text" || questionType === "number" || questionType === "date" 
@@ -700,7 +699,6 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
     setQuestionOptions(question.options ? question.options.join("\n") : "");
     setQuestionRequired(question.required);
     setQuestionDisplayOrder(question.displayOrder?.toString() || "");
-    setQuestionEventTypeId(question.eventTypeId);
     setIsEditDialogOpen(true);
   };
   
@@ -713,27 +711,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
     setCurrentQuestion(null);
   };
   
-  const handleCreateDialogClose = () => {
-    resetForm();
-    setIsCreateDialogOpen(false);
-  };
-  
-  const handleEditDialogClose = () => {
-    resetForm();
-    setIsEditDialogOpen(false);
-  };
-  
-  const handleEventTypeChange = (value: string) => {
-    setSelectedEventTypeId(parseInt(value));
-  };
-  
-  const handleCreateEventTypeChange = (value: string) => {
-    setQuestionEventTypeId(parseInt(value));
-  };
-  
-  const isLoadingAny = isLoadingEventTypes || isLoadingQuestions;
-  
-  if (isLoadingAny && !eventTypes) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -741,243 +719,183 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
     );
   }
   
-  if (questionsError) {
+  if (error) {
     return (
       <div className="text-center text-red-500">
-        Error loading questionnaire items: {(questionsError as Error).message}
+        Error loading questionnaire items: {(error as Error).message}
       </div>
     );
   }
   
-  const getEventTypeName = (id: number) => {
-    if (!eventTypes) return "Unknown";
-    const eventType = eventTypes.find(et => et.id === id);
-    return eventType ? eventType.name : "Unknown";
-  };
-  
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Questionnaire Items</h2>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Add Question
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Create New Question</DialogTitle>
-              <DialogDescription>
-                Add a question for clients to answer when selecting an event type.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="eventType">Event Type</Label>
-                  <Select
-                    value={questionEventTypeId?.toString() || ""}
-                    onValueChange={handleCreateEventTypeChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select event type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eventTypes?.map((et) => (
-                        <SelectItem key={et.id} value={et.id.toString()}>
-                          {et.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="questionText">Question</Label>
-                  <Input
-                    id="questionText"
-                    value={questionText}
-                    onChange={(e) => setQuestionText(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="questionType">Question Type</Label>
-                  <Select
-                    value={questionType}
-                    onValueChange={setQuestionType}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="text">Text</SelectItem>
-                      <SelectItem value="single_choice">Single Choice</SelectItem>
-                      <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-                      <SelectItem value="number">Number</SelectItem>
-                      <SelectItem value="date">Date</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {(questionType === "single_choice" || questionType === "multiple_choice") && (
-                  <div className="grid gap-2">
-                    <Label htmlFor="options">
-                      Options (one per line)
-                    </Label>
-                    <Textarea
-                      id="options"
-                      value={questionOptions}
-                      onChange={(e) => setQuestionOptions(e.target.value)}
-                      rows={4}
-                      required
-                      placeholder="Enter each option on a new line"
-                    />
-                  </div>
-                )}
-                <div className="grid gap-2">
-                  <Label htmlFor="displayOrder">Display Order (optional)</Label>
-                  <Input
-                    id="displayOrder"
-                    type="number"
-                    min="1"
-                    value={questionDisplayOrder}
-                    onChange={(e) => setQuestionDisplayOrder(e.target.value)}
-                    placeholder="Leave blank for default ordering"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="required"
-                    checked={questionRequired}
-                    onCheckedChange={(checked) => 
-                      setQuestionRequired(checked === true)
-                    }
-                  />
-                  <Label htmlFor="required">Required question</Label>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleCreateDialogClose}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createQuestionMutation.isPending}
-                >
-                  {createQuestionMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <h2 className="text-xl font-semibold">Questions</h2>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Add Question
+        </Button>
       </div>
       
-      <div className="mb-6">
-        <Label htmlFor="filterEventType">Filter by Event Type</Label>
-        <div className="flex gap-2 mt-2">
-          <Select
-            value={selectedEventTypeId?.toString() || ""}
-            onValueChange={handleEventTypeChange}
-          >
-            <SelectTrigger className="w-[300px]">
-              <SelectValue placeholder="All Event Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Event Types</SelectItem>
-              {eventTypes?.map((et) => (
-                <SelectItem key={et.id} value={et.id.toString()}>
-                  {et.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+      <div className="relative overflow-x-auto rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Question</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="hidden md:table-cell">Required</TableHead>
+              <TableHead>Order</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {questions && questions.length > 0 ? (
+              questions.map((question) => (
+                <TableRow key={question.id}>
+                  <TableCell className="font-medium max-w-[250px] truncate">
+                    {question.questionText}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {question.questionType.replace("_", " ")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {question.required ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <X className="h-4 w-4 text-gray-300" />
+                    )}
+                  </TableCell>
+                  <TableCell>{question.displayOrder || "-"}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(question)}
+                      >
+                        <PenLine className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(question.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
               <TableRow>
-                <TableHead>Question</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="hidden md:table-cell">Event Type</TableHead>
-                <TableHead className="hidden md:table-cell">Required</TableHead>
-                <TableHead>Order</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell colSpan={5} className="text-center h-24">
+                  No questions found for this event type. Add your first question.
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingQuestions ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                  </TableCell>
-                </TableRow>
-              ) : questions && questions.length > 0 ? (
-                questions.map((question) => (
-                  <TableRow key={question.id}>
-                    <TableCell className="font-medium max-w-[250px] truncate">
-                      {question.questionText}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {question.questionType.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {getEventTypeName(question.eventTypeId)}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {question.required ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <X className="h-4 w-4 text-gray-300" />
-                      )}
-                    </TableCell>
-                    <TableCell>{question.displayOrder || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(question)}
-                        >
-                          <PenLine className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(question.id)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    {selectedEventTypeId 
-                      ? "No questions found for this event type. Add your first question."
-                      : "No questions found. Add your first question to get started."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            )}
+          </TableBody>
+        </Table>
+      </div>
       
-      {/* Edit Dialog */}
+      {/* Create Question Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Question</DialogTitle>
+            <DialogDescription>
+              Add a question for clients to answer when selecting this event type.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="questionText">Question</Label>
+                <Input
+                  id="questionText"
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="questionType">Question Type</Label>
+                <Select
+                  value={questionType}
+                  onValueChange={setQuestionType}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="single_choice">Single Choice</SelectItem>
+                    <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
+                    <SelectItem value="date">Date</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(questionType === "single_choice" || questionType === "multiple_choice") && (
+                <div className="grid gap-2">
+                  <Label htmlFor="options">
+                    Options (one per line)
+                  </Label>
+                  <Textarea
+                    id="options"
+                    value={questionOptions}
+                    onChange={(e) => setQuestionOptions(e.target.value)}
+                    rows={4}
+                    required
+                    placeholder="Enter each option on a new line"
+                  />
+                </div>
+              )}
+              <div className="grid gap-2">
+                <Label htmlFor="displayOrder">Display Order (optional)</Label>
+                <Input
+                  id="displayOrder"
+                  type="number"
+                  min="1"
+                  value={questionDisplayOrder}
+                  onChange={(e) => setQuestionDisplayOrder(e.target.value)}
+                  placeholder="Leave blank for default ordering"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="required"
+                  checked={questionRequired}
+                  onCheckedChange={(checked) => 
+                    setQuestionRequired(checked === true)
+                  }
+                />
+                <Label htmlFor="required">Required question</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={createQuestionMutation.isPending}
+              >
+                {createQuestionMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Create
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Question Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -988,24 +906,6 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
           </DialogHeader>
           <form onSubmit={handleEditSubmit}>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-eventType">Event Type</Label>
-                <Select
-                  value={questionEventTypeId?.toString() || ""}
-                  onValueChange={handleCreateEventTypeChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select event type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {eventTypes?.map((et) => (
-                      <SelectItem key={et.id} value={et.id.toString()}>
-                        {et.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-questionText">Question</Label>
                 <Input
@@ -1074,7 +974,7 @@ function QuestionsTab({ eventTypeFilter }: { eventTypeFilter: number | null }) {
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={handleEditDialogClose}
+                onClick={() => setIsEditDialogOpen(false)}
               >
                 Cancel
               </Button>
@@ -1263,7 +1163,7 @@ function RequestsTab() {
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="quoted">Quoted</SelectItem>
               <SelectItem value="accepted">Accepted</SelectItem>

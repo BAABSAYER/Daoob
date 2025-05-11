@@ -13,7 +13,7 @@ import AdminVendors from "./pages/admin/vendors";
 import AdminBookings from "./pages/admin/bookings";
 import AdminChat from "./pages/admin/chat";
 import AdminUsers from "./pages/admin/users";
-import AdminEvents from "./pages/admin/events";
+import AdminEvents from "./pages/admin/events-new";
 
 // Shared Pages
 import Profile from "./pages/profile";
