@@ -99,10 +99,11 @@ class EventCategoryScreen extends StatelessWidget {
                   topRight: Radius.circular(16),
                 ),
               ),
-              child: Icon(
-                category.icon,
-                size: 48,
-                color: Colors.white,
+              child: Center(
+                child: Text(
+                  category.icon ?? '📅',
+                  style: const TextStyle(fontSize: 36),
+                ),
               ),
             ),
             Padding(

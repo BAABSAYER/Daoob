@@ -104,10 +104,11 @@ class CategoriesScreen extends StatelessWidget {
                   topRight: Radius.circular(16),
                 ),
               ),
-              child: Icon(
-                category.icon,
-                size: 48,
-                color: Colors.white,
+              child: Center(
+                child: Text(
+                  category.icon ?? '📅',
+                  style: const TextStyle(fontSize: 36),
+                ),
               ),
             ),
             Padding(
@@ -115,7 +116,7 @@ class CategoriesScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    isArabic ? category.nameAr : category.name,
+                    category.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -124,7 +125,7 @@ class CategoriesScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isArabic ? category.descriptionAr : category.description,
+                    category.description ?? '',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
