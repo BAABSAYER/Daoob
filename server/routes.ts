@@ -6,7 +6,8 @@ import { db } from "./db";
 import { setupAuth } from "./auth";
 import { 
   InsertVendor, InsertBooking, InsertMessage, InsertEventType, InsertQuestionnaireItem, 
-  InsertEventRequest, InsertQuotation, BOOKING_STATUS, USER_TYPES, messages 
+  InsertEventRequest, InsertQuotation, BOOKING_STATUS, USER_TYPES, messages,
+  eventRequests, quotations
 } from "@shared/schema";
 import { z } from "zod";
 import { eq, or, and } from "drizzle-orm";
@@ -248,25 +249,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      let eventRequests;
+      let requestsList;
       
       // If admin, can see all requests, optionally filtered by status
       const isAdmin = await storage.checkAdminPermission(req.user.id, 'view_event_requests');
       if (isAdmin) {
         if (req.query.status) {
           // Filter by status if provided
-          eventRequests = await db.query.eventRequests.findMany({
-            where: eq(eventRequests.status, req.query.status as string)
-          });
+          const status = req.query.status as string;
+          requestsList = await db
+            .select()
+            .from(eventRequests)
+            .where(eq(eventRequests.status, status));
         } else {
-          eventRequests = await storage.getAllEventRequests();
+          requestsList = await storage.getAllEventRequests();
         }
       } else {
         // Regular clients can only see their own requests
-        eventRequests = await storage.getEventRequestsByClient(req.user.id);
+        requestsList = await storage.getEventRequestsByClient(req.user.id);
       }
       
-      res.json(eventRequests);
+      res.json(requestsList);
     } catch (error) {
       console.error('Error fetching event requests:', error);
       res.status(500).json({ message: 'Failed to fetch event requests' });
@@ -445,8 +448,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotationData: InsertQuotation = {
         eventRequestId: req.body.eventRequestId,
         adminId: req.user.id,
-        totalAmount: req.body.totalAmount,
-        description: req.body.description,
+        totalPrice: req.body.totalAmount, // Use totalPrice instead of totalAmount
+        details: { // Convert description to JSON details
+          description: req.body.description,
+          items: [] // Can be populated with line items in the future
+        },
         status: 'pending',
         expiryDate: req.body.expiryDate,
       };

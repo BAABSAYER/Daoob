@@ -93,8 +93,11 @@ type Quotation = {
   id: number;
   eventRequestId: number;
   adminId: number;
-  totalAmount: number;
-  description: string;
+  totalPrice: number;
+  details: {
+    description: string;
+    items: any[];
+  };
   status: string;
   expiryDate: string | null;
   createdAt: string;
@@ -1128,7 +1131,12 @@ function RequestsTab() {
   
   // Create quotation mutation
   const createQuotationMutation = useMutation({
-    mutationFn: async (newQuotation: Omit<Quotation, "id" | "createdAt" | "adminId" | "status">) => {
+    mutationFn: async (newQuotation: { 
+      eventRequestId: number;
+      totalAmount: number;
+      description: string;
+      expiryDate: string | null;
+    }) => {
       const res = await apiRequest("POST", "/api/quotations", newQuotation);
       return await res.json();
     },
