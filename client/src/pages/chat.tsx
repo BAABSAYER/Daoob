@@ -1,16 +1,25 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ArrowLeft, Phone, Video } from "lucide-react";
 import { useLocation } from "wouter";
 import { ChatWindow } from "@/components/chat/chat-window";
 
+interface User {
+  id: number;
+  username: string;
+  fullName?: string;
+  userType: string;
+  email?: string;
+  avatarUrl?: string;
+}
+
 export default function Chat() {
-  const params = useParams();
+  const params = useParams<{ userId: string }>();
   const [, navigate] = useLocation();
-  const userId = parseInt(params.userId);
+  const userId = params.userId ? parseInt(params.userId) : 0;
   
-  const { data: recipient, isLoading } = useQuery({
+  const { data: recipient, isLoading } = useQuery<User>({
     queryKey: [`/api/users/${userId}`],
   });
   
@@ -20,20 +29,21 @@ export default function Chat() {
   
   const [isOnline, setIsOnline] = useState(false);
   
-  // Simulate online status for demo
-  useEffect(() => {
+  // Set online status when the component mounts
+  React.useEffect(() => {
     setIsOnline(Math.random() > 0.5);
-  }, [userId]);
+  }, []);
   
   // Get appropriate icon based on user type
   const getUserAvatar = () => {
     if (!recipient) return null;
     
-    const iconColor = recipient.userType === 'vendor' ? 'text-primary' : 'text-secondary';
-    const iconBg = recipient.userType === 'vendor' ? 'bg-primary/10' : 'bg-secondary/10';
+    const userType = recipient.userType || 'client';
+    const iconColor = userType === 'vendor' ? 'text-primary' : 'text-secondary';
+    const iconBg = userType === 'vendor' ? 'bg-primary/10' : 'bg-secondary/10';
     
     let icon;
-    switch (recipient.userType) {
+    switch (userType) {
       case 'vendor':
         icon = (
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

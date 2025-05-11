@@ -33,12 +33,8 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       
       {/* Client Routes */}
-      <Route path="/messages">
-        <Messages />
-      </Route>
-      <Route path="/chat/:userId">
-        <Chat />
-      </Route>
+      <ProtectedRoute path="/messages" component={Messages} />
+      <ProtectedRoute path="/chat/:userId" component={Chat} />
       
       {/* Admin Dashboard Routes */}
       <Route path="/">
