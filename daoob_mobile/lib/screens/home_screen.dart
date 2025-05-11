@@ -1,13 +1,14 @@
-import 'package:daoob_mobile/screens/bookings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:daoob_mobile/screens/messages_screen.dart';
 import 'package:daoob_mobile/screens/chat_screen.dart';
 import 'package:daoob_mobile/screens/event_selection_screen.dart';
+import 'package:daoob_mobile/screens/event_requests_screen.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
+import 'package:daoob_mobile/providers/event_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -43,6 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final authService = Provider.of<AuthService>(context);
     final bookingService = Provider.of<BookingService>(context);
     final user = authService.user;
+    
+    // Initialize EventProvider
+    final eventProvider = Provider.of<EventProvider>(context);
     
     final List<Widget> pages = [
       // Home page content with categories
@@ -232,8 +236,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       
-      // Bookings page
-      const BookingsScreen(),
+      // Event Requests page (replacing Bookings)
+      const EventRequestsScreen(),
       
       // Messages page
       const MessagesScreen(),
@@ -284,9 +288,9 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIcon: const Icon(Icons.home),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.calendar_today_outlined),
-            label: isArabic ? 'الحجوزات' : 'Bookings',
-            selectedIcon: const Icon(Icons.calendar_today),
+            icon: const Icon(Icons.event_note_outlined),
+            label: isArabic ? 'الطلبات' : 'Requests',
+            selectedIcon: const Icon(Icons.event_note),
           ),
           NavigationDestination(
             icon: const Icon(Icons.chat_outlined),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
+import 'package:daoob_mobile/models/event_category.dart';
 
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
