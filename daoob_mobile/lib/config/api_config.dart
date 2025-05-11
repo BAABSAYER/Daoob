@@ -1,16 +1,25 @@
 import 'dart:io';
 
 class ApiConfig {
-  // Determine the base URL based on the environment
+  // Production API URL - update this for production deployment
+  static const String productionApiUrl = 'https://api.daoob.com';
+  
+  // Determine if we're in production mode
+  static const bool isProduction = bool.fromEnvironment('dart.vm.product');
+  
+  // Base URL based on environment
   static String get baseUrl {
-    // For real device on the same network, this should be replaced with your local IP
-    // during deployment, e.g., 'http://192.168.1.100:5000'
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5000'; // Special IP for Android emulator to reach host
-    } else if (Platform.isIOS) {
-      return 'http://localhost:5000'; // Works for iOS simulator
+    if (isProduction) {
+      return productionApiUrl;
     } else {
-      return 'http://localhost:5000'; // Default for other platforms
+      // For development
+      if (Platform.isAndroid) {
+        return 'http://10.0.2.2:5000'; // Special IP for Android emulator
+      } else if (Platform.isIOS) {
+        return 'http://localhost:5000'; // Works for iOS simulator
+      } else {
+        return 'http://localhost:5000'; // Default for other platforms
+      }
     }
   }
 
@@ -40,10 +49,6 @@ class ApiConfig {
   static String get eventTypesEndpoint => '$apiUrl/event-types';
   static String get eventRequestsEndpoint => '$apiUrl/event-requests';
   static String get quotationsEndpoint => '$apiUrl/quotations';
-  
-  // Offline mode settings
-  static const bool defaultOfflineMode = false;
-  static const int cacheExpirationHours = 24;
   
   // Headers
   static Map<String, String> get jsonHeaders => {
