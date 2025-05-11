@@ -1191,7 +1191,7 @@ function RequestsTab() {
     
     createQuotationMutation.mutate({
       eventRequestId: currentRequest.id,
-      totalAmount: amount,
+      totalAmount: amount, // This will be converted to totalPrice on the server
       description: quotationDescription,
       expiryDate: quotationExpiryDate || null,
     });
