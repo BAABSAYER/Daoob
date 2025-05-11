@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Booking {
   final int id;
   final int clientId;
@@ -132,6 +134,3 @@ class Booking {
     );
   }
 }
-
-// Required for JSON parsing
-import 'dart:convert';
