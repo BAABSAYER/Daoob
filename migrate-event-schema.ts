@@ -1,4 +1,4 @@
-import { db } from './server/db';
+import { db, pool } from './server/db';
 import {
   eventTypes,
   questionnaireItems,
@@ -128,6 +128,7 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await db.end();
+    // Close pool connection instead of db.end()
+    await pool.end();
     process.exit(0);
   });

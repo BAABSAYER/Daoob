@@ -36,6 +36,11 @@ class ApiConfig {
   // Message endpoints
   static String get messagesEndpoint => '$apiUrl/messages';
   
+  // Event Management endpoints
+  static String get eventTypesEndpoint => '$apiUrl/event-types';
+  static String get eventRequestsEndpoint => '$apiUrl/event-requests';
+  static String get quotationsEndpoint => '$apiUrl/quotations';
+  
   // Offline mode settings
   static const bool defaultOfflineMode = false;
   static const int cacheExpirationHours = 24;
