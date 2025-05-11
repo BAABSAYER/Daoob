@@ -1142,5 +1142,493 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ========== NEW EVENT-BASED BOOKING FLOW ROUTES ==========
+  
+  // EVENT TYPES ROUTES (Admin)
+  
+  // Get all event types 
+  app.get('/api/event-types', async (req, res) => {
+    try {
+      // For public access (no authentication required)
+      // Users can see active event types even when not logged in
+      const isClient = req.isAuthenticated() && req.user.userType === USER_TYPES.CLIENT;
+      
+      // If client or not authenticated, only show active event types
+      if (!req.isAuthenticated() || isClient) {
+        const activeEventTypes = await storage.getActiveEventTypes();
+        return res.json(activeEventTypes);
+      }
+      
+      // Admin can see all event types including inactive ones
+      const allEventTypes = await storage.getAllEventTypes();
+      res.json(allEventTypes);
+    } catch (error) {
+      console.error('Error fetching event types:', error);
+      res.status(500).json({ message: 'Error fetching event types' });
+    }
+  });
+  
+  // Get a specific event type by ID
+  app.get('/api/event-types/:id', async (req, res) => {
+    try {
+      const eventType = await storage.getEventType(parseInt(req.params.id));
+      
+      if (!eventType) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      // Non-admins can only see active event types
+      if ((!req.isAuthenticated() || req.user.userType !== USER_TYPES.ADMIN) && !eventType.isActive) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      res.json(eventType);
+    } catch (error) {
+      console.error('Error fetching event type:', error);
+      res.status(500).json({ message: 'Error fetching event type' });
+    }
+  });
+  
+  // Create a new event type (Admin only)
+  app.post('/api/admin/event-types', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      // Validate the request body
+      const eventTypeData: InsertEventType = {
+        name: req.body.name,
+        description: req.body.description || '',
+        icon: req.body.icon || '',
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+        createdBy: req.user.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const eventType = await storage.createEventType(eventTypeData);
+      res.status(201).json(eventType);
+    } catch (error) {
+      console.error('Error creating event type:', error);
+      res.status(500).json({ message: 'Error creating event type' });
+    }
+  });
+  
+  // Update an event type (Admin only)
+  app.put('/api/admin/event-types/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      const eventType = await storage.getEventType(id);
+      
+      if (!eventType) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      // Update the event type
+      const updatedEventType = await storage.updateEventType(id, {
+        name: req.body.name !== undefined ? req.body.name : eventType.name,
+        description: req.body.description !== undefined ? req.body.description : eventType.description,
+        icon: req.body.icon !== undefined ? req.body.icon : eventType.icon,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : eventType.isActive,
+        updatedAt: new Date()
+      });
+      
+      res.json(updatedEventType);
+    } catch (error) {
+      console.error('Error updating event type:', error);
+      res.status(500).json({ message: 'Error updating event type' });
+    }
+  });
+  
+  // Delete an event type (Admin only)
+  app.delete('/api/admin/event-types/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      const eventType = await storage.getEventType(id);
+      
+      if (!eventType) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      // Instead of deleting, we can just mark it as inactive
+      await storage.updateEventType(id, { isActive: false });
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting event type:', error);
+      res.status(500).json({ message: 'Error deleting event type' });
+    }
+  });
+  
+  // QUESTIONNAIRE ITEMS ROUTES (Admin)
+  
+  // Get questionnaire items for an event type
+  app.get('/api/event-types/:eventTypeId/questions', async (req, res) => {
+    try {
+      const eventTypeId = parseInt(req.params.eventTypeId);
+      const eventType = await storage.getEventType(eventTypeId);
+      
+      if (!eventType) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      // Non-admins can only see questions for active event types
+      if ((!req.isAuthenticated() || req.user.userType !== USER_TYPES.ADMIN) && !eventType.isActive) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      const questions = await storage.getQuestionnaireItemsByEventType(eventTypeId);
+      res.json(questions);
+    } catch (error) {
+      console.error('Error fetching questionnaire items:', error);
+      res.status(500).json({ message: 'Error fetching questionnaire items' });
+    }
+  });
+  
+  // Create a new questionnaire item (Admin only)
+  app.post('/api/admin/event-types/:eventTypeId/questions', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const eventTypeId = parseInt(req.params.eventTypeId);
+      const eventType = await storage.getEventType(eventTypeId);
+      
+      if (!eventType) {
+        return res.status(404).json({ message: 'Event type not found' });
+      }
+      
+      // Validate the request body
+      const questionData: InsertQuestionnaireItem = {
+        eventTypeId,
+        questionText: req.body.questionText,
+        questionType: req.body.questionType,
+        options: req.body.options,
+        required: req.body.required !== undefined ? req.body.required : false,
+        displayOrder: req.body.displayOrder,
+        createdBy: req.user.id,
+        createdAt: new Date()
+      };
+      
+      const question = await storage.createQuestionnaireItem(questionData);
+      res.status(201).json(question);
+    } catch (error) {
+      console.error('Error creating questionnaire item:', error);
+      res.status(500).json({ message: 'Error creating questionnaire item' });
+    }
+  });
+  
+  // Update a questionnaire item (Admin only)
+  app.put('/api/admin/questions/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      const question = await storage.getQuestionnaireItem(id);
+      
+      if (!question) {
+        return res.status(404).json({ message: 'Question not found' });
+      }
+      
+      // Update the question
+      const updatedQuestion = await storage.updateQuestionnaireItem(id, {
+        questionText: req.body.questionText !== undefined ? req.body.questionText : question.questionText,
+        questionType: req.body.questionType !== undefined ? req.body.questionType : question.questionType,
+        options: req.body.options !== undefined ? req.body.options : question.options,
+        required: req.body.required !== undefined ? req.body.required : question.required,
+        displayOrder: req.body.displayOrder !== undefined ? req.body.displayOrder : question.displayOrder
+      });
+      
+      res.json(updatedQuestion);
+    } catch (error) {
+      console.error('Error updating questionnaire item:', error);
+      res.status(500).json({ message: 'Error updating questionnaire item' });
+    }
+  });
+  
+  // Delete a questionnaire item (Admin only)
+  app.delete('/api/admin/questions/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      const question = await storage.getQuestionnaireItem(id);
+      
+      if (!question) {
+        return res.status(404).json({ message: 'Question not found' });
+      }
+      
+      await storage.deleteQuestionnaireItem(id);
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting questionnaire item:', error);
+      res.status(500).json({ message: 'Error deleting questionnaire item' });
+    }
+  });
+  
+  // EVENT REQUESTS ROUTES (Client)
+  
+  // Create a new event request (Client)
+  app.post('/api/event-requests', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const eventTypeId = parseInt(req.body.eventTypeId);
+      const eventType = await storage.getEventType(eventTypeId);
+      
+      if (!eventType || !eventType.isActive) {
+        return res.status(404).json({ message: 'Event type not found or inactive' });
+      }
+      
+      // Validate the request body
+      if (!req.body.responses) {
+        return res.status(400).json({ message: 'Responses are required' });
+      }
+      
+      // Create the event request
+      const eventRequestData: InsertEventRequest = {
+        clientId: req.user.id,
+        eventTypeId,
+        status: BOOKING_STATUS.PENDING,
+        responses: req.body.responses,
+        eventDate: req.body.eventDate ? new Date(req.body.eventDate) : null,
+        budget: req.body.budget || null,
+        specialRequests: req.body.specialRequests || '',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const eventRequest = await storage.createEventRequest(eventRequestData);
+      res.status(201).json(eventRequest);
+    } catch (error) {
+      console.error('Error creating event request:', error);
+      res.status(500).json({ message: 'Error creating event request' });
+    }
+  });
+  
+  // Get all event requests for a client
+  app.get('/api/event-requests', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      let eventRequests;
+      
+      if (req.user.userType === USER_TYPES.CLIENT) {
+        // Clients can only see their own requests
+        eventRequests = await storage.getEventRequestsByClient(req.user.id);
+      } else if (req.user.userType === USER_TYPES.ADMIN) {
+        // Admins can see all requests
+        eventRequests = await storage.getAllEventRequests();
+      } else {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
+      
+      // Enhance the requests with event type names
+      const enhancedRequests = await Promise.all(
+        eventRequests.map(async request => {
+          const eventType = await storage.getEventType(request.eventTypeId);
+          return {
+            ...request,
+            eventTypeName: eventType?.name || 'Unknown Event Type'
+          };
+        })
+      );
+      
+      res.json(enhancedRequests);
+    } catch (error) {
+      console.error('Error fetching event requests:', error);
+      res.status(500).json({ message: 'Error fetching event requests' });
+    }
+  });
+  
+  // Get a specific event request by ID
+  app.get('/api/event-requests/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      const eventRequest = await storage.getEventRequest(id);
+      
+      if (!eventRequest) {
+        return res.status(404).json({ message: 'Event request not found' });
+      }
+      
+      // Clients can only view their own requests
+      if (req.user.userType === USER_TYPES.CLIENT && eventRequest.clientId !== req.user.id) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
+      
+      // Enhance with event type and client info
+      const eventType = await storage.getEventType(eventRequest.eventTypeId);
+      const client = await storage.getUser(eventRequest.clientId);
+      
+      // Get quotations for this request
+      const quotations = await storage.getQuotationsByEventRequest(id);
+      
+      const enhancedRequest = {
+        ...eventRequest,
+        eventTypeName: eventType?.name || 'Unknown Event Type',
+        clientName: client?.fullName || client?.username || 'Unknown Client',
+        quotations
+      };
+      
+      res.json(enhancedRequest);
+    } catch (error) {
+      console.error('Error fetching event request:', error);
+      res.status(500).json({ message: 'Error fetching event request' });
+    }
+  });
+  
+  // QUOTATION ROUTES (Admin)
+  
+  // Create a quotation for an event request (Admin only)
+  app.post('/api/admin/event-requests/:eventRequestId/quotations', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const eventRequestId = parseInt(req.params.eventRequestId);
+      const eventRequest = await storage.getEventRequest(eventRequestId);
+      
+      if (!eventRequest) {
+        return res.status(404).json({ message: 'Event request not found' });
+      }
+      
+      // Update the event request status to quotation sent
+      await storage.updateEventRequest(eventRequestId, {
+        status: BOOKING_STATUS.QUOTATION_SENT,
+        updatedAt: new Date()
+      });
+      
+      // Create the quotation
+      const quotationData: InsertQuotation = {
+        eventRequestId,
+        adminId: req.user.id,
+        totalPrice: req.body.totalPrice,
+        details: req.body.details,
+        notes: req.body.notes || '',
+        expiryDate: req.body.expiryDate ? new Date(req.body.expiryDate) : null,
+        status: BOOKING_STATUS.QUOTATION_SENT,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const quotation = await storage.createQuotation(quotationData);
+      res.status(201).json(quotation);
+    } catch (error) {
+      console.error('Error creating quotation:', error);
+      res.status(500).json({ message: 'Error creating quotation' });
+    }
+  });
+  
+  // Update an event request quotation status (Client)
+  app.patch('/api/event-requests/:id/quotation/:quotationId', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    try {
+      const eventRequestId = parseInt(req.params.id);
+      const quotationId = parseInt(req.params.quotationId);
+      
+      const eventRequest = await storage.getEventRequest(eventRequestId);
+      if (!eventRequest) {
+        return res.status(404).json({ message: 'Event request not found' });
+      }
+      
+      // Clients can only update their own requests
+      if (req.user.userType === USER_TYPES.CLIENT && eventRequest.clientId !== req.user.id) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
+      
+      const quotation = await storage.getQuotation(quotationId);
+      if (!quotation || quotation.eventRequestId !== eventRequestId) {
+        return res.status(404).json({ message: 'Quotation not found' });
+      }
+      
+      // Process the client's response to the quotation
+      const { action } = req.body;
+      let newStatus;
+      
+      if (action === 'accept') {
+        newStatus = BOOKING_STATUS.QUOTATION_ACCEPTED;
+      } else if (action === 'reject') {
+        newStatus = BOOKING_STATUS.QUOTATION_REJECTED;
+      } else {
+        return res.status(400).json({ message: 'Invalid action. Use "accept" or "reject".' });
+      }
+      
+      // Update both the quotation and the event request status
+      await storage.updateQuotation(quotationId, { 
+        status: newStatus,
+        updatedAt: new Date()
+      });
+      
+      await storage.updateEventRequest(eventRequestId, {
+        status: newStatus,
+        updatedAt: new Date()
+      });
+      
+      // If accepted, additional steps might be needed
+      if (newStatus === BOOKING_STATUS.QUOTATION_ACCEPTED) {
+        // In the future: create an actual booking, schedule the event, etc.
+      }
+      
+      res.json({ message: `Quotation ${action}ed successfully` });
+    } catch (error) {
+      console.error('Error updating quotation status:', error);
+      res.status(500).json({ message: 'Error updating quotation status' });
+    }
+  });
+  
   return httpServer;
 }
