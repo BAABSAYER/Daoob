@@ -5,8 +5,11 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
 import 'package:daoob_mobile/services/auth_service.dart';
+import 'package:daoob_mobile/models/vendor.dart';
 
-class Vendor {
+// Use the Vendor model from models/vendor.dart instead of redefining it here
+/* Commented out to avoid conflict
+class VendorOld {
   final int id;
   final int userId;
   final String name;
@@ -97,6 +100,7 @@ class Vendor {
     };
   }
 }
+*/
 
 class VendorService extends ChangeNotifier {
   List<Vendor> _vendors = [];

@@ -9,6 +9,7 @@ class Vendor {
   final bool isVerified;
   final String? imageUrl;
   final List<String> services;
+  final bool isSelected;
   
   Vendor({
     required this.id,
@@ -21,6 +22,7 @@ class Vendor {
     required this.isVerified,
     this.imageUrl,
     this.services = const [],
+    this.isSelected = false,
   });
   
   factory Vendor.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Vendor {
       isVerified: json['isVerified'],
       imageUrl: json['imageUrl'],
       services: servicesList,
+      isSelected: json['isSelected'] != null ? json['isSelected'] == 1 || json['isSelected'] == true : false,
     );
   }
   
@@ -59,6 +62,7 @@ class Vendor {
       'isVerified': isVerified,
       'imageUrl': imageUrl,
       'services': services,
+      'isSelected': isSelected,
     };
   }
 }
