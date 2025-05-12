@@ -14,7 +14,8 @@ import {
   BarChart3,
   ArrowRight,
   Star,
-  TrendingUp
+  TrendingUp,
+  ClipboardCheck
 } from "lucide-react";
 import { BOOKING_STATUS, EVENT_TYPES, SERVICE_CATEGORIES } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -132,19 +133,15 @@ export default function AdminDashboard() {
           <Card className="col-span-1">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Vendors
+                Event Requests
               </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              {isLoadingVendors ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-2xl font-bold">{getTotalVendorsCount()}</div>
-              )}
+              <div className="text-2xl font-bold">{getTotalEventRequestsCount()}</div>
             </CardContent>
             <CardFooter className="p-2">
-              <Link href="/admin/vendors">
+              <Link href="/admin/events">
                 <Button variant="ghost" size="sm" className="w-full justify-between">
                   <span>View all</span>
                   <ArrowRight className="h-4 w-4" />
@@ -260,49 +257,72 @@ export default function AdminDashboard() {
                 </CardFooter>
               </Card>
               
-              {/* Top Vendors by Category */}
+              {/* Event Requests */}
               <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Vendors by Category</CardTitle>
+                  <CardTitle>Recent Event Requests</CardTitle>
                   <CardDescription>
-                    Distribution of vendor categories
+                    Latest client event requests
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isLoadingVendors ? (
-                    <div className="space-y-4">
-                      <Skeleton className="h-12 w-full" />
-                      <Skeleton className="h-12 w-full" />
-                      <Skeleton className="h-12 w-full" />
-                    </div>
-                  ) : getVendorsByCategory().length > 0 ? (
-                    <div className="space-y-4">
-                      {getVendorsByCategory().map((item, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">
-                                {SERVICE_CATEGORIES[item.category as keyof typeof SERVICE_CATEGORIES] || item.category}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.count} {item.count === 1 ? 'vendor' : 'vendors'}
-                              </p>
-                            </div>
-                          </div>
-                          <PieChart className="h-4 w-4 text-muted-foreground" />
+                  <div className="space-y-4">
+                    {/* Placeholder for now - would fetch from API */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
+                          1
                         </div>
-                      ))}
+                        <div>
+                          <p className="text-sm font-medium">Wedding</p>
+                          <p className="text-xs text-muted-foreground">
+                            Requested 2 days ago
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                        Pending
+                      </Badge>
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No vendor category data available.</p>
-                  )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
+                          2
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Corporate Event</p>
+                          <p className="text-xs text-muted-foreground">
+                            Requested 4 days ago
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+                        Quoted
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
+                          3
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Birthday Party</p>
+                          <p className="text-xs text-muted-foreground">
+                            Requested 1 week ago
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                        Accepted
+                      </Badge>
+                    </div>
+                  </div>
                 </CardContent>
                 <CardFooter>
-                  <Link href="/admin/vendors">
-                    <Button variant="outline" size="sm">View all vendors</Button>
+                  <Link href="/admin/events">
+                    <Button variant="outline" size="sm">View all requests</Button>
                   </Link>
                 </CardFooter>
               </Card>
