@@ -33,14 +33,13 @@ class ApiConfig {
   static String get userEndpoint => '$apiUrl/user';
   static String get logoutEndpoint => '$apiUrl/logout';
   
-  // Vendor endpoints
-  static String get vendorsEndpoint => '$apiUrl/vendors';
+  // Event Management endpoints
+  static String get eventTypesEndpoint => '$apiUrl/event-types';
+  static String get eventRequestsEndpoint => '$apiUrl/event-requests';
+  static String get quotationsEndpoint => '$apiUrl/quotations';
   
   // Booking endpoints
   static String get bookingsEndpoint => '$apiUrl/bookings';
-  
-  // Review endpoints
-  static String get reviewsEndpoint => '$apiUrl/reviews';
   
   // Message endpoints
   static String get messagesEndpoint => '$apiUrl/messages';

@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   const vendors: any[] = [];
   
   // Fetch messages (last 10)
-  const { data: recentMessages = [], isLoading: isLoadingMessages, error: messagesError } = useQuery({
+  const { data: recentMessages = [], isLoading: isLoadingMessages, error: messagesError } = useQuery<any[]>({
     queryKey: ["/api/admin/messages/recent"],
     enabled: false, // Disable this query for now as the endpoint is not implemented yet
   });
