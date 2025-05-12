@@ -1,97 +1,94 @@
 # DAOOB Event Management Platform
 
-A comprehensive mobile and web-based event management platform that simplifies vendor discovery, event planning, and collaborative experiences through an intelligent, user-friendly interface.
+A comprehensive event management platform with web admin dashboard and mobile applications for clients and vendors.
 
-## Project Components
+## Core Components
 
 ### Web Admin Dashboard
 - Admin interface for platform oversight
-- Vendor management
-- Booking and event request handling
-- Admin team management with permissions system
+- Vendor and user management
+- Event request and booking management 
+- Real-time chat with clients and vendors
 
 ### Mobile Application (Flutter)
-- Client app for users to browse vendors and book services
-- Vendor app for service providers to manage bookings
-- Real-time chat functionality
-- Offline mode with local caching
+- Client app for browsing vendors and planning events
+- Vendor app for managing services and bookings
+- Real-time messaging system
+- Multilingual support (English/Arabic with RTL)
 
 ## Technology Stack
 
-### Backend
-- Node.js with Express
-- TypeScript
+### Backend (server/)
+- Node.js with Express and TypeScript
 - PostgreSQL database with Drizzle ORM
 - WebSocket for real-time messaging
-- Authentication with Passport.js
+- RESTful API endpoints
 
-### Web Frontend
-- React.js
-- TypeScript
+### Web Frontend (client/)
+- React with TypeScript 
 - TanStack Query for data fetching
-- Shadcn UI components with Tailwind CSS
+- Shadcn UI components and Tailwind CSS
+- Responsive design for all devices
 
-### Mobile App
+### Mobile App (daoob_mobile/)
 - Flutter/Dart
-- Provider for state management
-- SQLite for local storage
-- WebSocket for real-time chat
+- Provider pattern for state management
+- API integration with backend server
+- Localization support
 
-## Local Setup
+## Setup Instructions
 
-### Prerequisites
-- Node.js 18+ and npm
-- PostgreSQL
-- Flutter SDK
+### Backend and Web App
 
-### Getting Started
-
-1. Clone the repository
-```bash
-git clone https://github.com/yourusername/daoob-event-management.git
-cd daoob-event-management
-```
-
-2. Install dependencies
+1. Install dependencies
 ```bash
 npm install
 ```
 
-3. Set up the database
+2. Set up the database
 ```bash
 npm run db:push
 ```
 
-4. Run the server
+3. Start the development server
 ```bash
-./start-local-server.sh
+npm run dev
 ```
 
-5. Build the Flutter app
+### Flutter Mobile App
+
+1. Install Flutter dependencies
 ```bash
 cd daoob_mobile
 flutter pub get
-flutter build apk
 ```
 
-### Testing Local Connectivity
-Run the connectivity test script to verify your setup:
+2. Run the mobile app in development mode
 ```bash
-./test-local-connection.sh
+flutter run
 ```
 
-## Features
+3. Build a release version
+```bash
+flutter build apk --release
+```
 
-- **Vendor Discovery** - Browse and search vendors by category, location, and ratings
-- **Booking Management** - Create, view, and manage event bookings
-- **Real-time Messaging** - Chat directly with vendors or clients
-- **Admin Dashboard** - Comprehensive platform management
-- **Offline Mode** - Use the mobile app even without internet connection
-- **Multi-language Support** - Arabic (RTL) and English interfaces
+## Deployment
+
+For production deployment, use the deployment configuration in the `deploy/` directory.
+
+## Key Features
+
+- **Event Planning** - Custom event types with dynamic questionnaires
+- **Booking System** - Comprehensive booking management for vendors
+- **Real-time Chat** - WebSocket-based messaging between users
+- **Admin Dashboard** - Complete platform management interface
+- **Multi-language Support** - English and Arabic (RTL) interfaces
 
 ## Project Structure
 
-- `/client` - React web frontend
-- `/server` - Node.js backend
-- `/shared` - Shared TypeScript schemas and types
-- `/daoob_mobile` - Flutter mobile application
+- `client/` - React web frontend
+- `server/` - Node.js backend
+- `shared/` - Shared TypeScript schemas
+- `daoob_mobile/` - Flutter mobile application
+- `deploy/` - Deployment configuration

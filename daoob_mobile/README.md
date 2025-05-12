@@ -2,39 +2,60 @@
 
 Smart Event Management Platform
 
+## Overview
+
+DAOOB is a comprehensive event management platform with features for clients, vendors, and administrators.
+
 ## Features
 
 - User authentication with client and vendor roles
-- Event category selection
-- Custom event planning
-- Booking management
-- Real-time messaging system
-- Offline mode support
-- Multi-language support (English/Arabic)
+- Event category selection and custom event planning
+- Booking management system
+- Real-time messaging between users
+- Multi-language support (English/Arabic with RTL)
+- API integration with central server
 
-## Getting Started
+## Development Setup
 
-1. Run `flutter pub get` to install dependencies
-2. Set up app icons with `./setup_app_icon.sh`
-3. Run `flutter create --platforms=ios .` to add iOS platform files if needed
-4. Run `flutter run` to start the app
+1. **Install Dependencies:**
+   ```
+   flutter pub get
+   ```
 
-## Offline Mode
+2. **Run Development Build:**
+   ```
+   flutter run
+   ```
 
-The app supports an offline mode that can be enabled from the login screen.
-In offline mode, the app will use local storage for data persistence.
+3. **Build Release Version:**
+   ```
+   flutter build apk --release
+   ```
+   or
+   ```
+   flutter build ios --release
+   ```
 
-## App Icons
+## Project Structure
 
-The app uses a custom icon system. To set up app icons:
+- `lib/`: Application source code
+  - `models/`: Data models
+  - `screens/`: UI screens
+  - `widgets/`: Reusable UI components
+  - `providers/`: State management
+  - `services/`: API and backend services
+  - `utils/`: Utility functions
+  - `config/`: Configuration settings
+  - `l10n/`: Localization resources
 
-```bash
-./setup_app_icon.sh
-```
+- `assets/`: Static resources
+  - `images/`: Images and graphics
+  - `icons/`: App icons
+  - `fonts/`: Custom fonts
+  - `lang/`: Language files
 
-This script will generate all the necessary app icon files for both Android and iOS.
-See ICON_SETUP.md for more details on icon configuration.
+## Mobile App Configuration
 
-## Arabic Support
-
-The app fully supports Arabic language with proper RTL layout.
+The mobile app is configured to connect to the backend server. The API endpoints
+are defined in `lib/config/api_config.dart`. Update the endpoints as needed for 
+your deployment environment.
