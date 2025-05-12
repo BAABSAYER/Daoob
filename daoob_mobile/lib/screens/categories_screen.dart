@@ -63,7 +63,7 @@ class CategoriesScreen extends StatelessWidget {
                       } else {
                         Navigator.pushNamed(
                           context,
-                          '/vendors',
+                          '/event-questionnaire',
                           arguments: category.id,
                         );
                       }

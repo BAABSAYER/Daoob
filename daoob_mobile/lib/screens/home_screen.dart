@@ -309,10 +309,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToCategory(String categoryId) {
-    // Navigate to vendors for this category
+    // Navigate to event questionnaire for this category
     Navigator.pushNamed(
       context, 
-      '/vendors',
+      '/event-questionnaire',
       arguments: categoryId,
     );
   }
@@ -423,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  booking.vendorName ?? 'Unknown Vendor',
+                  booking.eventType ?? 'Unknown Event',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
