@@ -45,6 +45,7 @@ function Router() {
       <AdminRoute path="/admin/bookings" component={AdminBookings} />
       <AdminRoute path="/admin/events" component={AdminEvents} />
       <AdminRoute path="/admin/users" component={AdminUsers} />
+      <AdminRoute path="/admin/messages" component={Messages} />
       <AdminRoute path="/admin/chat/:userId" component={AdminChat} />
       <AdminRoute path="/admin/profile" component={Profile} />
       

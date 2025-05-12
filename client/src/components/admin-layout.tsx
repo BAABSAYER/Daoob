@@ -35,7 +35,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
     { name: "Bookings", path: "/admin/bookings", icon: <Calendar className="h-5 w-5" /> },
     { name: "Events", path: "/admin/events", icon: <CalendarDays className="h-5 w-5" /> },
     { name: "Admin Users", path: "/admin/users", icon: <UserCog className="h-5 w-5" /> },
-    { name: "Messages", path: "/admin/chat", icon: <MessageSquare className="h-5 w-5" /> },
+    { name: "Messages", path: "/admin/messages", icon: <MessageSquare className="h-5 w-5" /> },
     { name: "Profile", path: "/admin/profile", icon: <UserCircle className="h-5 w-5" /> },
   ];
 
