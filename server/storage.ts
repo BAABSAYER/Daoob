@@ -552,7 +552,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEventRequest(requestData: InsertEventRequest): Promise<EventRequest> {
-    const [request] = await db.insert(eventRequests).values(requestData).returning();
+    // Ensure eventDate is a proper Date object or null
+    const data = {
+      ...requestData,
+      eventDate: requestData.eventDate ? new Date(requestData.eventDate as any) : null
+    };
+    
+    const [request] = await db.insert(eventRequests).values(data).returning();
     return request;
   }
 

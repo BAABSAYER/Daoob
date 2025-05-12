@@ -313,12 +313,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      // Convert eventDate string to a Date object if it exists
+      let eventDate = null;
+      if (req.body.eventDate) {
+        eventDate = new Date(req.body.eventDate);
+        // Validate the date is valid
+        if (isNaN(eventDate.getTime())) {
+          return res.status(400).json({ message: 'Invalid event date format' });
+        }
+      }
+      
       const eventRequestData: InsertEventRequest = {
         clientId: req.user.id,
         eventTypeId: req.body.eventTypeId,
         status: 'pending',
         responses: req.body.responses || {},
-        eventDate: req.body.eventDate,
+        eventDate: eventDate,
         budget: req.body.budget,
         specialRequests: req.body.specialRequests,
       };
