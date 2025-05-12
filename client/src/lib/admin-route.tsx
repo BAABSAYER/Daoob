@@ -1,7 +1,7 @@
-import { ReactElement } from "react";
+import { ReactElement, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Redirect, Route } from "wouter";
+import { Route, useLocation } from "wouter";
 
 interface AdminRouteProps {
   path: string;
@@ -10,6 +10,17 @@ interface AdminRouteProps {
 
 export function AdminRoute({ path, component: Component }: AdminRouteProps) {
   const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        navigate("/auth");
+      } else if (user.userType !== 'admin') {
+        navigate("/messages");
+      }
+    }
+  }, [user, isLoading, navigate]);
 
   return (
     <Route path={path}>
@@ -22,20 +33,8 @@ export function AdminRoute({ path, component: Component }: AdminRouteProps) {
           );
         }
 
-        if (!user) {
-          return <Redirect to="/auth" />;
-        }
-
-        if (user.userType !== 'admin') {
-          return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
-              <h1 className="text-2xl font-bold text-destructive mb-2">Access Denied</h1>
-              <p className="text-muted-foreground text-center mb-6">
-                You do not have permission to access the admin dashboard.
-              </p>
-              <Redirect to="/auth" />
-            </div>
-          );
+        if (!user || user.userType !== 'admin') {
+          return null;
         }
 
         return <Component />;
