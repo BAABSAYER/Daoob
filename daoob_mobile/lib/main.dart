@@ -7,12 +7,11 @@ import 'package:daoob_mobile/screens/home_screen.dart';
 import 'package:daoob_mobile/screens/register_screen.dart';
 import 'package:daoob_mobile/screens/categories_screen.dart';
 import 'package:daoob_mobile/screens/custom_event_screen.dart';
-import 'package:daoob_mobile/screens/vendors_screen.dart';
+import 'package:daoob_mobile/screens/event_questionnaire_screen.dart';
 import 'package:daoob_mobile/screens/booking_management_screen.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/services/message_service.dart';
-import 'package:daoob_mobile/services/vendor_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
 
@@ -23,7 +22,6 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => BookingService()),
         ChangeNotifierProvider(create: (_) => MessageService()),
-        ChangeNotifierProvider(create: (_) => VendorService()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
       ],
@@ -84,7 +82,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/custom-event': (context) => const CustomEventScreen(),
-        '/vendors': (context) => VendorsScreen(categoryId: ModalRoute.of(context)!.settings.arguments as String),
+        '/event-questionnaire': (context) => EventQuestionnaireScreen(categoryId: ModalRoute.of(context)!.settings.arguments as String),
       },
     );
   }
