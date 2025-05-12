@@ -26,14 +26,13 @@ export default function AdminDashboard() {
   const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month'>('week');
   
   // Fetch bookings
-  const { data: bookings = [], isLoading: isLoadingBookings } = useQuery({
+  const { data: bookings = [], isLoading: isLoadingBookings } = useQuery<any[]>({
     queryKey: ["/api/admin/bookings"],
   });
   
-  // Fetch vendors
-  const { data: vendors = [], isLoading: isLoadingVendors } = useQuery({
-    queryKey: ["/api/vendors"],
-  });
+  // No longer fetching vendors
+  const isLoadingVendors = false;
+  const vendors: any[] = [];
   
   // Fetch messages (last 10)
   const { data: recentMessages = [], isLoading: isLoadingMessages, error: messagesError } = useQuery({
@@ -46,8 +45,9 @@ export default function AdminDashboard() {
     return bookings.filter((booking: any) => booking.status === BOOKING_STATUS.PENDING).length;
   };
   
-  const getTotalVendorsCount = () => {
-    return vendors.length;
+  const getTotalEventRequestsCount = () => {
+    // This would count active event requests
+    return 10; // Placeholder 
   };
   
   const getRecentClientsCount = () => {

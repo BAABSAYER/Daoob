@@ -9,7 +9,6 @@ import AuthPage from "@/pages/auth-page";
 
 // Admin Dashboard Pages
 import AdminDashboard from "./pages/admin/dashboard";
-import AdminVendors from "./pages/admin/vendors";
 import AdminBookings from "./pages/admin/bookings";
 import AdminChat from "./pages/admin/chat";
 import AdminUsers from "./pages/admin/users";
@@ -41,7 +40,6 @@ function Router() {
         <Redirect to="/admin" />
       </Route>
       <AdminRoute path="/admin" component={AdminDashboard} />
-      <AdminRoute path="/admin/vendors" component={AdminVendors} />
       <AdminRoute path="/admin/bookings" component={AdminBookings} />
       <AdminRoute path="/admin/events" component={AdminEvents} />
       <AdminRoute path="/admin/users" component={AdminUsers} />
