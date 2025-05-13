@@ -1020,11 +1020,31 @@ function RequestsTab() {
       const res = await fetch(url, { 
         credentials: 'include' 
       });
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to fetch event requests: ${res.status} ${errorText}`);
+      
+      // If we receive a 401 unauthorized response, handle it specially
+      if (res.status === 401) {
+        // This gets rid of HTML responses from the error
+        throw new Error("Not authenticated. Please log in again.");
       }
-      return await res.json();
+      
+      if (!res.ok) {
+        // Get the actual error text, not HTML
+        try {
+          const errorText = await res.text();
+          const errorJson = JSON.parse(errorText);
+          throw new Error(`Failed to fetch event requests: ${errorJson.message || JSON.stringify(errorJson)}`);
+        } catch (e) {
+          // If parsing failed, use a simpler error message
+          throw new Error(`Failed to fetch event requests: ${res.status}`);
+        }
+      }
+      
+      // Process the JSON response
+      const text = await res.text();
+      if (!text.trim()) {
+        return []; // Return empty array for empty responses
+      }
+      return JSON.parse(text);
     },
   });
   
@@ -1042,11 +1062,31 @@ function RequestsTab() {
       const res = await fetch('/api/users/map', { 
         credentials: 'include' 
       });
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to fetch user map: ${res.status} ${errorText}`);
+      
+      // If we receive a 401 unauthorized response, handle it specially
+      if (res.status === 401) {
+        // This gets rid of HTML responses from the error
+        throw new Error("Not authenticated. Please log in again.");
       }
-      return await res.json();
+      
+      if (!res.ok) {
+        // Get the actual error text, not HTML
+        try {
+          const errorText = await res.text();
+          const errorJson = JSON.parse(errorText);
+          throw new Error(`Failed to fetch user map: ${errorJson.message || JSON.stringify(errorJson)}`);
+        } catch (e) {
+          // If parsing failed, use a simpler error message
+          throw new Error(`Failed to fetch user map: ${res.status}`);
+        }
+      }
+      
+      // Process the JSON response
+      const text = await res.text();
+      if (!text.trim()) {
+        return {}; // Return empty object for empty responses
+      }
+      return JSON.parse(text);
     },
   });
   
