@@ -106,19 +106,54 @@ cd daoob_mobile
 flutter pub get
 ```
 
-2. Run the mobile app in development mode
+2. Configure the API endpoint
+   - To connect to a local server: Make sure `currentEnvironment = ENV_LOCAL` in `lib/config/api_config.dart`
+   - To connect to the Replit deployment: Set `currentEnvironment = ENV_REPLIT` in `lib/config/api_config.dart`
+   - To connect to production: Set `currentEnvironment = ENV_PRODUCTION` in `lib/config/api_config.dart`
+
+3. Run the mobile app in development mode
 ```bash
 flutter run
 ```
 
-3. Build a release version
+4. Build a release version
 ```bash
 flutter build apk --release
 ```
 
-## Deployment
+#### Mobile App Connection Notes
 
-For production deployment, use the deployment configuration in the `deploy/` directory.
+- For Android emulator connecting to a local server, the app uses `10.0.2.2:5000` (special Android emulator IP)
+- For iOS simulator connecting to a local server, the app uses `localhost:5000`
+- For physical devices, you may need to use your computer's actual IP address instead of localhost
+- WebSocket connections use the `ws://` or `wss://` protocol with the `/ws` endpoint
+
+## Deployment Options
+
+### Replit Deployment
+To deploy the application on Replit:
+
+1. Click the "Deploy" button at the top of the Replit interface
+2. Wait for the deployment process to complete
+3. Replit will provide a public URL (e.g., https://daoob.replit.app)
+4. Update the mobile app's configuration to point to this URL:
+   ```dart
+   // In daoob_mobile/lib/config/api_config.dart
+   static const int currentEnvironment = ENV_REPLIT;
+   ```
+
+### Production Deployment
+For production deployment on your own server:
+
+1. Use the deployment configuration in the `deploy/` directory
+2. Configure your web server (NGINX, Apache, etc.) as a reverse proxy
+3. Set up SSL certificates for secure connections
+4. Update the mobile app's configuration:
+   ```dart
+   // In daoob_mobile/lib/config/api_config.dart
+   static const String productionApiUrl = 'https://your-production-domain.com';
+   static const int currentEnvironment = ENV_PRODUCTION;
+   ```
 
 ## Key Features
 
