@@ -999,7 +999,9 @@ function RequestsTab() {
   const { toast } = useToast();
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [createQuotationDialogOpen, setCreateQuotationDialogOpen] = useState(false);
+  const [viewRequestDialogOpen, setViewRequestDialogOpen] = useState(false);
   const [currentRequest, setCurrentRequest] = useState<EventRequest | null>(null);
+  const [viewingRequestId, setViewingRequestId] = useState<number | null>(null);
   
   // Form state for quotation
   const [quotationAmount, setQuotationAmount] = useState("");
@@ -1276,7 +1278,7 @@ function RequestsTab() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => console.log("View detail")}
+                    onClick={() => setViewingRequestId(request.id)}
                   >
                     View Details
                   </Button>
@@ -1287,6 +1289,16 @@ function RequestsTab() {
                       onClick={() => handleCreateQuotation(request)}
                     >
                       Create Quotation
+                    </Button>
+                  )}
+                  
+                  {request.status === 'quoted' && (
+                    <Button 
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setViewingRequestId(request.id)}
+                    >
+                      View Quotation
                     </Button>
                   )}
                 </div>
