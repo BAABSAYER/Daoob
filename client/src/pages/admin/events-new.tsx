@@ -1105,6 +1105,28 @@ function RequestsTab() {
     },
   });
   
+  // Fetch quotations for the current request
+  const {
+    data: quotations,
+    isLoading: isLoadingQuotations,
+  } = useQuery<Quotation[]>({
+    queryKey: ["/api/quotations", currentRequest?.id],
+    queryFn: async () => {
+      if (!currentRequest) return [];
+      
+      const res = await fetch(`/api/quotations?eventRequestId=${currentRequest.id}`, {
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to fetch quotations");
+      }
+      
+      return await res.json();
+    },
+    enabled: !!currentRequest && currentRequest.status === 'quoted',
+  });
+  
   // Create quotation mutation
   const createQuotationMutation = useMutation({
     mutationFn: async (newQuotation: { 
@@ -1421,7 +1443,7 @@ function RequestsTab() {
                     </div>
                   ) : quotations && quotations.length > 0 ? (
                     <div className="space-y-4">
-                      {quotations.map((quotation) => (
+                      {quotations.map((quotation: Quotation) => (
                         <Card key={quotation.id}>
                           <CardHeader className="pb-2">
                             <div className="flex justify-between">
