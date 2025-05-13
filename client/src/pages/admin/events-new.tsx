@@ -1017,8 +1017,13 @@ function RequestsTab() {
       const url = selectedStatus 
         ? `/api/event-requests?status=${selectedStatus}`
         : '/api/event-requests';
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch event requests');
+      const res = await fetch(url, { 
+        credentials: 'include' 
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch event requests: ${res.status} ${errorText}`);
+      }
       return await res.json();
     },
   });
@@ -1034,8 +1039,13 @@ function RequestsTab() {
   } = useQuery<Record<number, { username: string; email: string }>>({
     queryKey: ["/api/users/map"],
     queryFn: async () => {
-      const res = await fetch('/api/users/map');
-      if (!res.ok) throw new Error('Failed to fetch user map');
+      const res = await fetch('/api/users/map', { 
+        credentials: 'include' 
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch user map: ${res.status} ${errorText}`);
+      }
       return await res.json();
     },
   });
