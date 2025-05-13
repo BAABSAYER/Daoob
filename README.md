@@ -133,14 +133,35 @@ flutter build apk --release
 ### Replit Deployment
 To deploy the application on Replit:
 
-1. Click the "Deploy" button at the top of the Replit interface
-2. Wait for the deployment process to complete
-3. Replit will provide a public URL (e.g., https://daoob.replit.app)
-4. Update the mobile app's configuration to point to this URL:
+1. Set up the database and create test users:
+   ```bash
+   # Make the setup script executable
+   chmod +x replit-setup.sh
+   
+   # Run the setup script
+   ./replit-setup.sh
+   ```
+
+2. Click the "Deploy" button at the top of the Replit interface
+3. Wait for the deployment process to complete
+4. Replit will provide a public URL (e.g., https://daoob.replit.app)
+
+5. The mobile app is already configured to connect to the Replit deployment:
    ```dart
-   // In daoob_mobile/lib/config/api_config.dart
+   // This is already set in daoob_mobile/lib/config/api_config.dart
    static const int currentEnvironment = ENV_REPLIT;
    ```
+
+#### Test Accounts
+The setup script creates two test accounts:
+
+**Admin User:**
+- Username: admin
+- Password: password
+
+**Test Client:**
+- Username: testuser
+- Password: password
 
 ### Production Deployment
 For production deployment on your own server:
