@@ -1008,6 +1008,19 @@ function RequestsTab() {
   const [quotationDescription, setQuotationDescription] = useState("");
   const [quotationExpiryDate, setQuotationExpiryDate] = useState("");
   
+  // Define the Quotation type
+  type Quotation = {
+    id: number;
+    eventRequestId: number;
+    adminId: number;
+    totalPrice: number;
+    details: { description: string; items?: any[] };
+    status: string;
+    expiryDate: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  
   // Queries
   const {
     data: eventRequests,
@@ -1278,7 +1291,10 @@ function RequestsTab() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setViewingRequestId(request.id)}
+                    onClick={() => {
+                      setCurrentRequest(request);
+                      setViewRequestDialogOpen(true);
+                    }}
                   >
                     View Details
                   </Button>
@@ -1296,7 +1312,10 @@ function RequestsTab() {
                     <Button 
                       size="sm"
                       variant="secondary"
-                      onClick={() => setViewingRequestId(request.id)}
+                      onClick={() => {
+                        setCurrentRequest(request);
+                        setViewRequestDialogOpen(true);
+                      }}
                     >
                       View Quotation
                     </Button>
@@ -1316,6 +1335,141 @@ function RequestsTab() {
       )}
       
       {/* Create Quotation Dialog */}
+      <Dialog open={viewRequestDialogOpen} onOpenChange={setViewRequestDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Event Request Details</DialogTitle>
+            <DialogDescription>
+              {currentRequest && (
+                <span>
+                  {getEventTypeName(currentRequest.eventTypeId)} request from {getClientName(currentRequest.clientId)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {currentRequest && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium">Event Details</h3>
+                  <div className="mt-2 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Status:</span>
+                      <span>{getStatusBadge(currentRequest.status)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Event Type:</span>
+                      <span>{getEventTypeName(currentRequest.eventTypeId)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Event Date:</span>
+                      <span>{formatDate(currentRequest.eventDate)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Budget:</span>
+                      <span>{formatCurrency(currentRequest.budget)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Submitted:</span>
+                      <span>{formatDate(currentRequest.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium">Client Information</h3>
+                  <div className="mt-2 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Client:</span>
+                      <span>{getClientName(currentRequest.clientId)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Email:</span>
+                      <span>{userMap?.[currentRequest.clientId]?.email || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {currentRequest.specialRequests && (
+                <div>
+                  <h3 className="text-sm font-medium">Special Requests</h3>
+                  <p className="mt-2 text-sm">{currentRequest.specialRequests}</p>
+                </div>
+              )}
+              
+              {/* Only show the create quotation button if status is 'pending' */}
+              {currentRequest.status === 'pending' && (
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => {
+                    setViewRequestDialogOpen(false);
+                    setTimeout(() => setCreateQuotationDialogOpen(true), 100);
+                  }}>
+                    Create Quotation
+                  </Button>
+                </div>
+              )}
+              
+              {/* Show quotations if any exist */}
+              {currentRequest.status === 'quoted' && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium mb-2">Quotations</h3>
+                  {isLoadingQuotations ? (
+                    <div className="flex justify-center p-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : quotations && quotations.length > 0 ? (
+                    <div className="space-y-4">
+                      {quotations.map((quotation) => (
+                        <Card key={quotation.id}>
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between">
+                              <CardTitle className="text-base">Quotation #{quotation.id}</CardTitle>
+                              <Badge>{quotation.status}</Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="font-medium">Total Amount:</span>
+                                <span>{formatCurrency(quotation.totalPrice)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="font-medium">Created:</span>
+                                <span>{formatDate(quotation.createdAt)}</span>
+                              </div>
+                              {quotation.expiryDate && (
+                                <div className="flex justify-between">
+                                  <span className="font-medium">Expires:</span>
+                                  <span>{formatDate(quotation.expiryDate)}</span>
+                                </div>
+                              )}
+                              <div className="mt-2">
+                                <span className="font-medium">Description:</span>
+                                <p className="mt-1 text-sm">{quotation.details?.description}</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No quotations found.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewRequestDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={createQuotationDialogOpen} onOpenChange={setCreateQuotationDialogOpen}>
         <DialogContent>
           <DialogHeader>
