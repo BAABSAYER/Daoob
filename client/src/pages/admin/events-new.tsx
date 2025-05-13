@@ -1017,7 +1017,7 @@ function RequestsTab() {
       const url = selectedStatus 
         ? `/api/event-requests?status=${selectedStatus}`
         : '/api/event-requests';
-      const res = await fetch(`/api${url}`);
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch event requests');
       return await res.json();
     },
