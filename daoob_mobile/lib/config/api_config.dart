@@ -1,7 +1,7 @@
 import 'dart:io';
 
 class ApiConfig {
-  // Production API URLs - update this for production deployment
+  // API URLs for different environments
   static const String productionApiUrl = 'https://api.daoob.com';
   static const String replitDeploymentUrl = 'https://daoob.replit.app';
   
@@ -11,7 +11,8 @@ class ApiConfig {
   static const int ENV_PRODUCTION = 2;
   
   // Set the current environment (0=local, 1=replit, 2=production)
-  static const int currentEnvironment = ENV_LOCAL;
+  // Change this value to connect to different environments
+  static const int currentEnvironment = ENV_REPLIT;
   
   // Determine if we're in production mode (for Flutter build)
   static const bool isProductionBuild = bool.fromEnvironment('dart.vm.product');

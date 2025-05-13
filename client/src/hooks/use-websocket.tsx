@@ -27,13 +27,16 @@ export function useWebSocket() {
   useEffect(() => {
     if (!user) return;
 
-    // Get the server host and port either from environment or window location
-    const host = import.meta.env.VITE_SERVER_HOST || window.location.hostname;
-    const port = import.meta.env.VITE_SERVER_PORT || '5000';
+    // Dynamic WebSocket URL based on current window location
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.hostname;
     
-    // Use environment variables with fallbacks for local development
-    const wsUrl = `${protocol}//${host}:${port}/ws`;
+    // In production/Replit, we don't need to specify the port as it's handled by the proxy
+    // For local development, use the port if it's not standard (80/443)
+    const usePort = window.location.port && !['80', '443', ''].includes(window.location.port);
+    const portSuffix = usePort ? `:${window.location.port}` : '';
+    
+    const wsUrl = `${protocol}//${host}${portSuffix}/ws`;
     console.log('Connecting to WebSocket at:', wsUrl);
 
     const ws = new WebSocket(wsUrl);
