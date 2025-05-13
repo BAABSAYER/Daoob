@@ -24,8 +24,8 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.example.daoob_mobile"
-    compileSdk 34
-    ndkVersion flutter.ndkVersion
+    compileSdk 35  // Updated from 34 to 35
+    ndkVersion "27.0.12077973"  // Updated to specific version
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

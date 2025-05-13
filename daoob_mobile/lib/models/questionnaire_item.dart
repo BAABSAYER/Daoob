@@ -7,6 +7,12 @@ class QuestionnaireItem {
   final bool isRequired;
   final int orderIndex;
   
+  // Aliased properties to match error references
+  String get question => questionText;
+  bool get required => isRequired;
+  int get displayOrder => orderIndex;
+  String get questionType => answerType;
+  
   const QuestionnaireItem({
     required this.id,
     required this.eventTypeId,

@@ -4,6 +4,7 @@ class EventType {
   final String? description;
   final bool isActive;
   final String? categoryId;
+  final String? icon;  // Added icon field
   
   const EventType({
     required this.id,
@@ -11,6 +12,7 @@ class EventType {
     this.description,
     required this.isActive,
     this.categoryId,
+    this.icon,  // Added to constructor
   });
   
   factory EventType.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class EventType {
       description: json['description'],
       isActive: json['isActive'] ?? true,
       categoryId: json['categoryId'],
+      icon: json['icon'],  // Added to fromJson
     );
   }
   
@@ -30,6 +33,7 @@ class EventType {
       'description': description,
       'isActive': isActive,
       'categoryId': categoryId,
+      'icon': icon,  // Added to toJson
     };
   }
 }

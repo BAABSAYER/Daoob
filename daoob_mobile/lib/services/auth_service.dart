@@ -10,12 +10,16 @@ class User {
   final String? name;
   final String email;
   final String userType;
+  final String? phone;  // Added phone field
+  final String? username;  // Added username field for compatibility
   
   User({
     required this.id,
     required this.name,
     required this.email,
     required this.userType,
+    this.phone,  // Added to constructor
+    this.username,  // Added to constructor
   });
   
   factory User.fromJson(Map<String, dynamic> json) {
@@ -24,6 +28,8 @@ class User {
       name: json['name'],
       email: json['email'],
       userType: json['userType'],
+      phone: json['phone'],  // Added to fromJson
+      username: json['username'],  // Added to fromJson
     );
   }
   
@@ -33,6 +39,8 @@ class User {
       'name': name,
       'email': email,
       'userType': userType,
+      'phone': phone,  // Added to toJson
+      'username': username,  // Added to toJson
     };
   }
 }
