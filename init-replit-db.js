@@ -1,5 +1,5 @@
-import { db } from './server/db.js';
-import { users } from './shared/schema.js';
+import { db } from './server/db.ts';
+import { users } from './shared/schema.ts';
 import { scrypt, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import * as dotenv from 'dotenv';
@@ -35,12 +35,9 @@ async function initializeReplitDatabase() {
         username: 'admin',
         email: 'admin@example.com',
         password: hashedPassword,
-        role: 'ADMIN',
-        name: 'Admin User',
-        profilePicture: null,
-        bio: 'System administrator',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        userType: 'admin',
+        fullName: 'Admin User',
+        avatarUrl: null
       });
       
       console.log('Admin user created successfully');
@@ -63,12 +60,9 @@ async function initializeReplitDatabase() {
         username: 'testuser',
         email: 'test@example.com',
         password: hashedPassword,
-        role: 'CLIENT',
-        name: 'Test User',
-        profilePicture: null,
-        bio: 'Test client account',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        userType: 'client',
+        fullName: 'Test User',
+        avatarUrl: null
       });
       
       console.log('Test user created successfully');
