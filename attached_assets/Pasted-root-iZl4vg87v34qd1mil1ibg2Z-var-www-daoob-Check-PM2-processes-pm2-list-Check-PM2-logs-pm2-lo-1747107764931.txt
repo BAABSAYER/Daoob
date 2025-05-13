@@ -1,0 +1,55 @@
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Check PM2 processes
+pm2 list
+
+# Check PM2 logs
+pm2 logs --lines 20
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ daoob              │ fork     │ 1    │ online    │ 0%       │ 3.5mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[TAILING] Tailing last 20 lines for [all] processes (change the value with --lines option)
+/root/.pm2/pm2.log last 20 lines:
+PM2        | 2025-05-13T11:27:39: PM2 log: App [daoob:0] exited with code [1] via signal [SIGINT]
+PM2        | 2025-05-13T11:27:39: PM2 log: App [daoob:0] starting in -fork mode-
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] online
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] exited with code [1] via signal [SIGINT]
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] starting in -fork mode-
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] online
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] exited with code [1] via signal [SIGINT]
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] starting in -fork mode-
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] online
+PM2        | 2025-05-13T11:27:40: PM2 log: App [daoob:0] exited with code [1] via signal [SIGINT]
+PM2        | 2025-05-13T11:27:40: PM2 log: Script /var/www/daoob/start.sh had too many unstable restarts (16). Stopped. "errored"
+PM2        | 2025-05-13T11:29:57: PM2 log: Stopping app:daoob id:0
+PM2        | 2025-05-13T11:29:57: PM2 error: app=daoob id=0 does not have a pid
+PM2        | 2025-05-13T11:36:19: PM2 log: App [daoob:0] starting in -fork mode-
+PM2        | 2025-05-13T11:36:19: PM2 log: App [daoob:0] online
+PM2        | 2025-05-13T11:40:22: PM2 log: Stopping app:daoob id:0
+PM2        | 2025-05-13T11:40:22: PM2 log: App [daoob:0] exited with code [0] via signal [SIGINT]
+PM2        | 2025-05-13T11:40:22: PM2 log: pid=13486 msg=process killed
+PM2        | 2025-05-13T11:40:22: PM2 log: App [daoob:0] starting in -fork mode-
+PM2        | 2025-05-13T11:40:22: PM2 log: App [daoob:0] online
+
+/root/.pm2/logs/daoob-error-0.log last 20 lines:
+0|daoob    |     at node:internal/main/run_main_module:28:49 {
+0|daoob    |   code: 'MODULE_NOT_FOUND',
+0|daoob    |   requireStack: []
+0|daoob    | }
+0|daoob    | 
+0|daoob    | Node.js v18.20.8
+0|daoob    | node:internal/modules/cjs/loader:1143
+0|daoob    |   throw err;
+0|daoob    |   ^
+0|daoob    | 
+0|daoob    | Error: Cannot find module '/var/www/daoob/server/index.js'
+0|daoob    |     at Module._resolveFilename (node:internal/modules/cjs/loader:1140:15)
+0|daoob    |     at Module._load (node:internal/modules/cjs/loader:981:27)
+0|daoob    |     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12)
+0|daoob    |     at node:internal/main/run_main_module:28:49 {
+0|daoob    |   code: 'MODULE_NOT_FOUND',
+0|daoob    |   requireStack: []
+0|daoob    | }
+0|daoob    | 
+0|daoob    | Node.js v18.20.8
+

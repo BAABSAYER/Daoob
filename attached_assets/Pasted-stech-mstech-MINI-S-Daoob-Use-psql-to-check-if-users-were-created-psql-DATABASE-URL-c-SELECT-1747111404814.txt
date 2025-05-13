@@ -1,0 +1,59 @@
+stech@mstech-MINI-S:~/Daoob$ # Use psql to check if users were created
+psql $DATABASE_URL -c "SELECT id, username, user_type, email FROM users;"
+
+# Check admin permissions
+psql $DATABASE_URL -c "SELECT * FROM admin_permissions;"
+ id | username | user_type |       email       
+----+----------+-----------+-------------------
+  1 | admin    | admin     | admin@example.com
+  2 | demouser | client    | demo@example.com
+(2 rows)
+
+mstech@mstech-MINI-S:~/Daoob$ ifconfig
+br-e319a20b8b60: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.18.0.1  netmask 255.255.0.0  broadcast 172.18.255.255
+        inet6 fe80::c48d:d9ff:fe66:5915  prefixlen 64  scopeid 0x20<link>
+        ether c6:8d:d9:66:59:15  txqueuelen 0  (Ethernet)
+        RX packets 3  bytes 84 (84.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 950  bytes 199729 (199.7 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 66:10:4f:c6:8f:4d  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+enp1s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.8.147  netmask 255.255.255.0  broadcast 192.168.8.255
+        inet6 fd22:31a3:b32:6700:644b:ef2a:7dc3:5b42  prefixlen 64  scopeid 0x0<global>
+        inet6 2001:16a2:c2d4:3fd:2231:a30b:3267:7  prefixlen 128  scopeid 0x0<global>
+        inet6 fd22:31a3:b32:6700:3c34:59f3:542b:2840  prefixlen 64  scopeid 0x0<global>
+        inet6 2001:16a2:c2d4:3fd:41ca:ccc8:b6a6:15fd  prefixlen 64  scopeid 0x0<global>
+        inet6 2001:16a2:c2d4:3fd:9cf4:4f0a:a462:abe6  prefixlen 64  scopeid 0x0<global>
+        inet6 fe80::fb3d:6744:20ec:350b  prefixlen 64  scopeid 0x20<link>
+        ether e8:ff:1e:d0:92:fc  txqueuelen 1000  (Ethernet)
+        RX packets 894077  bytes 876716974 (876.7 MB)
+        RX errors 0  dropped 2  overruns 0  frame 0
+        TX packets 396442  bytes 43909452 (43.9 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 13275  bytes 3745369 (3.7 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 13275  bytes 3745369 (3.7 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+veth1f9adeb: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet6 fe80::30b0:cfff:fe23:a98d  prefixlen 64  scopeid 0x20<link>
+        ether 32:b0:cf:23:a9:8d  txqueuelen 0  (Ethernet)
+        RX packets 3  bytes 126 (126.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 1491  bytes 298931 (298.9 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0

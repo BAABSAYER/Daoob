@@ -1,0 +1,166 @@
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Check if the server is listening on port 5000
+sudo netstat -tuln | grep 5000
+
+# Test if the application responds locally
+curl http://localhost:5000/api/ping
+tcp        0      0 0.0.0.0:5000            0.0.0.0:*               LISTEN     
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>DAOOB - Event Management Platform</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script type="module" crossorigin src="/assets/index-CEYVOYMn.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D5NJ2Rno.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Update NGINX configurationuration
+sudo tee /etc/nginx/sites-available/daoob << EOF
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location /ws {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+EOF
+
+# Verify and reload NGINX configuration
+sudo nginx -t && sudo systemctl restart nginx
+
+# Test if NGINX is properly forwarding requests
+curl http://localhost
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /ws {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>DAOOB - Event Management Platform</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script type="module" crossorigin src="/assets/index-CEYVOYMn.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D5NJ2Rno.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Check if the process is runningrunning
+ps aux | grep node
+
+# Check what ports are open and listening
+sudo netstat -tuln | grep LISTEN
+
+# Check if anything is listening on port 5000
+sudo lsof -i :5000
+root       14171  0.1  0.7 11124840 56888 ?      Sl   11:50   0:00 node --experimental-modules simple-server.js
+root       14189  0.1  0.7 639752 54996 pts/0    Sl+  11:50   0:00 node /usr/bin/pm2 logs --lines 20
+root       14312  0.0  0.0   6480  2476 pts/1    S+   11:54   0:00 grep --color=auto node
+tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN     
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:5000            0.0.0.0:*               LISTEN     
+tcp6       0      0 :::22                   :::*                    LISTEN     
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node    14171 root   19u  IPv4 133132      0t0  TCP *:5000 (LISTEN)
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Check firewall status
+sudo ufw status
+
+# If it's active, allow ports 80 and 5000
+sudo ufw allow 80/tcp
+sudo ufw allow 5000/tcp
+Status: active
+
+To                         Action      From
+--                         ------      ----
+Nginx Full                 ALLOW       Anywhere                  
+22/tcp                     ALLOW       Anywhere                  
+80/tcp                     ALLOW       Anywhere                  
+5000/tcp                   ALLOW       Anywhere                  
+Nginx Full (v6)            ALLOW       Anywhere (v6)             
+22/tcp (v6)                ALLOW       Anywhere (v6)             
+80/tcp (v6)                ALLOW       Anywhere (v6)             
+5000/tcp (v6)              ALLOW       Anywhere (v6)             
+
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+Skipping adding existing rule
+Skipping adding existing rule (v6)
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Get the correct public IP address of the server
+curl -s ifconfig.me
+curl -s http://checkip.amazonaws.com
+8.213.40.2278.213.40.227
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Create a very simple test server
+cat > /var/www/daoob/test-server.js << EOF
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('DAOOB Test Server is running!\n');
+});
+
+server.listen(5000, '0.0.0.0', () => {
+  console.log('Test server running on port 5000');
+});
+EOF
+
+# Run the test server
+node /var/www/daoob/test-server.js
+file:///var/www/daoob/test-server.js:1
+const http = require('http');
+             ^
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/var/www/daoob/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///var/www/daoob/test-server.js:1:14
+    at ModuleJob.run (node:internal/modules/esm/module_job:195:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:337:24)
+    at async loadESM (node:internal/process/esm_loader:34:7)
+    at async handleMainPromise (node:internal/modules/run_main:106:12)
+
+Node.js v18.20.8

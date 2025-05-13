@@ -1,0 +1,1291 @@
+mstech@mstech-MINI-S:~/Daoob$ cat > test-api-login-follow.js << 'EOF'
+import fetch from 'node-fetch';
+import https from 'https';
+
+async function testLogin() {
+  const apiUrl = 'http://localhost:5000/api/login';
+  const credentials = {
+    username: 'admin',
+    password: 'password'
+  };
+  
+  console.log(`Testing login with ${credentials.username}/${credentials.password}`);
+  
+  // Create a custom HTTPS agent that doesn't validate certificates
+  const httpsAgent = new https.Agent({
+    rejectUnauthorized: false
+  });
+  
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(credentials),
+      redirect: 'follow',
+      agent: function(_parsedURL) {
+        if (_parsedURL.protocol === 'https:') {
+          return httpsAgent;
+        }
+        return null;
+      }
+    });
+    
+    console.log('Response status:', response.status);
+    
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('Response data:', data);
+    } else {
+      const text = await response.text();
+      console.log('Response text:', text);
+    }
+  } catch (error) {
+    console.error('Error testing login:', error);
+  }
+}
+
+testLogin();
+EOF
+
+# Run the test
+node test-api-login-follow.js
+Testing login with admin/password
+Error testing login: FetchError: request to http://localhost:5000/api/login failed, reason: connect ECONNREFUSED 127.0.0.1:5000
+    at ClientRequest.<anonymous> (file:///home/mstech/Daoob/node_modules/node-fetch/src/index.js:108:11)
+    at ClientRequest.emit (node:events:536:35)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  type: 'system',
+  errno: 'ECONNREFUSED',
+  code: 'ECONNREFUSED',
+  erroredSysCall: 'connect'
+}
+mstech@mstech-MINI-S:~/Daoob$ node test-api-login-follow.js
+Testing login with admin/password
+Error testing login: FetchError: request to http://localhost:5000/api/login failed, reason: connect ECONNREFUSED 127.0.0.1:5000
+    at ClientRequest.<anonymous> (file:///home/mstech/Daoob/node_modules/node-fetch/src/index.js:108:11)
+    at ClientRequest.emit (node:events:536:35)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  type: 'system',
+  errno: 'ECONNREFUSED',
+  code: 'ECONNREFUSED',
+  erroredSysCall: 'connect'
+}
+mstech@mstech-MINI-S:~/Daoob$ # Search for hardcoded HTTPS references
+grep -r "https:" client/src/
+grep -r "443" client/src/
+
+# Search for WebSocket connections
+grep -r "new WebSocket" client/src/
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="dns-prefetch" href="https://github.githubassets.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="dns-prefetch" href="https://avatars.githubusercontent.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="dns-prefetch" href="https://github-cloud.s3.amazonaws.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="dns-prefetch" href="https://user-images.githubusercontent.com/">
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="preconnect" href="https://github.githubassets.com" crossorigin>
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="preconnect" href="https://avatars.githubusercontent.com">
+client/src/assets/fonts/Roboto-Regular.ttf:      <link rel="preload" href="https://github.githubassets.com/assets/global-banner-disable-f988792be49f.js" as="script" crossorigin>
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="preload" href="https://github.githubassets.com/assets/mona-sans-d1bf285e9b9b.woff2" as="font" type="font/woff2" crossorigin>
+client/src/assets/fonts/Roboto-Regular.ttf:  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/light-74231a1f3bbb.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/dark-8a995f0bacd4.css" /><link data-color-theme="light_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_high_contrast-83beb16e0ecf.css" /><link data-color-theme="light_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_colorblind-f91b0f603451.css" /><link data-color-theme="light_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https//github.githubassets.com/assets/light_colorblind_high_contrast-5aebfa54b215.css" /><link data-color-theme="light_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia-6e122dab64fc.css" /><link data-color-theme="light_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia_high_contrast-b32664e28b79.css" /><link data-color-theme="dark_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_high_contrast-9ac301c3ebe5.css" /><link data-color-theme="dark_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind-cd826e8636dc.css" /><link data-color-theme="dark_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind_high_contrast-131d53fe187c.css" /><link data-color-theme="dark_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia-18119e682df0.css" /><link data-color-theme="dark_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia_high_contrast-63c0358957ba.css" /><link data-color-theme="dark_dimmed" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed-f37fb7684b1f.css" /><link data-color-theme="dark_dimmed_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed_high_contrast-8f371c75debd.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-primitives-225433424a87.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-cba26849680f.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/global-d579beef0491.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/github-864568fbf430.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/repository-4fce88777fa8.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/wp-runtime-36bc160050d6.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_oddbird_popover-polyfill_dist_popover-fn_js-81211bd82278.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_mini-throttle_dist_index_js-node_modules_stacktrace-parser_dist_s-1d3d52-4be8ffe9a34a.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_failbot_failbot_ts-9d1ab2cdab0d.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/environment-cc191d9d2324.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_primer_behaviors_dist_esm_index_mjs-0dbb79f97f8f.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_selector-observer_dist_index_esm_js-f690fd9ae3d5.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_relative-time-element_dist_index_js-62d275b7ddd9.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_auto-complete-element_dist_index_js-node_modules_github_catalyst_-8e9f78-a90ac05d2469.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_text-expander-element_dist_index_js-78748950cb0c.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_filter-input-element_dist_index_js-node_modules_github_remote-inp-b5f1d7-a1760ffda83d.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_markdown-toolbar-element_dist_index_js-ceef33f593fa.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_file-attachment-element_dist_index_js-node_modules_primer_view-co-c44a69-08c257325fd3.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/github-elements-d67ff6fcb72d.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/element-registry-c7475cff79ff.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_braintree_browser-detection_dist_browser-detection_js-node_modules_githu-2906d7-2a07a295af40.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_lit-html_lit-html_js-be8cb88f481b.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_morphdom_dist_morphdom-esm_js-0c08218c7d5f.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_turbo_dist_turbo_es2017-esm_js-a03ee12d659a.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_remote-form_dist_index_js-node_modules_delegated-events_dist_inde-893f9f-b6294cf703b7.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_color-convert_index_js-e3180fe3bcb3.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_quote-selection_dist_index_js-node_modules_github_session-resume_-054bff-311c04966bb2.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_updatable-content_updatable-content_ts-62f3e9c52ece.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_behaviors_task-list_ts-app_assets_modules_github_sso_ts-ui_packages-900dde-768abe60b1f8.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_sticky-scroll-into-view_ts-3e000c5d31a9.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_behaviors_ajax-error_ts-app_assets_modules_github_behaviors_include-d0d0a6-7cc66dc86dd7.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_behaviors_commenting_edit_ts-app_assets_modules_github_behaviors_ht-83c235-4bcbbbfbe1d4.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_alive_alive_ts-ui_packages_favicon_favicon_ts-ui_packages_hotkey_keyboard-shortcu-30cc64-4f2226f8b82b.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/behaviors-72c242c10738.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_delegated-events_dist_index_js-node_modules_github_catalyst_lib_index_js-f6223d90c7ba.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/notifications-global-01e85cd1be94.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="assets" href="https://github.githubassets.com/">
+client/src/assets/fonts/Roboto-Regular.ttf:<meta name="octolytics-url" content="https://collector.github.com/github/collect" />
+client/src/assets/fonts/Roboto-Regular.ttf:    <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub">
+client/src/assets/fonts/Roboto-Regular.ttf:    <meta name="apple-itunes-app" content="app-id=1477376905, app-argument=https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf" />
+client/src/assets/fonts/Roboto-Regular.ttf:      <meta property="og:url" content="https://github.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <meta property="og:image" content="https://github.githubassets.com/assets/github-logo-55c5b9a1fe52.png">
+client/src/assets/fonts/Roboto-Regular.ttf:  <meta property="og:image" content="https://github.githubassets.com/assets/github-mark-57519b92ca4e.png">
+client/src/assets/fonts/Roboto-Regular.ttf:  <meta property="og:image" content="https://github.githubassets.com/assets/github-octocat-13c86b8b336d.png">
+client/src/assets/fonts/Roboto-Regular.ttf:  <meta property="twitter:image" content="https://github.githubassets.com/assets/github-logo-55c5b9a1fe52.png">
+client/src/assets/fonts/Roboto-Regular.ttf:      <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/site-62271ce87619.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/error-3bfb6168c7d5.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:      <link rel="canonical" href="https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf" data-turbo-transient>
+client/src/assets/fonts/Roboto-Regular.ttf:  <meta name="browser-stats-url" content="https://api.github.com/_private/browser/stats">
+client/src/assets/fonts/Roboto-Regular.ttf:  <meta name="browser-errors-url" content="https://api.github.com/_private/browser/errors">
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="mask-icon" href="https://github.githubassets.com/assets/pinned-octocat-093da3e6fa40.svg" color="#000000">
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="alternate icon" class="js-site-favicon" type="image/png" href="https://github.githubassets.com/favicons/favicon.png">
+client/src/assets/fonts/Roboto-Regular.ttf:  <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="https://github.githubassets.com/favicons/favicon.svg" data-base-href="https://github.githubassets.com/favicons/favicon">
+client/src/assets/fonts/Roboto-Regular.ttf:      <script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/primer-react-185cf474198e.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/react-core-2b73d1f40839.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/react-lib-80430c87778a.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/octicons-react-cf2f2ab8dab4.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_emotion_is-prop-valid_dist_emotion-is-prop-valid_esm_js-node_modules_emo-b1c483-23083d170518.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_catalyst_lib_index_js-node_modules_tanstack_react-query_build_mod-3b1f5d-85b60118c668.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_ui-commands_ui-commands_ts-0e6cfc813d47.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/keyboard-shortcuts-dialog-8eef249f0ef9.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react.05990da7b38026080f99.module.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/keyboard-shortcuts-dialog.1aa183523505d66bb990.module.css" />
+client/src/assets/fonts/Roboto-Regular.ttf:  <script type="application/json" data-target="react-partial.embeddedData">{"props":{"docsUrl":"https://docs.github.com/get-started/accessibility/keyboard-shortcuts"}}</script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_remote-form_dist_index_js-node_modules_delegated-events_dist_inde-94fd67-4898d1bf4b51.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/sessions-45d6658f8b6b.js"></script>
+client/src/assets/fonts/Roboto-Regular.ttf:            data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="4f86f1f9467f580608e0c48c7f58179f462959b24df7e9c9f0e88cba718b5334"
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_copilot&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_copilot_link_product_navbar&quot;}" href="https://github.com/features/copilot">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_advanced_security&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_advanced_security_link_product_navbar&quot;}" href="https://github.com/security/advanced-security">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;actions&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;actions_link_product_navbar&quot;}" href="https://github.com/features/actions">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;codespaces&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;codespaces_link_product_navbar&quot;}" href="https://github.com/features/codespaces">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;issues&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;issues_link_product_navbar&quot;}" href="https://github.com/features/issues">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;code_review&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;code_review_link_product_navbar&quot;}" href="https://github.com/features/code-review">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;discussions&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;discussions_link_product_navbar&quot;}" href="https://github.com/features/discussions">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;code_search&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;code_search_link_product_navbar&quot;}" href="https://github.com/features/code-search">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;why_github&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;why_github_link_product_navbar&quot;}" href="https://github.com/why-github">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;all_features&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;all_features_link_product_navbar&quot;}" href="https://github.com/features">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;documentation&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;documentation_link_product_navbar&quot;}" href="https://docs.github.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_skills&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_skills_link_product_navbar&quot;}" href="https://skills.github.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;blog&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;blog_link_product_navbar&quot;}" href="https://github.blog">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;enterprises&quot;,&quot;context&quot;:&quot;solutions&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;enterprises_link_solutions_navbar&quot;}" href="https//github.com/enterprise">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;small_and_medium_teams&quot;,&quot;context&quot;:&quot;solutions&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;small_and_medium_teams_link_solutions_navbar&quot;}" href="https://github.com/team">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;startups&quot;,&quot;context&quot;:&quot;solutions&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;startups_link_solutions_navbar&quot;}" href="https://github.com/enterprise/startups">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;learning_pathways&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;learning_pathways_link_resources_navbar&quot;}" href="https://resources.github.com/learn/pathways">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;events_amp_webinars&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;events_amp_webinars_link_resources_navbar&quot;}" href="https://resources.github.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;ebooks_amp_whitepapers&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;ebooks_amp_whitepapers_link_resources_navbar&quot;}" href="https://github.com/resources/whitepapers">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;customer_stories&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;customer_stories_link_resources_navbar&quot;}" href="https://github.com/customer-stories">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;partners&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;partners_link_resources_navbar&quot;}" href="https://partner.github.com">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;executive_insights&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;executive_insights_link_resources_navbar&quot;}" href="https://github.com/solutions/executive-insights">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;the_readme_project&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;the_readme_project_link_open_source_navbar&quot;}" href="https://github.com/readme">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;topics&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;topics_link_open_source_navbar&quot;}" href="https://github.com/topics">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;trending&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;trending_link_open_source_navbar&quot;}" href="https://github.com/trending">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;collections&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;collections_link_open_source_navbar&quot;}" href="https://github.com/collections">
+client/src/assets/fonts/Roboto-Regular.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_advanced_security&quot;,&quot;context&quot;:&quot;enterprise&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_advanced_security_link_enterprise_navbar&quot;}" href="https://github.com/security/advanced-security">
+client/src/assets/fonts/Roboto-Regular.ttf:    <a class="HeaderMenu-link no-underline px-0 px-lg-2 py-3 py-lg-2 d-block d-lg-inline-block" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;pricing&quot;,&quot;context&quot;:&quot;global&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;pricing_link_global_navbar&quot;}" href="https://github.com/pricing">Pricing</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a target="_blank" href="https://docs.github.com/search-github/github-code-search/understanding-github-code-search-syntax" data-view-component="true" class="Link color-fg-accent text-normal ml-2">Search syntax tips</a>            <div class="d-flex flex-1"></div>
+client/src/assets/fonts/Roboto-Regular.ttf:            To see all available qualifiers, see our <a class="Link--inTextBlock" href="https://docs.github.com/search-github/github-code-search/understanding-github-code-search-syntax">documentation</a>.
+client/src/assets/fonts/Roboto-Regular.ttf:                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="4f86f1f9467f580608e0c48c7f58179f462959b24df7e9c9f0e88cba718b5334"
+client/src/assets/fonts/Roboto-Regular.ttf:<input type="hidden" name="return_to" id="return_to" value="https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf" autocomplete="off" class="form-control" />
+client/src/assets/fonts/Roboto-Regular.ttf:                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Regular.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="4f86f1f9467f580608e0c48c7f58179f462959b24df7e9c9f0e88cba718b5334"
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://support.github.com?tags=dotcom-404" class="Link--secondary">Contact Support</a> &mdash;
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://githubstatus.com" class="Link--secondary">GitHub Status</a> &mdash;
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://twitter.com/githubstatus" class="Link--secondary">@githubstatus</a>
+client/src/assets/fonts/Roboto-Regular.ttf:        <a class="btn-mktg mb-4 btn-muted-mktg" data-analytics-event="{&quot;category&quot;:&quot;Subscribe&quot;,&quot;action&quot;:&quot;click to Subscribe&quot;,&quot;label&quot;:&quot;ref_cta:Subscribe;&quot;}" href="https://resources.github.com/newsletter/">
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;resources&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;resources_link_product_footer&quot;}" href="https://resources.github.com">Resources</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;roadmap&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;roadmap_link_product_footer&quot;}" href="https://github.com/github/roadmap">Roadmap</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;compare&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;compare_link_product_footer&quot;}" href="https://resources.github.com/devops/tools/compare">Compare GitHub</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;dev-api&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;dev-api_link_platform_footer&quot;}" href="https://docs.github.com/get-started/exploring-integrations/about-building-integrations">Developer API</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;partners&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;partners_link_platform_footer&quot;}" href="https://partner.github.com">Partners</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;edu&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;edu_link_platform_footer&quot;}" href="https://github.com/edu">Education</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;cli&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;cli_link_platform_footer&quot;}" href="https://cli.github.com">GitHub CLI</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;desktop&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;desktop_link_platform_footer&quot;}" href="https://desktop.github.com">GitHub Desktop</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;mobile&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;mobile_link_platform_footer&quot;}" href="https://github.com/mobile">GitHub Mobile</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;docs&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;docs_link_support_footer&quot;}" href="https://docs.github.com">Docs</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;community&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;community_link_support_footer&quot;}" href="https://github.community">Community Forum</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;services&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;services_link_support_footer&quot;}" href="https://services.github.com">Professional Services</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;skills&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;skills_link_support_footer&quot;}" href="https://skills.github.com">Skills</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;status&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;status_link_support_footer&quot;}" href="https://www.githubstatus.com">Status</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;contact_github&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;contact_github_link_support_footer&quot;}" href="https://support.github.com?tags=dotcom-footer">Contact GitHub</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;about&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;about_link_company_footer&quot;}" href="https://github.com/about">About</a>
+client/src/assets/fonts/Roboto-Regular.ttf:              <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;why_github&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;why_github_link_company_footer&quot;}" href="https://github.com/why-github">Why GitHub</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;blog&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;blog_link_company_footer&quot;}" href="https://github.blog">Blog</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;careers&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;careers_link_company_footer&quot;}" href="https://github.careers">Careers</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;social_impact&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;social_impact_link_company_footer&quot;}" href="https://socialimpact.github.com">Social Impact</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;shop&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;shop_link_company_footer&quot;}" href="https://shop.github.com">Shop</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;terms&quot;,&quot;context&quot;:&quot;subfooter&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;terms_link_subfooter_footer&quot;}" href="https://docs.github.com/site-policy/github-terms/github-terms-of-service">Terms</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;privacy&quot;,&quot;context&quot;:&quot;subfooter&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;privacy_link_subfooter_footer&quot;}" href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement">Privacy</a>
+client/src/assets/fonts/Roboto-Regular.ttf:            (<a href="https://github.com/github/site-policy/pull/582" class="Link--secondary">Updated <time datetime="2022-08">02/2024</time></a>)
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://www.linkedin.com/company/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to Linkedin&quot;,&quot;label&quot;:&quot;text:linkedin&quot;}">
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://www.instagram.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to Instagram&quot;,&quot;label&quot;:&quot;text:instagram&quot;}">
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://www.youtube.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to YouTube&quot;,&quot;label&quot;:&quot;text:youtube&quot;}">
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://x.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to X&quot;,&quot;label&quot;:&quot;text:x&quot;}">
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://www.tiktok.com/@github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to tiktok&quot;,&quot;label&quot;:&quot;text:tiktok&quot;}">
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://www.twitch.tv/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to Twitch&quot;,&quot;label&quot;:&quot;text:twitch&quot;}">
+client/src/assets/fonts/Roboto-Regular.ttf:      <a href="https://github.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to github&#39;s org&quot;,&quot;label&quot;:&quot;text:github&quot;}">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="dns-prefetch" href="https://github.githubassets.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="dns-prefetch" href="https://avatars.githubusercontent.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="dns-prefetch" href="https://github-cloud.s3.amazonaws.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="dns-prefetch" href="https://user-images.githubusercontent.com/">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="preconnect" href="https://github.githubassets.com" crossorigin>
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="preconnect" href="https://avatars.githubusercontent.com">
+client/src/assets/fonts/Roboto-Bold.ttf:      <link rel="preload" href="https://github.githubassets.com/assets/global-banner-disable-f988792be49f.js" as="script" crossorigin>
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="preload" href="https://github.githubassets.com/assets/mona-sans-d1bf285e9b9b.woff2" as="font" type="font/woff2" crossorigin>
+client/src/assets/fonts/Roboto-Bold.ttf:  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/light-74231a1f3bbb.css" /><link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/dark-8a995f0bacd4.css" /><link data-color-theme="light_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_high_contrast-83beb16e0ecf.css" /><link data-color-theme="light_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_colorblind-f91b0f603451.css" /><link data-color-theme="light_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_colorblind_high_contrast-5aebfa54b215.css" /><link data-color-theme="light_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia-6e122dab64fc.css" /><link data-color-theme="light_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/light_tritanopia_high_contrast-b32664e28b79.css" /><link data-color-theme="dark_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_high_contrast-9ac301c3ebe5.css" /><link data-color-theme="dark_colorblind" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind-cd826e8636dc.css" /><link data-color-theme="dark_colorblind_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_colorblind_high_contrast-131d53fe187c.css" /><link data-color-theme="dark_tritanopia" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia-18119e682df0.css" /><link data-color-theme="dark_tritanopia_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_tritanopia_high_contrast-63c0358957ba.css" /><link data-color-theme="dark_dimmed" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed-f37fb7684b1f.css" /><link data-color-theme="dark_dimmed_high_contrast" crossorigin="anonymous" media="all" rel="stylesheet" data-href="https://github.githubassets.com/assets/dark_dimmed_high_contrast-8f371c75debd.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-primitives-225433424a87.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-cba26849680f.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/global-d579beef0491.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/github-864568fbf430.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/repository-4fce88777fa8.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/wp-runtime-36bc160050d6.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_oddbird_popover-polyfill_dist_popover-fn_js-81211bd82278.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_mini-throttle_dist_index_js-node_modules_stacktrace-parser_dist_s-1d3d52-4be8ffe9a34a.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_failbot_failbot_ts-9d1ab2cdab0d.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/environment-cc191d9d2324.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_primer_behaviors_dist_esm_index_mjs-0dbb79f97f8f.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_selector-observer_dist_index_esm_js-f690fd9ae3d5.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_relative-time-element_dist_index_js-62d275b7ddd9.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_auto-complete-element_dist_index_js-node_modules_github_catalyst_-8e9f78-a90ac05d2469.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_text-expander-element_dist_index_js-78748950cb0c.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_filter-input-element_dist_index_js-node_modules_github_remote-inp-b5f1d7-a1760ffda83d.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_markdown-toolbar-element_dist_index_js-ceef33f593fa.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_file-attachment-element_dist_index_js-node_modules_primer_view-co-c44a69-08c257325fd3.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/github-elements-d67ff6fcb72d.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/element-registry-c7475cff79ff.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_braintree_browser-detection_dist_browser-detection_js-node_modules_githu-2906d7-2a07a295af40.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_lit-html_lit-html_js-be8cb88f481b.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_morphdom_dist_morphdom-esm_js-0c08218c7d5f.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_turbo_dist_turbo_es2017-esm_js-a03ee12d659a.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_remote-form_dist_index_js-node_modules_delegated-events_dist_inde-893f9f-b6294cf703b7.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_color-convert_index_js-e3180fe3bcb3.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_quote-selection_dist_index_js-node_modules_github_session-resume_-054bff-311c04966bb2.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_updatable-content_updatable-content_ts-62f3e9c52ece.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_behaviors_task-list_ts-app_assets_modules_github_sso_ts-ui_packages-900dde-768abe60b1f8.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_sticky-scroll-into-view_ts-3e000c5d31a9.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_behaviors_ajax-error_ts-app_assets_modules_github_behaviors_include-d0d0a6-7cc66dc86dd7.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/app_assets_modules_github_behaviors_commenting_edit_ts-app_assets_modules_github_behaviors_ht-83c235-4bcbbbfbe1d4.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_alive_alive_ts-ui_packages_favicon_favicon_ts-ui_packages_hotkey_keyboard-shortcu-30cc64-4f2226f8b82b.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/behaviors-72c242c10738.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_delegated-events_dist_index_js-node_modules_github_catalyst_lib_index_js-f6223d90c7ba.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/notifications-global-01e85cd1be94.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="assets" href="https://github.githubassets.com/">
+client/src/assets/fonts/Roboto-Bold.ttf:<meta name="octolytics-url" content="https://collector.github.com/github/collect" />
+client/src/assets/fonts/Roboto-Bold.ttf:    <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub">
+client/src/assets/fonts/Roboto-Bold.ttf:    <meta name="apple-itunes-app" content="app-id=1477376905, app-argument=https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf" />
+client/src/assets/fonts/Roboto-Bold.ttf:      <meta property="og:url" content="https://github.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <meta property="og:image" content="https://github.githubassets.com/assets/github-logo-55c5b9a1fe52.png">
+client/src/assets/fonts/Roboto-Bold.ttf:  <meta property="og:image" content="https://github.githubassets.com/assets/github-mark-57519b92ca4e.png">
+client/src/assets/fonts/Roboto-Bold.ttf:  <meta property="og:image" content="https://github.githubassets.com/assets/github-octocat-13c86b8b336d.png">
+client/src/assets/fonts/Roboto-Bold.ttf:  <meta property="twitter:image" content="https://github.githubassets.com/assets/github-logo-55c5b9a1fe52.png">
+client/src/assets/fonts/Roboto-Bold.ttf:      <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/site-62271ce87619.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:  <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/error-3bfb6168c7d5.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:      <link rel="canonical" href="https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf" data-turbo-transient>
+client/src/assets/fonts/Roboto-Bold.ttf:  <meta name="browser-stats-url" content="https://api.github.com/_private/browser/stats">
+client/src/assets/fonts/Roboto-Bold.ttf:  <meta name="browser-errors-url" content="https://api.github.com/_private/browser/errors">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="mask-icon" href="https://github.githubassets.com/assets/pinned-octocat-093da3e6fa40.svg" color="#000000">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="alternate icon" class="js-site-favicon" type="image/png" href="https://github.githubassets.com/favicons/favicon.png">
+client/src/assets/fonts/Roboto-Bold.ttf:  <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="https://github.githubassets.com/favicons/favicon.svg" data-base-href="https://github.githubassets.com/favicons/favicon">
+client/src/assets/fonts/Roboto-Bold.ttf:      <script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/primer-react-185cf474198e.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/react-core-2b73d1f40839.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/react-lib-80430c87778a.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/octicons-react-cf2f2ab8dab4.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_emotion_is-prop-valid_dist_emotion-is-prop-valid_esm_js-node_modules_emo-b1c483-23083d170518.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_catalyst_lib_index_js-node_modules_tanstack_react-query_build_mod-3b1f5d-85b60118c668.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/ui_packages_ui-commands_ui-commands_ts-0e6cfc813d47.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/keyboard-shortcuts-dialog-8eef249f0ef9.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/primer-react.05990da7b38026080f99.module.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:<link crossorigin="anonymous" media="all" rel="stylesheet" href="https://github.githubassets.com/assets/keyboard-shortcuts-dialog.1aa183523505d66bb990.module.css" />
+client/src/assets/fonts/Roboto-Bold.ttf:  <script type="application/json" data-target="react-partial.embeddedData">{"props":{"docsUrl":"https://docs.github.com/get-started/accessibility/keyboard-shortcuts"}}</script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/vendors-node_modules_github_remote-form_dist_index_js-node_modules_delegated-events_dist_inde-94fd67-4898d1bf4b51.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:<script crossorigin="anonymous" defer="defer" type="application/javascript" src="https://github.githubassets.com/assets/sessions-45d6658f8b6b.js"></script>
+client/src/assets/fonts/Roboto-Bold.ttf:            data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="9d833341e84fbfac01c361793ab5c19fbb8d4d0bed45d9552b50b838629abb69"
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_copilot&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_copilot_link_product_navbar&quot;}" href="https://github.com/features/copilot">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_advanced_security&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_advanced_security_link_product_navbar&quot;}" href="https://github.com/security/advanced-security">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;actions&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;actions_link_product_navbar&quot;}" href="https://github.com/features/actions">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;codespaces&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;codespaces_link_product_navbar&quot;}" href="https://github.com/features/codespaces">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;issues&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;issues_link_product_navbar&quot;}" href="https://github.com/features/issues">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;code_review&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;code_review_link_product_navbar&quot;}" href="https://github.com/features/code-review">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;discussions&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;discussions_link_product_navbar&quot;}" href="https://github.com/features/discussions">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;code_search&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;code_search_link_product_navbar&quot;}" href="https://github.com/features/code-search">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;why_github&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;why_github_link_product_navbar&quot;}" href="https://github.com/why-github">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;all_features&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;all_features_link_product_navbar&quot;}" href="https://github.com/features">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;documentation&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;documentation_link_product_navbar&quot;}" href="https://docs.github.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_skills&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_skills_link_product_navbar&quot;}" href="https://skills.github.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;blog&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;blog_link_product_navbar&quot;}" href="https://github.blog">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;enterprises&quot;,&quot;context&quot;:&quot;solutions&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;enterprises_link_solutions_navbar&quot;}" href="https://github.com/enterprise">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;small_and_medium_teams&quot;,&quot;context&quot;:&quot;solutions&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;small_and_medium_teams_link_solutions_navbar&quot;}" href="https://github.com/team">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;startups&quot;,&quot;context&quot;:&quot;solutions&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;startups_link_solutions_navbar&quot;}" href="https://github.com/enterprise/startups">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;learning_pathways&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;learning_pathways_link_resources_navbar&quot;}" href="https://resources.github.com/learn/pathways">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;events_amp_webinars&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;events_amp_webinars_link_resources_navbar&quot;}" href="https://resources.github.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;ebooks_amp_whitepapers&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;ebooks_amp_whitepapers_link_resources_navbar&quot;}" href="https://github.com/resources/whitepapers">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;customer_stories&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;customer_stories_link_resources_navbar&quot;}" href="https://github.com/customer-stories">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary Link--external" target="_blank" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;partners&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;partners_link_resources_navbar&quot;}" href="https://partner.github.com">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;executive_insights&quot;,&quot;context&quot;:&quot;resources&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;executive_insights_link_resources_navbar&quot;}" href="https://github.com/solutions/executive-insights">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;the_readme_project&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;the_readme_project_link_open_source_navbar&quot;}" href="https://github.com/readme">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;topics&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;topics_link_open_source_navbar&quot;}" href="https://github.com/topics">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;trending&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;trending_link_open_source_navbar&quot;}" href="https://github.com/trending">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;collections&quot;,&quot;context&quot;:&quot;open_source&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;collections_link_open_source_navbar&quot;}" href="https://github.com/collections">
+client/src/assets/fonts/Roboto-Bold.ttf:  <a class="HeaderMenu-dropdown-link d-block no-underline position-relative py-2 Link--secondary d-flex flex-items-center Link--has-description pb-lg-3" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;github_advanced_security&quot;,&quot;context&quot;:&quot;enterprise&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;github_advanced_security_link_enterprise_navbar&quot;}" href="https://github.com/security/advanced-security">
+client/src/assets/fonts/Roboto-Bold.ttf:    <a class="HeaderMenu-link no-underline px-0 px-lg-2 py-3 py-lg-2 d-block d-lg-inline-block" data-analytics-event="{&quot;location&quot;:&quot;navbar&quot;,&quot;action&quot;:&quot;pricing&quot;,&quot;context&quot;:&quot;global&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;pricing_link_global_navbar&quot;}" href="https://github.com/pricing">Pricing</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a target="_blank" href="https://docs.github.com/search-github/github-code-search/understanding-github-code-search-syntax" data-view-component="true" class="Link color-fg-accent text-normal ml-2">Search syntax tips</a>            <div class="d-flex flex-1"></div>
+client/src/assets/fonts/Roboto-Bold.ttf:            To see all available qualifiers, see our <a class="Link--inTextBlock" href="https://docs.github.com/search-github/github-code-search/understanding-github-code-search-syntax">documentation</a>.
+client/src/assets/fonts/Roboto-Bold.ttf:                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="9d833341e84fbfac01c361793ab5c19fbb8d4d0bed45d9552b50b838629abb69"
+client/src/assets/fonts/Roboto-Bold.ttf:<input type="hidden" name="return_to" id="return_to" value=https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf" autocomplete="off" class="form-control" />
+client/src/assets/fonts/Roboto-Bold.ttf:                data-hydro-click="{&quot;event_type&quot;:&quot;authentication.click&quot;,&quot;payload&quot;:{&quot;location_in_page&quot;:&quot;site header menu&quot;,&quot;repository_id&quot;:null,&quot;auth_type&quot;:&quot;SIGN_UP&quot;,&quot;originating_url&quot;:&quot;https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf&quot;,&quot;user_id&quot;:null}}" data-hydro-click-hmac="9d833341e84fbfac01c361793ab5c19fbb8d4d0bed45d9552b50b838629abb69"
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://support.github.com?tags=dotcom-404" class="Link--secondary">Contact Support</a> &mdash;
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://githubstatus.com" class="Link--secondary">GitHub Status</a> &mdash;
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://twitter.com/githubstatus" class="Link--secondary">@githubstatus</a>
+client/src/assets/fonts/Roboto-Bold.ttf:        <a class="btn-mktg mb-4 btn-muted-mktg" data-analytics-event="{&quot;category&quot;:&quot;Subscribe&quot;,&quot;action&quot;:&quot;click to Subscribe&quot;,&quot;label&quot;:&quot;ref_cta:Subscribe;&quot;}" href="https://resources.github.com/newsletter/">
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;resources&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;resources_link_product_footer&quot;}" href="https://resources.github.com">Resources</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;roadmap&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;roadmap_link_product_footer&quot;}" href="https://github.com/github/roadmap">Roadmap</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;compare&quot;,&quot;context&quot;:&quot;product&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;compare_link_product_footer&quot;}" href="https://resources.github.com/devops/tools/compare">Compare GitHub</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;dev-api&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;dev-api_link_platform_footer&quot;}" href="https://docs.github.com/get-started/exploring-integrations/about-building-integrations">Developer API</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;partners&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;partners_link_platform_footer&quot;}" href="https://partner.github.com">Partners</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;edu&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;edu_link_platform_footer&quot;}" href="https://github.com/edu">Education</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;cli&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;cli_link_platform_footer&quot;}" href="https://cli.github.com">GitHub CLI</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;desktop&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;desktop_link_platform_footer&quot;}" href="https://desktop.github.com">GitHub Desktop</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;mobile&quot;,&quot;context&quot;:&quot;platform&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;mobile_link_platform_footer&quot;}" href="https://github.com/mobile">GitHub Mobile</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;docs&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;docs_link_support_footer&quot;}" href="https://docs.github.com">Docs</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;community&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;community_link_support_footer&quot;}" href="https://github.community">Community Forum</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;services&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;services_link_support_footer&quot;}" href="https://services.github.com">Professional Services</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;skills&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;skills_link_support_footer&quot;}" href="https://skills.github.com">Skills</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;status&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;status_link_support_footer&quot;}" href="https://www.githubstatus.com">Status</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;contact_github&quot;,&quot;context&quot;:&quot;support&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;contact_github_link_support_footer&quot;}" href="https://support.github.com?tags=dotcom-footer">Contact GitHub</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;about&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;about_link_company_footer&quot;}" href="https://github.com/about">About</a>
+client/src/assets/fonts/Roboto-Bold.ttf:              <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;why_github&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;why_github_link_company_footer&quot;}" href="https://github.com/why-github">Why GitHub</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;blog&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;blog_link_company_footer&quot;}" href="https://github.blog">Blog</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;careers&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;careers_link_company_footer&quot;}" href="https://github.careers">Careers</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;social_impact&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;social_impact_link_company_footer&quot;}" href="https://socialimpact.github.com">Social Impact</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;shop&quot;,&quot;context&quot;:&quot;company&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;shop_link_company_footer&quot;}" href="https://shop.github.com">Shop</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;terms&quot;,&quot;context&quot;:&quot;subfooter&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;terms_link_subfooter_footer&quot;}" href="https://docs.github.com/site-policy/github-terms/github-terms-of-service">Terms</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            <a class="Link--secondary" data-analytics-event="{&quot;location&quot;:&quot;footer&quot;,&quot;action&quot;:&quot;privacy&quot;,&quot;context&quot;:&quot;subfooter&quot;,&quot;tag&quot;:&quot;link&quot;,&quot;label&quot;:&quot;privacy_link_subfooter_footer&quot;}" href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement">Privacy</a>
+client/src/assets/fonts/Roboto-Bold.ttf:            (<a href="https://github.com/github/site-policy/pull/582" class="Link--secondary">Updated <time datetime="2022-08">02/2024</time></a>)
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://www.linkedin.com/company/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to Linkedin&quot;,&quot;label&quot;:&quot;text:linkedin&quot;}">
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://www.instagram.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to Instagram&quot;,&quot;label&quot;:&quot;text:instagram&quot;}">
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://www.youtube.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to YouTube&quot;,&quot;label&quot;:&quot;text:youtube&quot;}">
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://x.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to X&quot;,&quot;label&quot;:&quot;text:x&quot;}">
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://www.tiktok.com/@github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to tiktok&quot;,&quot;label&quot;:&quot;text:tiktok&quot;}">
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://www.twitch.tv/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to Twitch&quot;,&quot;label&quot;:&quot;text:twitch&quot;}">
+client/src/assets/fonts/Roboto-Bold.ttf:      <a href="https://github.com/github" class="footer-social-icon d-block Link--outlineOffset" data-analytics-event="{&quot;category&quot;:&quot;Footer&quot;,&quot;action&quot;:&quot;go to github&#39;s org&quot;,&quot;label&quot;:&quot;text:github&quot;}">
+client/src/components/home/service-categories.tsx:      imageUrl: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+client/src/components/home/service-categories.tsx:      imageUrl: "https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+client/src/components/home/service-categories.tsx:      imageUrl: "https://images.unsplash.com/photo-1478146059778-26028b07395a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+client/src/components/home/service-categories.tsx:      imageUrl: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+client/src/components/bookings/booking-card.tsx:    return "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+client/src/components/vendor/vendor-details.tsx:    'venue': 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-details.tsx:    'catering': 'https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-details.tsx:    'photography': 'https://images.unsplash.com/photo-1478146059778-26028b07395a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-details.tsx:    'decoration': 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-details.tsx:    'entertainment': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+client/src/components/vendor/vendor-details.tsx:  return imageMap[category] || 'https://images.unsplash.com/photo-1505236858219-8359eb29e329?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
+client/src/components/vendor/vendor-card.tsx:    'venue': 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-card.tsx:    'catering': 'https://images.unsplash.com/photo-1555244162-803834f70033?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-card.tsx:    'photography': 'https://images.unsplash.com/photo-1478146059778-26028b07395a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-card.tsx:    'decoration': 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+client/src/components/vendor/vendor-card.tsx:    'entertainment': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+client/src/components/vendor/vendor-card.tsx:  return imageMap[category] || 'https://images.unsplash.com/photo-1505236858219-8359eb29e329?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
+client/src/pages/vendor/service-form.tsx:    const placeholderImage = "https://images.unsplash.com/photo-1605774337664-7a846e9cdf17?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+client/src/pages/vendor/profile.tsx:    const placeholderImage = "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+client/src/pages/vendor/profile.tsx:                          <Input placeholder="https://yourwebsite.com" {...field} />
+client/src/app.css:@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
+mstech@mstech-MINI-S:~/Daoob$  # Find all files that might be creating WebSocket connections
+find client/src -type f -exec grep -l "WebSocket" {} \; | xargs cat
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { useWebSocket, Message as WebSocketMessage } from "@/hooks/use-websocket";
+import { formatRelative } from "date-fns";
+import { Loader2, Send } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+interface ChatWindowProps {
+  recipientId: number;
+}
+
+interface Message {
+  id?: number;
+  senderId: number;
+  receiverId: number;
+  content: string;
+  read?: boolean;
+  createdAt?: string;
+  timestamp?: Date;
+}
+
+interface MessageInputProps {
+  onSend: (message: string) => void;
+  isLoading: boolean;
+}
+
+function MessageInput({ onSend, isLoading }: MessageInputProps) {
+  const [message, setMessage] = useState("");
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      onSend(message);
+      setMessage("");
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="bg-white p-3 shadow-md">
+      <div className="flex items-center">
+        <Input
+          placeholder="Type a message..."
+          className="flex-1 mx-2 bg-neutral-100 py-2 px-4 rounded-full"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          disabled={isLoading}
+        />
+        <Button 
+          type="submit"
+          className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center text-white p-0"
+          disabled={!message.trim() || isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Send className="h-5 w-5" />
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export function ChatWindow({ recipientId }: ChatWindowProps) {
+  const { user } = useAuth();
+  const { sendMessage, getConversationMessages, status } = useWebSocket();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Get user details of the recipient
+  const { data: recipient, isLoading: isLoadingRecipient } = useQuery({
+    queryKey: [`/api/users/${recipientId}`],
+  });
+  
+  // Get messages from the API
+  const { data: apiMessages, isLoading: isLoadingMessages } = useQuery<Message[]>({
+    queryKey: [`/api/messages/${recipientId}`],
+  });
+  
+  // Get WebSocket messages
+  const wsMessages = getConversationMessages(recipientId);
+  
+  // Combine and deduplicate messages from both sources
+  const allMessages = [...(apiMessages || [])];
+  
+  // Create a map to deduplicate by ID
+  const messageMap = new Map<string | number, Message>();
+  
+  // Add API messages to the map
+  allMessages.forEach(msg => {
+    if (msg.id) {
+      messageMap.set(msg.id, msg);
+    }
+  });
+  
+  // Add WebSocket messages, avoiding duplicates
+  wsMessages.forEach(msg => {
+    if (msg.id && !messageMap.has(msg.id)) {
+      messageMap.set(msg.id, {
+        id: msg.id,
+        senderId: msg.senderId,
+        receiverId: msg.receiverId,
+        content: msg.content,
+        read: msg.read,
+        createdAt: msg.createdAt,
+        timestamp: msg.timestamp
+      });
+    } else if (!msg.id) {
+      // For messages without IDs (temporary/local ones), use a timestamp-based key
+      const tempKey = `temp-${msg.timestamp?.getTime() || Date.now()}-${Math.random()}`;
+      messageMap.set(tempKey, {
+        senderId: msg.senderId,
+        receiverId: msg.receiverId,
+        content: msg.content,
+        timestamp: msg.timestamp
+      });
+    }
+  });
+  
+  // Convert the map back to an array and sort by time
+  const sortedMessages = Array.from(messageMap.values()).sort((a, b) => {
+    const timeA = a.timestamp ? a.timestamp.getTime() : 
+                 a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.timestamp ? b.timestamp.getTime() : 
+                 b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return timeA - timeB;
+  });
+  
+  // Mutation for sending messages via REST API
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const result = await apiRequest("POST", "/api/messages", {
+        receiverId: recipientId,
+        content,
+      });
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${recipientId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+    }
+  });
+  
+  // Handle sending a message
+  const handleSendMessage = (content: string) => {
+    if (status === 'open') {
+      // Send via WebSocket for real-time delivery
+      sendMessage(recipientId, content);
+    }
+    
+    // Also send via REST API to ensure persistence
+    sendMessageMutation.mutate(content);
+  };
+  
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [sortedMessages]);
+  
+  const formatMessageTime = (message: Message) => {
+    try {
+      const time = message.timestamp ? message.timestamp : 
+                  message.createdAt ? new Date(message.createdAt) : new Date();
+      return formatRelative(time, new Date());
+    } catch (error) {
+      return 'now';
+    }
+  };
+  
+  const isLoading = isLoadingMessages || isLoadingRecipient;
+  
+  return (
+    <div className="flex flex-col h-full">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+          </div>
+        ) : sortedMessages.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-neutral-500">
+            <p>No messages yet. Say hello!</p>
+          </div>
+        ) : (
+          sortedMessages.map((message, index) => {
+            const isSender = message.senderId === user?.id;
+            
+            return (
+              <div 
+                key={message.id || `local-${index}`}
+                className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
+              >
+                <div 
+                  className={`p-3 max-w-[75%] rounded-lg ${
+                    isSender 
+                      ? 'bg-secondary text-white rounded-tr-none' 
+                      : 'bg-white rounded-tl-none shadow-sm'
+                  }`}
+                >
+                  <p className={isSender ? 'text-white' : 'text-neutral-800'}>
+                    {message.content}
+                  </p>
+                  <p className={`text-right text-xs mt-1 ${
+                    isSender ? 'text-white/80' : 'text-neutral-500'
+                  }`}>
+                    {formatMessageTime(message)}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+      
+      {/* Message Input */}
+      <MessageInput 
+        onSend={handleSendMessage}
+        isLoading={sendMessageMutation.isPending}
+      />
+    </div>
+  );
+}
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useParams, Link } from "wouter";
+import { AdminLayout } from "@/components/admin-layout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { 
+  MoreVertical, 
+  Send, 
+  ArrowLeft,
+  Loader2
+} from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+
+export default function AdminChat() {
+  const { userId } = useParams();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { sendMessage, messages, status } = useWebSocket();
+  const [messageText, setMessageText] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(userId ? parseInt(userId) : null);
+  
+  // Get all user/client chats for the admin
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
+    queryKey: ["/api/admin/clients"],
+    enabled: !!user,
+    // Placeholder until the endpoint is implemented
+    queryFn: async () => {
+      // Demo placeholder data
+      return [
+        { id: 1, username: 'client1', fullName: 'Demo Client 1', unreadCount: 2, lastMessage: 'Hello, I need help with my event.' },
+        { id: 2, username: 'client2', fullName: 'Demo Client 2', unreadCount: 0, lastMessage: 'Thank you for your assistance.' },
+      ];
+    }
+  });
+  
+  // Get the selected user's details
+  const { data: selectedUserDetails, isLoading: isLoadingUserDetails } = useQuery({
+    queryKey: ["/api/users", selectedUser],
+    enabled: !!selectedUser,
+    // Placeholder until the endpoint is implemented
+    queryFn: async () => {
+      // Return demo placeholder data for the selected user
+      if (selectedUser === 1) {
+        return { id: 1, username: 'client1', fullName: 'Demo Client 1' };
+      } else if (selectedUser === 2) {
+        return { id: 2, username: 'client2', fullName: 'Demo Client 2' };
+      }
+      return { id: selectedUser, username: `client${selectedUser}`, fullName: `Demo Client ${selectedUser}` };
+    }
+  });
+  
+  // Send a message
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageData: any) => {
+      const res = await apiRequest("POST", "/api/messages", messageData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      setMessageText("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to send message",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Scroll to bottom of messages when new messages come in
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+  
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageText.trim() || !selectedUser || !user) return;
+    
+    if (status === 'open') {
+      sendMessage({
+        type: "chat",
+        sender: user.id,
+        receiver: selectedUser,
+        content: messageText,
+        timestamp: new Date()
+      });
+    } else {
+      // Fallback to REST API if WebSocket is not available
+      sendMessageMutation.mutate({
+        senderId: user.id,
+        receiverId: selectedUser,
+        content: messageText
+      });
+    }
+  };
+  
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(part => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+  
+  const formatMessageDate = (date: Date | null) => {
+    if (!date) return "";
+    return format(new Date(date), "MMM d, h:mm a");
+  };
+  
+  const filteredMessages = messages.filter(
+    msg => 
+      (msg.sender === user?.id && msg.receiver === selectedUser) || 
+      (msg.sender === selectedUser && msg.receiver === user?.id)
+  );
+  
+  return (
+    <AdminLayout title="Messages">
+      <div className="flex h-[calc(100vh-10rem)] rounded-md border overflow-hidden">
+        {/* Client list sidebar */}
+        <div className="w-64 border-r flex flex-col bg-card">
+          <div className="p-4 border-b">
+            <h3 className="font-medium">Client Conversations</h3>
+          </div>
+          
+          <div className="flex-1 overflow-auto">
+            {isLoadingClients ? (
+              <div className="p-4 space-y-3">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : clients && clients.length > 0 ? (
+              clients.map((client: any) => (
+                <div 
+                  key={client.id}
+                  className={`p-3 border-b cursor-pointer hover:bg-accent ${
+                    selectedUser === client.id ? "bg-accent" : ""
+                  }`}
+                  onClick={() => setSelectedUser(client.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarFallback>
+                        {getInitials(client.fullName || client.username)}
+                      </AvatarFallback>
+                      {/* Avatar image would go here if available */}
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium truncate">
+                          {client.fullName || client.username}
+                        </span>
+                        {client.unreadCount > 0 && (
+                          <Badge variant="destructive" className="text-xs">
+                            {client.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {client.lastMessage ? client.lastMessage.substring(0, 20) : "No messages yet"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-4 text-center text-muted-foreground">
+                No conversations yet
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Chat area */}
+        <div className="flex-1 flex flex-col">
+          {selectedUser ? (
+            <>
+              {/* Chat header */}
+              <div className="p-4 border-b flex items-center justify-between bg-card">
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="md:hidden"
+                    onClick={() => setSelectedUser(null)}
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  
+                  <Avatar>
+                    <AvatarFallback>
+                      {getInitials(
+                        selectedUserDetails?.fullName || selectedUserDetails?.username || "User"
+                      )}
+                    </AvatarFallback>
+                    {/* Avatar image would go here if available */}
+                  </Avatar>
+                  
+                  <div>
+                    {isLoadingUserDetails ? (
+                      <Skeleton className="h-5 w-24" />
+                    ) : (
+                      <div className="font-medium">
+                        {selectedUserDetails?.fullName || selectedUserDetails?.username || "User"}
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground">
+                      {status === 'open' ? (
+                        <span className="text-green-500">Online</span>
+                      ) : (
+                        "Offline"
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              {/* Messages */}
+              <div className="flex-1 p-4 overflow-auto bg-accent/10">
+                {filteredMessages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                    <p className="text-muted-foreground mb-2">
+                      No messages yet with this user
+                    </p>
+                    <p className="text-sm">
+                      Send a message to start the conversation
+                    </p>
+                  </div>
+                ) : (
+                  filteredMessages.map((msg, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-end gap-2 mb-4 ${
+                        msg.sender === user?.id ? "justify-end" : ""
+                      }`}
+                    >
+                      {msg.sender !== user?.id && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-xs">
+                            {getInitials(
+                              selectedUserDetails?.fullName || 
+                              selectedUserDetails?.username || 
+                              "User"
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          msg.sender === user?.id
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-secondary-foreground"
+                        }`}
+                      >
+                        <div>{msg.content}</div>
+                        <div className={`text-xs mt-1 ${
+                          msg.sender === user?.id
+                            ? "text-primary-foreground/70"
+                            : "text-secondary-foreground/70"
+                        }`}>
+                          {formatMessageDate(msg.timestamp)}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+              
+              {/* Message input */}
+              <form onSubmit={handleSendMessage} className="p-3 border-t bg-card flex items-center gap-2">
+                <Input
+                  placeholder="Type a message..."
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  className="flex-1"
+                />
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  disabled={!messageText.trim() || status !== 'open'}
+                >
+                  {sendMessageMutation.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                </Button>
+              </form>
+            </>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+              <h3 className="text-lg font-medium mb-2">Select a conversation</h3>
+              <p className="text-muted-foreground mb-4">
+                Choose a client from the list to view your conversation
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}import { useCallback, useState } from "react";
+
+export type WebSocketMessage = {
+  type: string;
+  sender?: number;
+  receiver?: number;
+  content: string;
+  timestamp: string;
+};
+
+// This is a mock implementation that doesn't actually connect to a WebSocket
+export function useWebSocket() {
+  const [messages] = useState<WebSocketMessage[]>([]);
+  const [isConnected] = useState(false);
+  
+  console.log("WebSocket functionality is temporarily disabled");
+  
+  const sendMessage = useCallback(() => {
+    console.log("WebSocket functionality is temporarily disabled");
+    return false;
+  }, []);
+  
+  return { messages, sendMessage, isConnected };
+}
+mstech@mstech-MINI-S:~/Daoob$ # Create a simple fix for the WebSocket connections
+cat > ws-fix.js << 'EOF'
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useAuth } from "./use-auth";
+
+export type WebSocketMessage = {
+  type: string;
+  sender?: number;
+  receiver?: number;
+  content: string;
+  timestamp: string;
+};
+
+export function useWebSocket() {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<WebSocketMessage[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  
+  useEffect(() => {
+    if (!user) return;
+    
+    // Hard-code the WebSocket URL to use the correct port
+    // and prevent attempts to connect to port 443
+    const wsUrl = `ws://localhost:5000/ws`;
+    
+    console.log("Connecting to WebSocket at:", wsUrl);
+    
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+      
+      ws.onopen = () => {
+        console.log("WebSocket connection established");
+        setIsConnected(true);
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          setMessages((prevMessages) => [...prevMessages, message]);
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setIsConnected(false);
+      };
+      
+      ws.onclose = () => {
+        console.log("WebSocket connection closed");
+        setIsConnected(false);
+echo "Replace the current code with the fix above"e === WebSocket.OPEN) {
+import { useCallback, useState } from "react";
+
+export type WebSocketMessage = {
+  type: string;
+  sender?: number;
+  receiver?: number;
+  content: string;
+  timestamp: string;
+};
+
+// This is a mock implementation that doesn't actually connect to a WebSocket
+export function useWebSocket() {
+  const [messages] = useState<WebSocketMessage[]>([]);
+  const [isConnected] = useState(false);
+  
+  console.log("WebSocket functionality is temporarily disabled");
+  
+  const sendMessage = useCallback(() => {
+    console.log("WebSocket functionality is temporarily disabled");
+    return false;
+  }, []);
+  
+  return { messages, sendMessage, isConnected };
+}
+Replace the current code with the fix above
+mstech@mstech-MINI-S:~/Daoob$ npm run dev
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+Database URL: Set (not showing for security)
+8:12:20 AM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+8:12:33 AM [express] GET /api/user 401 in 2ms
+8:12:52 AM [express] POST /api/login 500 in 36ms :: {"message":"connect ECONNREFUSED 127.0.0.1:443"}
+Error: connect ECONNREFUSED 127.0.0.1:443
+    at file:///home/mstech/Daoob/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/mstech/Daoob/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.getUserByUsername (/home/mstech/Daoob/server/storage.ts:141:20)
+    at async Strategy._verify (/home/mstech/Daoob/server/auth.ts:42:13)
+8:12:56 AM [express] GET /api/user 401 in 0ms
+8:13:02 AM [express] POST /api/login 500 in 3ms :: {"message":"connect ECONNREFUSED 127.0.0.1:443"}
+Error: connect ECONNREFUSED 127.0.0.1:443
+    at file:///home/mstech/Daoob/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/mstech/Daoob/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.getUserByUsername (/home/mstech/Daoob/server/storage.ts:141:20)
+    at async Strategy._verify (/home/mstech/Daoob/server/auth.ts:42:13)
+^C
+mstech@mstech-MINI-S:~/Daoob$ # Check how WebSockets are initialized in routes.ts
+grep -A 10 "WebSocketServer" server/routes.ts
+import { WebSocketServer, WebSocket } from "ws";
+import { storage } from "./storage";
+import { db } from "./db";
+import { setupAuth } from "./auth";
+import { 
+  InsertVendor, InsertBooking, InsertMessage, InsertEventType, InsertQuestionnaireItem, 
+  InsertEventRequest, InsertQuotation, BOOKING_STATUS, USER_TYPES, messages,
+  eventRequests, quotations
+} from "@shared/schema";
+import { z } from "zod";
+import { eq, or, and } from "drizzle-orm";
+--
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const connections: SocketConnection[] = [];
+  
+  wss.on('connection', (ws: WebSocket) => {
+    let userId: number | null = null;
+    
+    ws.on('message', async (message: string) => {
+      try {
+        const data = JSON.parse(message) as WSMessage;
+        
+        if (data.type === 'auth') {
+mstech@mstech-MINI-S:~/Daoob$ # Create a simplified WebSocket hook
+cat > client/src/hooks/use-websocket.tsx << 'EOF'
+import { useState, useCallback } from "react";
+
+export type WebSocketMessage = {
+  type: string;
+  sender?: number;
+  receiver?: number;
+  content: string;
+  timestamp: string;
+};
+
+// This is a mock implementation that doesn't actually connect to a WebSocket
+export function useWebSocket() {
+  const [messages] = useState<WebSocketMessage[]>([]);
+  const [isConnected] = useState(true); // Pretend we're connected
+  
+  console.log("Using mock WebSocket implementation");
+  
+  const sendMessage = useCallback(
+    (message: Omit<WebSocketMessage, "timestamp">) => {
+      console.log("Mock WebSocket: message sent", message);
+      return true; // Pretend it succeeded
+    },
+    []
+  );
+  
+  return { messages, sendMessage, isConnected };
+}
+EOF
+mstech@mstech-MINI-S:~/Daoob$ # Create a simple test for the user API
+cat > test-user-api.js << 'EOF'
+import fetch from 'node-fetch';
+
+async function testUserAPI() {
+  const apiUrl = 'http://localhost:5000/api/user';
+  
+  try {
+    console.log('Testing user API...');
+    const response = await fetch(apiUrl);
+    
+    console.log('Response status:', response.status);
+    
+    if (response.status === 401) {
+      console.log('Not authenticated - this is expected if not logged in');
+    } else {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        console.log('Response data:', data);
+      } else {
+        const text = await response.text();
+        console.log('Response text:', text);
+      }
+    }
+  } catch (error) {
+    console.error('Error testing API:', error);
+  }
+}
+
+testUserAPI();
+EOF
+
+# Run the test
+node test-user-api.js
+Testing user API...
+Error testing API: FetchError: request to http://localhost:5000/api/user failed, reason: connect ECONNREFUSED 127.0.0.1:5000
+    at ClientRequest.<anonymous> (file:///home/mstech/Daoob/node_modules/node-fetch/src/index.js:108:11)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  type: 'system',
+  errno: 'ECONNREFUSED',
+  code: 'ECONNREFUSED',
+  erroredSysCall: 'connect'
+}
+mstech@mstech-MINI-S:~/Daoob$ # Create a minimal login page
+cat > simple-login.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Login</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        form { width: 300px; margin: 0 auto; }
+        input { margin: 10px 0; padding: 8px; width: 100%; }
+        button { padding: 10px; background: #4285f4; color: white; border: none; width: 100%; }
+        #message { margin-top: 20px; color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <h1>Simple Login</h1>
+    <form id="loginForm">
+        <div>
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" value="admin">
+        </div>
+        <div>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" value="password">
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    
+    <div id="message"></div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = 'Logging in...';
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                // Direct API call to the login endpoint
+                const response = await fetch('http://localhost:5000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    messageEl.style.color = 'green';
+                    messageEl.textContent = `Login successful! Welcome, ${user.username}`;
+python3 -m http.server 8080 different port:', error);r: ${error.message}`;e || 'Unknown error'}`;
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/usr/lib/python3.12/http/server.py", line 1314, in <module>
+    test(
+  File "/usr/lib/python3.12/http/server.py", line 1261, in test
+    with ServerClass(addr, HandlerClass) as httpd:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socketserver.py", line 457, in __init__
+    self.server_bind()
+  File "/usr/lib/python3.12/http/server.py", line 1308, in server_bind
+    return super().server_bind()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/server.py", line 136, in server_bind
+    socketserver.TCPServer.server_bind(self)
+  File "/usr/lib/python3.12/socketserver.py", line 473, in server_bind
+    self.socket.bind(self.server_address)
+OSError: [Errno 98] Address already in use
+mstech@mstech-MINI-S:~/Daoob$ # Create a CORS headers file
+cat > cors-headers.txt << 'EOF'
+// Add these lines near the top of server/index.ts:
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+EOF
+
+# Display the file as a reminder to manually add these headers
+cat cors-headers.txt
+// Add these lines near the top of server/index.ts:
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});

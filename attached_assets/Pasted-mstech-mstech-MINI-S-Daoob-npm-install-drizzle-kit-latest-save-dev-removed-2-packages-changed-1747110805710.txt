@@ -1,0 +1,156 @@
+mstech@mstech-MINI-S:~/Daoob$ npm install drizzle-kit@latest --save-dev
+
+removed 2 packages, changed 3 packages, and audited 481 packages in 9s
+
+65 packages are looking for funding
+  run `npm fund` for details
+
+7 moderate severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+mstech@mstech-MINI-S:~/Daoob$ npm run db:push
+
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/mstech/Daoob/drizzle.config.ts'
+_ZodError: [
+  {
+    "code": "invalid_union",
+    "unionErrors": [
+      {
+        "issues": [
+          {
+            "code": "invalid_union",
+            "unionErrors": [
+              {
+                "issues": [
+                  {
+                    "received": "pg",
+                    "code": "invalid_literal",
+                    "expected": "d1-http",
+                    "path": [
+                      "driver"
+                    ],
+                    "message": "Invalid literal value, expected \"d1-http\""
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "received": "pg",
+                    "code": "invalid_literal",
+                    "expected": "expo",
+                    "path": [
+                      "driver"
+                    ],
+                    "message": "Invalid literal value, expected \"expo\""
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "received": "pg",
+                    "code": "invalid_literal",
+                    "expected": "durable-sqlite",
+                    "path": [
+                      "driver"
+                    ],
+                    "message": "Invalid literal value, expected \"durable-sqlite\""
+                  }
+                ],
+                "name": "ZodError"
+              }
+            ],
+            "path": [
+              "driver"
+            ],
+            "message": "Invalid input"
+          }
+        ],
+        "name": "ZodError"
+      },
+      {
+        "issues": [
+          {
+            "code": "invalid_union",
+            "unionErrors": [
+              {
+                "issues": [
+                  {
+                    "received": "pg",
+                    "code": "invalid_literal",
+                    "expected": "aws-data-api",
+                    "path": [
+                      "driver"
+                    ],
+                    "message": "Invalid literal value, expected \"aws-data-api\""
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "received": "pg",
+                    "code": "invalid_literal",
+                    "expected": "pglite",
+                    "path": [
+                      "driver"
+                    ],
+                    "message": "Invalid literal value, expected \"pglite\""
+                  }
+                ],
+                "name": "ZodError"
+              }
+            ],
+            "path": [
+              "driver"
+            ],
+            "message": "Invalid input"
+          }
+        ],
+        "name": "ZodError"
+      }
+    ],
+    "path": [
+      "driver"
+    ],
+    "message": "Invalid input"
+  }
+]
+    at get error [as error] (/home/mstech/Daoob/node_modules/drizzle-kit/bin.cjs:2142:28)
+    at drizzleConfigFromFile (/home/mstech/Daoob/node_modules/drizzle-kit/bin.cjs:17523:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async preparePushConfig (/home/mstech/Daoob/node_modules/drizzle-kit/bin.cjs:17037:29)
+    at async run (/home/mstech/Daoob/node_modules/drizzle-kit/bin.cjs:91903:51) {
+  issues: [
+    {
+      code: 'invalid_union',
+      unionErrors: [Array],
+      path: [Array],
+      message: 'Invalid input'
+    }
+  ],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)],
+  errors: [
+    {
+      code: 'invalid_union',
+      unionErrors: [Array],
+      path: [Array],
+      message: 'Invalid input'
+    }
+  ]
+}

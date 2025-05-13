@@ -1,0 +1,85 @@
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Create a very simple HTTP server with no dependencies 
+cat > /var/www/daoob/basic-server.js << EOF
+const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end('DAOOB Test Server is working!');
+}).listen(3000, '0.0.0.0');
+
+console.log('Basic server running on port 3000');
+EOF
+
+# Run the server
+node /var/www/daoob/basic-server.js &
+
+# Allow the port in firewall
+sudo ufw allow 3000/tcp
+[1] 15142
+file:///var/www/daoob/basic-server.js:1
+                                       const http = require('http');
+                                                                                 ^
+
+                                                                                  ReferenceError: require is not defined in ES module scope, you can use import instead
+                                                                   This file is being treated as an ES module because it has a '.js' file extension and '/var/www/daoob/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+                                                                                          at file:///var/www/daoob/basic-server.js:1:14
+                                       at ModuleJob.run (node:internal/modules/esm/module_job:195:25)
+     at async ModuleLoader.import (node:internal/modules/esm/loader:337:24)
+                                                                               at async loadESM (node:internal/process/esm_loader:34:7)
+                                       at async handleMainPromise (node:internal/modules/run_main:106:12)
+
+     Node.js v18.20.8
+                     Rule added
+Rule added (v6)
+[1]+  Exit 1                  node /var/www/daoob/basic-server.js
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# # Install ping tools if not already installed
+sudo apt install -y iputils-ping
+
+# Test connectivity to a well-known server
+ping -c 5 google.com
+
+# Check for packet loss to your server from outside
+# (You'll need to run this from your local machine, not the server)
+ping -c 20 8.213.40.227
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+iputils-ping is already the newest version (3:20211215-1).
+iputils-ping set to manually installed.
+0 upgraded, 0 newly installed, 0 to remove and 3 not upgraded.
+PING google.com (172.217.19.46) 56(84) bytes of data.
+64 bytes from mrs08s03-in-f14.1e100.net (172.217.19.46): icmp_seq=1 ttl=115 time=71.1 ms
+64 bytes from ham02s11-in-f46.1e100.net (172.217.19.46): icmp_seq=2 ttl=115 time=71.1 ms
+64 bytes from mrs08s03-in-f14.1e100.net (172.217.19.46): icmp_seq=3 ttl=115 time=71.1 ms
+64 bytes from mrs08s03-in-f14.1e100.net (172.217.19.46): icmp_seq=4 ttl=115 time=71.1 ms
+64 bytes from mrs08s03-in-f14.1e100.net (172.217.19.46): icmp_seq=5 ttl=115 time=71.0 ms
+
+--- google.com ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4004ms
+rtt min/avg/max/mdev = 71.047/71.086/71.138/0.034 ms
+PING 8.213.40.227 (8.213.40.227) 56(84) bytes of data.
+64 bytes from 8.213.40.227: icmp_seq=1 ttl=64 time=0.303 ms
+64 bytes from 8.213.40.227: icmp_seq=2 ttl=64 time=0.242 ms
+64 bytes from 8.213.40.227: icmp_seq=3 ttl=64 time=0.261 ms
+64 bytes from 8.213.40.227: icmp_seq=4 ttl=64 time=0.251 ms
+64 bytes from 8.213.40.227: icmp_seq=5 ttl=64 time=0.259 ms
+64 bytes from 8.213.40.227: icmp_seq=6 ttl=64 time=0.240 ms
+64 bytes from 8.213.40.227: icmp_seq=7 ttl=64 time=0.249 ms
+64 bytes from 8.213.40.227: icmp_seq=8 ttl=64 time=0.247 ms
+64 bytes from 8.213.40.227: icmp_seq=9 ttl=64 time=0.297 ms
+64 bytes from 8.213.40.227: icmp_seq=10 ttl=64 time=0.234 ms
+64 bytes from 8.213.40.227: icmp_seq=11 ttl=64 time=0.275 ms
+64 bytes from 8.213.40.227: icmp_seq=12 ttl=64 time=0.252 ms
+64 bytes from 8.213.40.227: icmp_seq=13 ttl=64 time=0.248 ms
+64 bytes from 8.213.40.227: icmp_seq=14 ttl=64 time=0.267 ms
+64 bytes from 8.213.40.227: icmp_seq=15 ttl=64 time=0.219 ms
+64 bytes from 8.213.40.227: icmp_seq=16 ttl=64 time=0.232 ms
+64 bytes from 8.213.40.227: icmp_seq=17 ttl=64 time=0.224 ms
+64 bytes from 8.213.40.227: icmp_seq=18 ttl=64 time=0.278 ms
+64 bytes from 8.213.40.227: icmp_seq=19 ttl=64 time=0.273 ms
+64 bytes from 8.213.40.227: icmp_seq=20 ttl=64 time=0.258 ms
+
+--- 8.213.40.227 ping statistics ---
+20 packets transmitted, 20 received, 0% packet loss, time 19438ms
+rtt min/avg/max/mdev = 0.219/0.255/0.303/0.021 ms
+root@iZl4vg87v34qd1mil1ibg2Z:/var/www/daoob# 

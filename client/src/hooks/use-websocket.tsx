@@ -27,8 +27,9 @@ export function useWebSocket() {
   useEffect(() => {
     if (!user) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    // Hardcode the WebSocket URL to ensure it's always connecting to port 5000
+    const wsUrl = 'ws://localhost:5000/ws';
+    console.log('Connecting to WebSocket at:', wsUrl);
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;

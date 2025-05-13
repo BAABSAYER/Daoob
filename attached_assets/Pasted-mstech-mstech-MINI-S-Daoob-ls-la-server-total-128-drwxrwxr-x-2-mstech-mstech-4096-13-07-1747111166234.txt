@@ -1,0 +1,211 @@
+mstech@mstech-MINI-S:~/Daoob$ ls -la server/
+total 128
+drwxrwxr-x 2 mstech mstech  4096 مايو   13 07:25 .
+drwxrwxr-x 9 mstech mstech  4096 مايو   13 07:36 ..
+-rw-rw-r-- 1 mstech mstech  4477 مايو   13 07:25 auth.ts
+-rw-rw-r-- 1 mstech mstech   755 مايو   13 07:25 db.ts
+-rw-rw-r-- 1 mstech mstech  1921 مايو   13 07:25 index.ts
+-rw-rw-r-- 1 mstech mstech 73782 مايو   13 07:25 routes.ts
+-rw-rw-r-- 1 mstech mstech 20801 مايو   13 07:25 storage.ts
+-rw-rw-r-- 1 mstech mstech  2254 مايو   13 07:25 vite.ts
+mstech@mstech-MINI-S:~/Daoob$ # Create a file for the admin user script using TypeScript
+cat > create-admin-user.ts << EOF
+import { db } from './server/db';
+import { users, adminPermissions, ADMIN_PERMISSIONS } from './shared/schema';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
+import { eq } from 'drizzle-orm';
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString('hex');
+  const buf = await scryptAsync(password, salt, 64) as Buffer;
+  return `${buf.toString('hex')}.${salt}`;
+}
+
+async function createAdmin() {
+  try {
+    // Check if admin already exists
+    const existingAdmin = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, 'admin'));
+    
+    if (existingAdmin.length > 0) {
+      console.log('Admin user already exists');
+      return;
+    }
+    
+    // Create admin user
+    const hashedPassword = await hashPassword('password');
+    
+    const adminUser = await db
+      .insert(users)
+      .values({
+        username: 'admin',
+        password: hashedPassword,
+        email: 'admin@example.com',
+        fullName: 'Admin User',
+        userType: 'admin',
+        createdAt: new Date()
+      })
+      .returning();
+    
+    console.log('Admin user created:', adminUser[0]);
+    
+    // Add admin permissions
+    const permissions = Object.values(ADMIN_PERMISSIONS);
+    
+    for (const permission of permissions) {
+      await db
+        .insert(adminPermissions)
+        .values({
+npx tsx create-admin-user.tsTypeScript executor));
+-bash: ${buf.toString('hex')}.${salt}: bad substitution
+Database URL: Set (not showing for security)
+Error creating admin: ErrorEvent {
+  [Symbol(kTarget)]: WebSocket {
+    _events: [Object: null prototype] {
+      error: [Function],
+      message: [Function],
+      close: [Function],
+      open: [Function]
+    },
+    _eventsCount: 4,
+    _maxListeners: undefined,
+    _binaryType: 'arraybuffer',
+    _closeCode: 1006,
+    _closeFrameReceived: false,
+    _closeFrameSent: false,
+    _closeMessage: <Buffer >,
+    _closeTimer: null,
+    _errorEmitted: true,
+    _extensions: {},
+    _paused: false,
+    _protocol: '',
+    _readyState: 3,
+    _receiver: null,
+    _sender: null,
+    _socket: null,
+    _bufferedAmount: 0,
+    _isServer: false,
+    _redirects: 0,
+    _autoPong: true,
+    _url: 'wss://localhost/v2',
+    _req: null,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  },
+  [Symbol(kType)]: 'error',
+  [Symbol(kError)]: Error: connect ECONNREFUSED 127.0.0.1:443
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 443
+  },
+  [Symbol(kMessage)]: 'connect ECONNREFUSED 127.0.0.1:443'
+}
+mstech@mstech-MINI-S:~/Daoob$ # Create a file for the demo user script
+cat > create-demo-user.ts << EOF
+import { db } from './server/db';
+import { users } from './shared/schema';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
+import { eq } from 'drizzle-orm';
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString('hex');
+  const buf = await scryptAsync(password, salt, 64) as Buffer;
+  return `${buf.toString('hex')}.${salt}`;
+}
+
+async function createDemoUser() {
+  try {
+    // Check if demo user already exists
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, 'demouser'));
+    
+    if (existingUser.length > 0) {
+      console.log('Demo user already exists');
+      return;
+    }
+    
+    // Create demo user
+    const hashedPassword = await hashPassword('password');
+    
+    const demoUser = await db
+      .insert(users)
+      .values({
+        username: 'demouser',
+        password: hashedPassword,
+        email: 'demo@example.com',
+        fullName: 'Demo User',
+        userType: 'client',
+        createdAt: new Date()
+      })
+      .returning();
+    
+    console.log('Demo user created:', demoUser[0]);
+  } catch (error) {
+    console.error('Error creating demo user:', error);
+  }
+}
+
+createDemoUser();
+EOF
+
+npx tsx create-demo-user.ts
+-bash: ${buf.toString('hex')}.${salt}: bad substitution
+Database URL: Set (not showing for security)
+Error creating demo user: ErrorEvent {
+  [Symbol(kTarget)]: WebSocket {
+    _events: [Object: null prototype] {
+      error: [Function],
+      message: [Function],
+      close: [Function],
+      open: [Function]
+    },
+    _eventsCount: 4,
+    _maxListeners: undefined,
+    _binaryType: 'arraybuffer',
+    _closeCode: 1006,
+    _closeFrameReceived: false,
+    _closeFrameSent: false,
+    _closeMessage: <Buffer >,
+    _closeTimer: null,
+    _errorEmitted: true,
+    _extensions: {},
+    _paused: false,
+    _protocol: '',
+    _readyState: 3,
+    _receiver: null,
+    _sender: null,
+    _socket: null,
+    _bufferedAmount: 0,
+    _isServer: false,
+    _redirects: 0,
+    _autoPong: true,
+    _url: 'wss://localhost/v2',
+    _req: null,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  },
+  [Symbol(kType)]: 'error',
+  [Symbol(kError)]: Error: connect ECONNREFUSED 127.0.0.1:443
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 443
+  },
+  [Symbol(kMessage)]: 'connect ECONNREFUSED 127.0.0.1:443'
+}
+mstech@mstech-MINI-S:~/Daoob$ 
