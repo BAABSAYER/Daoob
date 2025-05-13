@@ -29,9 +29,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   
-  // Add a simple test endpoint
+  // Add test endpoints for debugging
   app.get('/api/test', (req, res) => {
-    res.json({ message: 'API is working!' });
+    res.json({ 
+      message: 'API is working!',
+      authenticated: req.isAuthenticated(),
+      session: req.session,
+      user: req.user ? { 
+        id: req.user.id, 
+        username: req.user.username,
+        userType: req.user.userType
+      } : null
+    });
+  });
+  
+  // Debug endpoint for checking authentication
+  app.get('/api/auth-status', (req, res) => {
+    res.json({
+      authenticated: req.isAuthenticated(),
+      session: req.session,
+      sessionID: req.sessionID,
+      user: req.user ? { 
+        id: req.user.id, 
+        username: req.user.username,
+        userType: req.user.userType
+      } : null
+    });
   });
   
   // Event Type routes
