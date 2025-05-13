@@ -27,8 +27,13 @@ export function useWebSocket() {
   useEffect(() => {
     if (!user) return;
 
-    // Hardcode the WebSocket URL to ensure it's always connecting to port 5000
-    const wsUrl = 'ws://localhost:5000/ws';
+    // Get the server host and port either from environment or window location
+    const host = import.meta.env.VITE_SERVER_HOST || window.location.hostname;
+    const port = import.meta.env.VITE_SERVER_PORT || '5000';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    
+    // Use environment variables with fallbacks for local development
+    const wsUrl = `${protocol}//${host}:${port}/ws`;
     console.log('Connecting to WebSocket at:', wsUrl);
 
     const ws = new WebSocket(wsUrl);

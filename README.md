@@ -36,21 +36,64 @@ A comprehensive event management platform with web admin dashboard and mobile ap
 - API integration with backend server
 - Localization support
 
-## Setup Instructions
+## Quick Setup for Local Development
 
-### Backend and Web App
+### One-Command Setup (Recommended)
 
-1. Install dependencies
+Run the setup script to automatically install dependencies, set up the database, and create an admin user:
+
+```bash
+# Make the script executable
+chmod +x setup.sh
+
+# Run the setup script
+./setup.sh
+```
+
+The script will:
+1. Create necessary environment files
+2. Install dependencies
+3. Set up the database schema
+4. Create an admin user (username: admin, password: password)
+
+After running the setup script, you can start the server:
+
+```bash
+npm run dev
+```
+
+Then access the application at http://localhost:5000
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+1. Create a `.env` file in the root directory with the following content:
+```
+DATABASE_URL=postgres://username:password@localhost:5432/database_name
+SESSION_SECRET=your_session_secret_here
+NODE_ENV=development
+PORT=5000
+SERVER_HOST=localhost
+```
+
+2. Create a `client/.env` file with:
+```
+VITE_SERVER_HOST=localhost
+VITE_SERVER_PORT=5000
+```
+
+3. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Set up the database
+4. Set up the database:
 ```bash
 npm run db:push
 ```
 
-3. Start the development server
+5. Start the development server:
 ```bash
 npm run dev
 ```
