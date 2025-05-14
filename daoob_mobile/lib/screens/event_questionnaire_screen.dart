@@ -45,19 +45,11 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       // Convert category ID to event type ID (assuming they match or have a mapping)
       final eventTypeId = _getEventTypeIdFromCategory(widget.categoryId);
       
-      // Get token - we don't need to call getApiConfig() as we can access ApiConfig directly
-      final token = authService.token;
-      
-      // Fetch questions from API for this event type
+      // Fetch questions from API for this event type using authService.apiService
       final url = '${ApiConfig.apiUrl}/event-types/$eventTypeId/questions';
       
-      // Use ApiService or direct http call with proper headers
-      final response = await http.get(
-        Uri.parse(url),
-        headers: token != null 
-            ? ApiConfig.authHeaders(token)
-            : ApiConfig.jsonHeaders,
-      );
+      // Use ApiService for consistent cookie handling
+      final response = await authService.apiService.get(url);
       
       if (response.statusCode == 200) {
         final List<dynamic> questionsJson = jsonDecode(response.body);
@@ -71,7 +63,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
         });
       } else {
         // API error, fallback to empty question list
-        print('Error loading questions: ${response.statusCode}');
+        print('Error loading questions: ${response.statusCode} - ${response.body}');
         setState(() {
           _questions = [];
           _isLoading = false;
@@ -331,6 +323,15 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       
+      // Check authentication first
+      final authService = Provider.of<AuthService>(context, listen: false);
+      if (authService.user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to submit a request')),
+        );
+        return;
+      }
+      
       if (_selectedDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select an event date')),
@@ -348,6 +349,11 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
             : null,
         'estimatedGuests': _estimatedGuests,
         'status': 'pending',
+        // Add client info early to help with debugging
+        'clientId': authService.user?.id,
+        'clientName': authService.user?.name,
+        'clientEmail': authService.user?.email,
+        'clientPhone': authService.user?.phone,
       };
       
       // Navigate to confirmation screen
