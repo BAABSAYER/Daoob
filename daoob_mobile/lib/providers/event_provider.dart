@@ -112,12 +112,8 @@ class EventProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      final response = await http.get(
-        Uri.parse(ApiConfig.eventTypesEndpoint),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
-      );
+      // Use the ApiService to handle cookie management consistently
+      final response = await authService.apiService.get(ApiConfig.eventTypesEndpoint);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -128,6 +124,17 @@ class EventProvider with ChangeNotifier {
         await loadCategories();
         
         notifyListeners();
+      } else if (response.statusCode == 401) {
+        // Authentication error - let the user know they need to log in
+        _error = 'Please log in to view event types';
+        _isLoading = false;
+        notifyListeners();
+        
+        // If this is an auth error, attempt to clear session and redirect to login
+        if (authService.isLoggedIn) {
+          print('Authentication error - clearing session');
+          await authService.logout();
+        }
       } else {
         _error = 'Failed to load event types: ${response.statusCode}';
         _isLoading = false;
@@ -240,23 +247,37 @@ class EventProvider with ChangeNotifier {
     if (authService.user == null) return;
     
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/quotations/client/${authService.user!.id}'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
+      _isLoading = true;
+      notifyListeners();
+      
+      final response = await authService.apiService.get(
+        '${ApiConfig.baseUrl}/api/quotations/client/${authService.user!.id}'
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         _quotations = data.map((item) => Quotation.fromJson(item)).toList();
+        _isLoading = false;
         notifyListeners();
+      } else if (response.statusCode == 401) {
+        // Authentication error
+        _error = 'Your session has expired. Please log in again.';
+        _isLoading = false;
+        notifyListeners();
+        
+        // If this is an auth error, attempt to clear session
+        if (authService.isLoggedIn) {
+          print('Authentication error while loading quotations - clearing session');
+          await authService.logout();
+        }
       } else {
         _error = 'Failed to load quotations: ${response.statusCode}';
+        _isLoading = false;
         notifyListeners();
       }
     } catch (e) {
       _error = 'Failed to load quotations: $e';
+      _isLoading = false;
       notifyListeners();
     }
   }
@@ -267,20 +288,36 @@ class EventProvider with ChangeNotifier {
     AuthService authService,
   ) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/event-requests/$requestId'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
+      // Check authentication first
+      if (!authService.isLoggedIn) {
+        print('User not logged in, cannot get event request');
+        return null;
+      }
+      
+      final response = await authService.apiService.get(
+        '${ApiConfig.baseUrl}/api/event-requests/$requestId'
       );
 
       if (response.statusCode == 200) {
         final dynamic data = json.decode(response.body);
         return EventRequest.fromJson(data);
+      } else if (response.statusCode == 401) {
+        // Authentication error
+        _error = 'Your session has expired. Please log in again.';
+        notifyListeners();
+        
+        // If this is an auth error, attempt to clear session
+        print('Authentication error while getting event request - clearing session');
+        await authService.logout();
+        return null;
       } else {
+        _error = 'Failed to load event request: ${response.statusCode}';
+        notifyListeners();
         return null;
       }
     } catch (e) {
+      _error = 'Failed to load event request: $e';
+      notifyListeners();
       return null;
     }
   }

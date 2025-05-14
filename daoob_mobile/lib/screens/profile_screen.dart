@@ -40,9 +40,10 @@ class ProfileScreen extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Profile header
           Center(
             child: Column(
@@ -214,7 +215,7 @@ class ProfileScreen extends StatelessWidget {
             },
           ),
 
-          const Spacer(),
+          const SizedBox(height: 40),
 
           // Logout button
           Padding(
@@ -281,6 +282,7 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

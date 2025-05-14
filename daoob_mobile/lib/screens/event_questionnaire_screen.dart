@@ -395,22 +395,43 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
         return;
       }
       
-      // Create the request data
+      // Process answers - ensure no null values are passed as strings
+      final Map<String, dynamic> processedAnswers = {};
+      _answers.forEach((key, value) {
+        // Convert null to empty string to avoid type errors
+        if (value == null) {
+          processedAnswers[key] = '';
+        } else {
+          processedAnswers[key] = value;
+        }
+      });
+      
+      // Format event time properly or use empty string
+      String formattedEventTime = '';
+      if (_selectedTime != null) {
+        // Ensure minutes are zero-padded (e.g., 9:5 becomes 9:05)
+        String minutes = _selectedTime!.minute < 10 
+            ? '0${_selectedTime!.minute}' 
+            : '${_selectedTime!.minute}';
+        formattedEventTime = '${_selectedTime!.hour}:$minutes';
+      }
+      
+      // Create the request data with proper type handling
       final requestData = {
         'categoryId': widget.categoryId,
-        'answers': _answers,
-        'eventDate': '${_selectedDate!.toIso8601String()}',
-        'eventTime': _selectedTime != null 
-            ? '${_selectedTime!.hour}:${_selectedTime!.minute}' 
-            : null,
+        'answers': processedAnswers,
+        'eventDate': _selectedDate!.toIso8601String(),
+        'eventTime': formattedEventTime != '' ? formattedEventTime : '', // Empty string instead of null
         'estimatedGuests': _estimatedGuests,
         'status': 'pending',
         // Add client info early to help with debugging
-        'clientId': authService.user?.id,
-        'clientName': authService.user?.name,
-        'clientEmail': authService.user?.email,
-        'clientPhone': authService.user?.phone,
+        'clientId': authService.user?.id ?? 0, // Default to 0 if null
+        'clientName': authService.user?.name ?? '', // Default to empty string if null
+        'clientEmail': authService.user?.email ?? '', // Default to empty string if null
+        'clientPhone': authService.user?.phone ?? '', // Default to empty string if null
       };
+      
+      print('Debug - Request data: ${jsonEncode(requestData)}');
       
       // Navigate to confirmation screen
       Navigator.push(
