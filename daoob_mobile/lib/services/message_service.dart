@@ -144,58 +144,127 @@ class MessageService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     
-    // Always set a default user ID for offline mode testing
-    _currentUserId = authService.user?.id ?? 1;
+    // Set current user ID from auth service
+    _currentUserId = authService.user?.id;
+    
+    if (_currentUserId == null) {
+      _error = 'User not authenticated';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
     
     // Load chat users
-    await loadChatUsers();
+    await loadChatUsers(authService);
     
     _isLoading = false;
     notifyListeners();
   }
   
-  Future<void> loadChatUsers() async {
+  Future<void> loadChatUsers(AuthService authService) async {
     if (_database == null) {
       await _initDatabase();
     }
     
     try {
-      // Check if we have any chat users stored
-      final List<Map<String, dynamic>> maps = await _database!.query('chat_users');
+      // Get the API base URL
+      final apiConfig = await authService.getApiConfig();
+      final token = await authService.getToken();
       
-      if (maps.isNotEmpty) {
-        _chatUsers = maps.map((item) {
+      // Fetch chat users from API
+      final url = '${apiConfig.baseUrl}/api/messages/chats';
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> usersJson = jsonDecode(response.body);
+        
+        _chatUsers = usersJson.map((json) {
           return ChatUser(
-            id: item['id'],
-            name: item['name'],
-            avatar: item['avatar'],
-            userType: item['userType'],
-            lastMessage: item['lastMessage'],
-            lastMessageTime: item['lastMessageTime'] != null 
-              ? DateTime.parse(item['lastMessageTime']) 
+            id: json['id'],
+            name: json['name'],
+            avatar: json['avatar'],
+            userType: json['userType'],
+            lastMessage: json['lastMessage'],
+            lastMessageTime: json['lastMessageTime'] != null 
+              ? DateTime.parse(json['lastMessageTime']) 
               : null,
-            hasUnreadMessages: item['hasUnreadMessages'] == 1,
+            hasUnreadMessages: json['hasUnreadMessages'] ?? false,
           );
         }).toList();
-      } else {
-        // No chat users found, generate sample data
-        _chatUsers = _generateSampleChatUsers();
+        
+        // Save to local database for caching
         await _saveChatUsersLocally(_chatUsers);
+      } else {
+        // If API request fails, try to load from local cache
+        final List<Map<String, dynamic>> maps = await _database!.query('chat_users');
+        
+        if (maps.isNotEmpty) {
+          _chatUsers = maps.map((item) {
+            return ChatUser(
+              id: item['id'],
+              name: item['name'],
+              avatar: item['avatar'],
+              userType: item['userType'],
+              lastMessage: item['lastMessage'],
+              lastMessageTime: item['lastMessageTime'] != null 
+                ? DateTime.parse(item['lastMessageTime']) 
+                : null,
+              hasUnreadMessages: item['hasUnreadMessages'] == 1,
+            );
+          }).toList();
+        } else {
+          // If no users in cache, initialize with empty list
+          _chatUsers = [];
+          _error = 'No chat users available.';
+        }
       }
     } catch (e) {
       _error = 'Error loading chat users: ${e.toString()}';
-      // Fallback to sample data
-      _chatUsers = _generateSampleChatUsers();
+      
+      // Try to load from local cache as last resort
+      try {
+        final List<Map<String, dynamic>> maps = await _database!.query('chat_users');
+        if (maps.isNotEmpty) {
+          _chatUsers = maps.map((item) {
+            return ChatUser(
+              id: item['id'],
+              name: item['name'],
+              avatar: item['avatar'],
+              userType: item['userType'],
+              lastMessage: item['lastMessage'],
+              lastMessageTime: item['lastMessageTime'] != null 
+                ? DateTime.parse(item['lastMessageTime']) 
+                : null,
+              hasUnreadMessages: item['hasUnreadMessages'] == 1,
+            );
+          }).toList();
+        } else {
+          // Initialize with empty list if all attempts fail
+          _chatUsers = [];
+        }
+      } catch (_) {
+        _chatUsers = [];
+      }
     }
   }
   
-  Future<void> loadMessages(int otherUserId) async {
+  Future<void> loadMessages(int otherUserId, [AuthService? authService]) async {
     if (_database == null) {
       await _initDatabase();
     }
     
     if (_currentUserId == null) {
-      _currentUserId = 1; // Default user ID for testing
+      _error = 'User not authenticated';
+      _isLoading = false;
+      notifyListeners();
+      return;
     }
     
     _isLoading = true;
@@ -203,7 +272,39 @@ class MessageService extends ChangeNotifier {
     notifyListeners();
     
     try {
-      // Load messages between current user and the selected user
+      // If authService is provided, fetch messages from API
+      if (authService != null) {
+        final apiConfig = await authService.getApiConfig();
+        final token = await authService.getToken();
+        
+        // Fetch messages from API
+        final url = '${apiConfig.baseUrl}/api/messages/${_currentUserId}/${otherUserId}';
+        
+        final response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+        
+        if (response.statusCode == 200) {
+          final List<dynamic> messagesJson = jsonDecode(response.body);
+          _messages = messagesJson.map((json) => Message.fromJson(json)).toList();
+          
+          // Save to local database for caching
+          await _saveMessagesLocally(_messages);
+          
+          // Mark messages as read
+          await _markMessagesAsRead(otherUserId);
+          
+          _isLoading = false;
+          notifyListeners();
+          return;
+        }
+      }
+      
+      // If API request fails or authService not provided, try to load from local cache
       final List<Map<String, dynamic>> maps = await _database!.rawQuery(
         '''
         SELECT * FROM messages 
@@ -228,21 +329,55 @@ class MessageService extends ChangeNotifier {
             receiverAvatar: item['receiverAvatar'],
           );
         }).toList();
+        
+        // Mark messages as read
+        await _markMessagesAsRead(otherUserId);
       } else {
-        // If no saved messages, generate sample conversation
-        _messages = _generateSampleMessages(otherUserId);
-        await _saveMessagesLocally(_messages);
+        // Initialize with empty message list
+        _messages = [];
+        _error = 'No messages found.';
       }
-      
-      // Mark messages as read
-      await _markMessagesAsRead(otherUserId);
       
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = 'Database error: ${e.toString()}';
+      _error = 'Error loading messages: ${e.toString()}';
       _isLoading = false;
-      _messages = _generateSampleMessages(otherUserId); // Fallback to sample data
+      
+      // Try to load from local cache as last resort
+      try {
+        final List<Map<String, dynamic>> maps = await _database!.rawQuery(
+          '''
+          SELECT * FROM messages 
+          WHERE (senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?)
+          ORDER BY timestamp ASC
+          ''',
+          [_currentUserId, otherUserId, otherUserId, _currentUserId]
+        );
+        
+        if (maps.isNotEmpty) {
+          _messages = maps.map((item) {
+            return Message(
+              id: item['id'],
+              senderId: item['senderId'],
+              receiverId: item['receiverId'],
+              senderName: item['senderName'],
+              receiverName: item['receiverName'],
+              content: item['content'],
+              timestamp: DateTime.parse(item['timestamp']),
+              isRead: item['isRead'] == 1,
+              senderAvatar: item['senderAvatar'],
+              receiverAvatar: item['receiverAvatar'],
+            );
+          }).toList();
+        } else {
+          // If all attempts fail, initialize with empty list
+          _messages = [];
+        }
+      } catch (_) {
+        _messages = [];
+      }
+      
       notifyListeners();
     }
   }
@@ -301,7 +436,7 @@ class MessageService extends ChangeNotifier {
     }
   }
   
-  Future<bool> sendMessage(int receiverId, String content, String receiverName) async {
+  Future<bool> sendMessage(int receiverId, String content, String receiverName, [AuthService? authService]) async {
     if (_database == null || _currentUserId == null) {
       _error = 'Not initialized';
       notifyListeners();
@@ -313,12 +448,6 @@ class MessageService extends ChangeNotifier {
     notifyListeners();
     
     try {
-      // Generate new message ID (highest ID + 1)
-      int newId = 1;
-      if (_messages.isNotEmpty) {
-        newId = _messages.map((m) => m.id).reduce((a, b) => a > b ? a : b) + 1;
-      }
-      
       // Get current user's name
       final prefs = await SharedPreferences.getInstance();
       final userData = prefs.getString('user');
@@ -329,31 +458,84 @@ class MessageService extends ChangeNotifier {
         senderName = user['name'] ?? 'You';
       }
       
-      final newMessage = Message(
-        id: newId,
-        senderId: _currentUserId!,
-        receiverId: receiverId,
-        senderName: senderName,
-        receiverName: receiverName,
-        content: content,
-        timestamp: DateTime.now(),
-        isRead: false,
-        senderAvatar: null,
-        receiverAvatar: null,
-      );
-      
-      // Add to in-memory list
-      _messages.add(newMessage);
-      
-      // Save to local database
-      await _saveMessageLocally(newMessage);
-      
-      // Update chat users with last message
-      await _updateChatUserWithLastMessage(receiverId, content, newMessage.timestamp);
-      
-      _isLoading = false;
-      notifyListeners();
-      return true;
+      // If authService is provided, send message to server
+      if (authService != null) {
+        final apiConfig = await authService.getApiConfig();
+        final token = await authService.getToken();
+        
+        // Prepare message data
+        final messageData = {
+          'senderId': _currentUserId,
+          'receiverId': receiverId,
+          'content': content,
+        };
+        
+        // Send message to API
+        final url = '${apiConfig.baseUrl}/api/messages';
+        
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(messageData),
+        );
+        
+        if (response.statusCode == 201) {
+          // Message created successfully on server
+          final messageJson = jsonDecode(response.body);
+          final newMessage = Message.fromJson(messageJson);
+          
+          // Add to in-memory list
+          _messages.add(newMessage);
+          
+          // Save to local database
+          await _saveMessageLocally(newMessage);
+          
+          // Update chat users with last message
+          await _updateChatUserWithLastMessage(receiverId, content, newMessage.timestamp);
+          
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          throw Exception('Failed to send message: ${response.statusCode}');
+        }
+      } else {
+        // Offline mode or no authService provided - create local message only
+        // Generate new message ID (highest ID + 1)
+        int newId = 1;
+        if (_messages.isNotEmpty) {
+          newId = _messages.map((m) => m.id).reduce((a, b) => a > b ? a : b) + 1;
+        }
+        
+        final newMessage = Message(
+          id: newId,
+          senderId: _currentUserId!,
+          receiverId: receiverId,
+          senderName: senderName,
+          receiverName: receiverName,
+          content: content,
+          timestamp: DateTime.now(),
+          isRead: false,
+          senderAvatar: null,
+          receiverAvatar: null,
+        );
+        
+        // Add to in-memory list
+        _messages.add(newMessage);
+        
+        // Save to local database
+        await _saveMessageLocally(newMessage);
+        
+        // Update chat users with last message
+        await _updateChatUserWithLastMessage(receiverId, content, newMessage.timestamp);
+        
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
     } catch (e) {
       _error = 'Error sending message: ${e.toString()}';
       _isLoading = false;
