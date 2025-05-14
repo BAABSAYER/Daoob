@@ -27,12 +27,8 @@ export default function Chat() {
     navigate('/messages');
   };
   
-  const [isOnline, setIsOnline] = useState(false);
-  
-  // Set online status when the component mounts
-  useEffect(() => {
-    setIsOnline(Math.random() > 0.5);
-  }, []);
+  // Online status is determined by user presence in the API response
+  const isOnline = !!recipient?.isOnline;
   
   // Get appropriate icon based on user type
   const getUserAvatar = () => {
