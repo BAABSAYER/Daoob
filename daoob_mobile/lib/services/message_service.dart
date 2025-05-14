@@ -168,18 +168,11 @@ class MessageService extends ChangeNotifier {
     }
     
     try {
-      // Get the token - we don't need to call getApiConfig() as we can access ApiConfig directly
-      final token = authService.token;
-      
-      // Fetch chat users from API
+      // Fetch chat users from API using ApiService
       final url = '${ApiConfig.apiUrl}/messages/chats';
       
-      final response = await http.get(
-        Uri.parse(url),
-        headers: token != null 
-            ? ApiConfig.authHeaders(token)
-            : ApiConfig.jsonHeaders,
-      );
+      // Use ApiService for consistent cookie handling
+      final response = await authService.apiService.get(url);
       
       if (response.statusCode == 200) {
         final List<dynamic> usersJson = jsonDecode(response.body);
@@ -273,17 +266,11 @@ class MessageService extends ChangeNotifier {
     try {
       // If authService is provided, fetch messages from API
       if (authService != null) {
-        final token = authService.token;
-        
-        // Fetch messages from API
+        // Fetch messages from API using ApiService
         final url = '${ApiConfig.apiUrl}/messages/${_currentUserId}/${otherUserId}';
         
-        final response = await http.get(
-          Uri.parse(url),
-          headers: token != null 
-              ? ApiConfig.authHeaders(token)
-              : ApiConfig.jsonHeaders,
-        );
+        // Use ApiService for consistent cookie handling
+        final response = await authService.apiService.get(url);
         
         if (response.statusCode == 200) {
           final List<dynamic> messagesJson = jsonDecode(response.body);
@@ -457,8 +444,6 @@ class MessageService extends ChangeNotifier {
       
       // If authService is provided, send message to server
       if (authService != null) {
-        final token = authService.token;
-        
         // Prepare message data
         final messageData = {
           'senderId': _currentUserId,
@@ -466,16 +451,11 @@ class MessageService extends ChangeNotifier {
           'content': content,
         };
         
-        // Send message to API
+        // Send message to API using ApiService
         final url = '${ApiConfig.apiUrl}/messages';
         
-        final response = await http.post(
-          Uri.parse(url),
-          headers: token != null 
-              ? ApiConfig.authHeaders(token)
-              : ApiConfig.jsonHeaders,
-          body: jsonEncode(messageData),
-        );
+        // Use ApiService for consistent cookie handling
+        final response = await authService.apiService.post(url, messageData);
         
         if (response.statusCode == 201) {
           // Message created successfully on server
