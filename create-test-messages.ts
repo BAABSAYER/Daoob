@@ -1,7 +1,7 @@
 import { db } from './server/db';
 import { messages } from './shared/schema';
 
-// Create sample messages
+// Create sample messages - only between client and admin
 async function createTestMessages() {
   try {
     console.log('Creating test messages...');
@@ -45,52 +45,10 @@ async function createTestMessages() {
       }
     ];
     
-    // Admin (ID 7) to Vendor (ID 4) messages
-    const adminToVendorMessages = [
-      {
-        senderId: 7,
-        receiverId: 4,
-        content: 'We have a new client looking for event planning services',
-        read: true,
-        createdAt: new Date(Date.now() - 86400000 * 3) // 3 days ago
-      },
-      {
-        senderId: 4,
-        receiverId: 7,
-        content: 'Great! What kind of event?',
-        read: true,
-        createdAt: new Date(Date.now() - 86400000 * 3 + 3600000) // 3 days ago + 1 hour
-      },
-      {
-        senderId: 7,
-        receiverId: 4,
-        content: 'A wedding for about 200 guests',
-        read: true,
-        createdAt: new Date(Date.now() - 86400000 * 3 + 7200000) // 3 days ago + 2 hours
-      },
-      {
-        senderId: 4,
-        receiverId: 7,
-        content: 'We can handle that. Do they have a specific theme in mind?',
-        read: true,
-        createdAt: new Date(Date.now() - 86400000 * 2) // 2 days ago
-      },
-      {
-        senderId: 7,
-        receiverId: 4,
-        content: 'They mentioned a beach theme',
-        read: false,
-        createdAt: new Date(Date.now() - 3600000) // 1 hour ago
-      }
-    ];
+    // Insert only client-admin messages
+    const insertedMessages = await db.insert(messages).values(adminToClientMessages).returning();
     
-    // Insert all messages
-    const insertedMessages = await db.insert(messages).values([
-      ...adminToClientMessages,
-      ...adminToVendorMessages
-    ]).returning();
-    
-    console.log(`Created ${insertedMessages.length} test messages`);
+    console.log(`Created ${insertedMessages.length} client-admin test messages`);
     console.log('Test data creation complete!');
     
   } catch (error) {
