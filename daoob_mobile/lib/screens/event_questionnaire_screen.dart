@@ -31,6 +31,22 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
   @override
   void initState() {
     super.initState();
+    // First check if user is logged in before loading questions
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthAndLoadQuestions();
+    });
+  }
+  
+  Future<void> _checkAuthAndLoadQuestions() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    // Use the new helper method to check authentication
+    bool isLoggedIn = await authService.checkLoginStatus(context);
+    if (!isLoggedIn) {
+      return;
+    }
+    
+    // User is authenticated, proceed to load questions
     _loadQuestions();
   }
   
@@ -57,25 +73,65 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
             .map((json) => QuestionnaireItem.fromJson(json))
             .toList();
         
-        setState(() {
-          _questions = questions;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _questions = questions;
+            _isLoading = false;
+          });
+        }
       } else {
-        // API error, fallback to empty question list
+        // API error, check if it's an auth error (401)
+        if (response.statusCode == 401) {
+          // Session expired - show login dialog
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                final languageProvider = Provider.of<LanguageProvider>(context);
+                final bool isArabic = languageProvider.locale.languageCode == 'ar';
+                
+                return AlertDialog(
+                  title: Text(isArabic ? 'انتهت الجلسة' : 'Session Expired'),
+                  content: Text(
+                    isArabic 
+                        ? 'انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.'
+                        : 'Your session has expired. Please login again.'
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pushReplacementNamed('/login');
+                      },
+                      child: Text(isArabic ? 'تسجيل الدخول' : 'Login'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+          return;
+        }
+        
+        // Other API error, fallback to empty question list
         print('Error loading questions: ${response.statusCode} - ${response.body}');
+        if (mounted) {
+          setState(() {
+            _questions = [];
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      // Handle error
+      print('Exception loading questions: $e');
+      if (mounted) {
         setState(() {
           _questions = [];
           _isLoading = false;
         });
       }
-    } catch (e) {
-      // Handle error
-      print('Exception loading questions: $e');
-      setState(() {
-        _questions = [];
-        _isLoading = false;
-      });
     }
   }
   

@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import '../config/api_config.dart';
 import './api_service.dart';
+import '../l10n/language_provider.dart';
 
 class User {
   final int id;
@@ -68,6 +70,46 @@ class AuthService extends ChangeNotifier {
   void updateUnreadMessageCount(int count) {
     _unreadMessageCount = count;
     notifyListeners();
+  }
+  
+  // Show login required dialog
+  Future<bool> checkLoginStatus(BuildContext context) async {
+    if (!_isLoggedIn || _user == null) {
+      // Get language for i18n
+      final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+      final bool isArabic = languageProvider.locale.languageCode == 'ar';
+      
+      // Show dialog
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            title: Text(isArabic ? 'تسجيل الدخول مطلوب' : 'Login Required'),
+            content: Text(
+              isArabic 
+                  ? 'يجب تسجيل الدخول أولاً لإكمال هذا الإجراء.'
+                  : 'You need to login first to complete this action.'
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  Navigator.pushNamedAndRemoveUntil(
+                    context, 
+                    '/login', 
+                    (route) => false
+                  );
+                },
+                child: Text(isArabic ? 'تسجيل الدخول' : 'Login'),
+              ),
+            ],
+          );
+        },
+      );
+      return false;
+    }
+    return true;
   }
 
   AuthService() {

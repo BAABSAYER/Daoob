@@ -19,6 +19,22 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
   bool _isSuccess = false;
   
   @override
+  void initState() {
+    super.initState();
+    // Check auth on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthentication();
+    });
+  }
+  
+  Future<void> _checkAuthentication() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    // Use the common authentication check method
+    await authService.checkLoginStatus(context);
+  }
+  
+  @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
     final eventProvider = Provider.of<EventProvider>(context);

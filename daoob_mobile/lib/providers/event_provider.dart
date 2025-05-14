@@ -167,6 +167,19 @@ class EventProvider with ChangeNotifier {
     AuthService authService,
   ) async {
     try {
+      // First verify that the user is logged in
+      if (!authService.isLoggedIn || authService.user == null) {
+        throw Exception('You must be logged in to submit a request. Please log in and try again.');
+      }
+      
+      // Make sure clientId is included
+      if (requestData['clientId'] == null) {
+        requestData['clientId'] = authService.user!.id;
+      }
+      
+      // For debugging, log what we're sending
+      print('Submitting event request: ${json.encode(requestData)}');
+      
       // Use the ApiService to ensure cookies are properly handled
       final response = await authService.apiService.post(
         '${ApiConfig.baseUrl}/api/event-requests',
@@ -179,6 +192,9 @@ class EventProvider with ChangeNotifier {
         _eventRequests.add(eventRequest);
         notifyListeners();
         return eventRequest;
+      } else if (response.statusCode == 401) {
+        // Authentication error
+        throw Exception('Your session has expired. Please log in again.');
       } else {
         final errorMessage = response.body.isNotEmpty 
             ? 'Failed to create event request: ${response.body}'
