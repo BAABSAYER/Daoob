@@ -132,21 +132,11 @@ class BookingService extends ChangeNotifier {
   }
   
   Future<void> loadBookings(AuthService authService) async {
-    if (_database == null) {
-      await _initDatabase();
-    }
-    
     _isLoading = true;
     _error = null;
     notifyListeners();
     
-    // If offline mode is active, load from local DB
-    if (authService.isOfflineMode) {
-      await _loadOfflineBookings(authService.user?.id, authService.user?.userType);
-      return;
-    }
-    
-    // Otherwise, load from API
+    // Load from API
     final user = authService.user;
     final token = authService.token;
     
@@ -162,95 +152,35 @@ class BookingService extends ChangeNotifier {
           ? '${ApiConfig.apiUrl}/vendor/bookings'
           : '${ApiConfig.apiUrl}/client/bookings';
       
+      print('Fetching bookings from endpoint: $endpoint');
+      
       final response = await http.get(
         Uri.parse(endpoint),
         headers: ApiConfig.authHeaders(token),
       ).timeout(const Duration(seconds: 10));
       
+      print('Response status: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
+        print('Received booking data: ${response.body}');
         final List<dynamic> data = json.decode(response.body);
         _bookings = data.map((item) => Booking.fromJson(item)).toList();
-        
-        // Save to local database
-        await _saveBookingsLocally(_bookings);
         
         _isLoading = false;
         notifyListeners();
       } else {
-        // If API fails, try to load from local database as fallback
-        await _loadOfflineBookings(user.id, user.userType);
+        _error = 'Failed to load bookings: ${response.statusCode} - ${response.body}';
+        _isLoading = false;
+        notifyListeners();
       }
     } catch (e) {
       _error = 'Network error: ${e.toString()}';
-      // If network request fails, try to load from local database as fallback
-      await _loadOfflineBookings(authService.user?.id, authService.user?.userType);
-    }
-  }
-  
-  Future<void> _loadOfflineBookings(int? userId, String? userType) async {
-    try {
-      if (_database == null) {
-        await _initDatabase();
-      }
-      
-      List<Map<String, dynamic>> maps;
-      
-      if (userId != null) {
-        if (userType == 'vendor') {
-          // For vendors, get bookings where vendorId matches or they are in additionalVendorIds
-          maps = await _database!.rawQuery(
-            'SELECT * FROM bookings WHERE vendorId = ?',
-            [userId]
-          );
-          
-          // Also check for bookings where vendor is in additionalVendorIds
-          final allBookings = await _database!.query('bookings');
-          for (final booking in allBookings) {
-            final additionalIdsStr = booking['additionalVendorIds'] as String?;
-            if (additionalIdsStr != null && additionalIdsStr.isNotEmpty) {
-              try {
-                final additionalIds = jsonDecode(additionalIdsStr) as List;
-                if (additionalIds.contains(userId)) {
-                  maps.add(booking);
-                }
-              } catch (e) {
-                print('Error parsing additionalVendorIds: $e');
-              }
-            }
-          }
-        } else {
-          // For clients, get bookings where clientId matches
-          maps = await _database!.query(
-            'bookings',
-            where: 'clientId = ?',
-            whereArgs: [userId],
-          );
-        }
-      } else {
-        // If no user id, get all bookings
-        maps = await _database!.query('bookings');
-      }
-      
-      if (maps.isNotEmpty) {
-        _bookings = maps.map((item) {
-          return Booking.fromJson(item);
-        }).toList();
-      } else {
-        // If no saved bookings, generate some sample data
-        _bookings = _generateSampleBookings(userId, userType);
-        await _saveBookingsLocally(_bookings);
-      }
-      
       _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = 'Database error: ${e.toString()}';
-      _isLoading = false;
-      _bookings = _generateSampleBookings(userId, userType); // Fallback to sample data
       notifyListeners();
     }
   }
   
+  // Database methods to save bookings locally for caching
   Future<void> _saveBookingsLocally(List<Booking> bookings) async {
     if (_database == null) {
       await _initDatabase();
@@ -268,131 +198,10 @@ class BookingService extends ChangeNotifier {
     }
   }
   
-  List<Booking> _generateSampleBookings(int? userId, String? userType) {
-    // Default values if user is not logged in
-    final clientId = userId ?? 1;
-    final isVendor = userType == 'vendor';
-    
-    // Primary vendor IDs
-    const List<int> vendorIds = [101, 102, 103, 104];
-    const List<String> vendorNames = [
-      'Elegant Events', 
-      'Corporate Solutions', 
-      'Party Planners', 
-      'Wedding Paradise'
-    ];
-    
-    // List of booking examples for clients
-    final List<Booking> clientBookings = [
-      Booking(
-        id: 1,
-        clientId: clientId,
-        vendorId: vendorIds[0],
-        vendorName: vendorNames[0],
-        eventDate: DateTime.now().add(const Duration(days: 30)),
-        eventType: 'wedding',
-        packageType: 'Premium',
-        totalPrice: 3500.0,
-        status: 'confirmed',
-        notes: 'Beach wedding with 100 guests',
-        additionalVendorIds: [vendorIds[2], vendorIds[3]],
-        additionalVendorNames: [vendorNames[2], vendorNames[3]],
-      ),
-      Booking(
-        id: 2,
-        clientId: clientId,
-        vendorId: vendorIds[1],
-        vendorName: vendorNames[1],
-        eventDate: DateTime.now().add(const Duration(days: 15)),
-        eventType: 'corporate',
-        packageType: 'Standard',
-        totalPrice: 2000.0,
-        status: 'pending',
-        notes: 'Annual company meeting for 50 people',
-      ),
-      Booking(
-        id: 3,
-        clientId: clientId,
-        vendorId: vendorIds[2],
-        vendorName: vendorNames[2],
-        eventDate: DateTime.now().subtract(const Duration(days: 10)),
-        eventType: 'birthday',
-        packageType: 'Basic',
-        totalPrice: 800.0,
-        status: 'completed',
-        notes: 'Sweet sixteen birthday party',
-      ),
-      Booking(
-        id: 4,
-        clientId: clientId,
-        vendorId: vendorIds[3],
-        vendorName: vendorNames[3],
-        eventDate: DateTime.now().subtract(const Duration(days: 60)),
-        eventType: 'wedding',
-        packageType: 'Premium',
-        totalPrice: 4500.0,
-        status: 'cancelled',
-        notes: 'Canceled due to venue issues',
-      ),
-    ];
-    
-    // List of booking examples for vendors with different clients
-    final List<Booking> vendorBookings = [
-      Booking(
-        id: 5,
-        clientId: 1001,
-        clientName: 'John Smith',
-        vendorId: userId ?? vendorIds[0],
-        vendorName: userId != null ? null : vendorNames[0],
-        eventDate: DateTime.now().add(const Duration(days: 20)),
-        eventType: 'wedding',
-        packageType: 'Premium',
-        totalPrice: 3800.0,
-        status: 'pending',
-        notes: 'Garden wedding for 80 guests',
-      ),
-      Booking(
-        id: 6,
-        clientId: 1002,
-        clientName: 'Sarah Johnson',
-        vendorId: userId ?? vendorIds[1],
-        vendorName: userId != null ? null : vendorNames[1],
-        eventDate: DateTime.now().add(const Duration(days: 7)),
-        eventType: 'corporate',
-        packageType: 'Standard',
-        totalPrice: 2200.0,
-        status: 'confirmed',
-        notes: 'Product launch event',
-      ),
-      Booking(
-        id: 7,
-        clientId: 1003,
-        clientName: 'Michael Brown',
-        vendorId: userId ?? vendorIds[2],
-        vendorName: userId != null ? null : vendorNames[2],
-        eventDate: DateTime.now().add(const Duration(days: 45)),
-        eventType: 'birthday',
-        packageType: 'Premium',
-        totalPrice: 1200.0,
-        status: 'pending',
-        notes: '40th birthday celebration',
-      ),
-    ];
-    
-    // Return appropriate bookings based on user type
-    return isVendor ? vendorBookings : clientBookings;
-  }
-  
   Future<bool> createBooking(Booking booking, AuthService authService) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
-    
-    // If offline mode is active, save locally
-    if (authService.isOfflineMode) {
-      await _createOfflineBooking(booking);
-      return true;
-    }
     
     final user = authService.user;
     final token = authService.token;
@@ -405,17 +214,22 @@ class BookingService extends ChangeNotifier {
     }
     
     try {
+      print('Creating booking via API: ${ApiConfig.bookingsEndpoint}');
+      print('Booking data: ${json.encode(booking.toJson())}');
+      
       final response = await http.post(
         Uri.parse(ApiConfig.bookingsEndpoint),
         headers: ApiConfig.authHeaders(token),
         body: json.encode(booking.toJson()),
       ).timeout(const Duration(seconds: 10));
       
+      print('Create booking response: ${response.statusCode} - ${response.body}');
+      
       if (response.statusCode == 201) {
         final createdBooking = Booking.fromJson(json.decode(response.body));
         _bookings.add(createdBooking);
         
-        // Save to local database
+        // Save to local database for caching
         await _saveBookingLocally(createdBooking);
         
         _isLoading = false;
@@ -431,45 +245,8 @@ class BookingService extends ChangeNotifier {
       _error = 'Network error: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
-      
-      // Try to save locally if network fails
-      await _createOfflineBooking(booking);
-      return true;
+      return false;
     }
-  }
-  
-  Future<void> _createOfflineBooking(Booking booking) async {
-    if (_database == null) {
-      await _initDatabase();
-    }
-    
-    // Generate a new ID (highest ID + 1)
-    int newId = 1;
-    if (_bookings.isNotEmpty) {
-      newId = _bookings.map((b) => b.id).reduce((a, b) => a > b ? a : b) + 1;
-    }
-    
-    final newBooking = Booking(
-      id: newId,
-      clientId: booking.clientId,
-      vendorId: booking.vendorId,
-      vendorName: booking.vendorName,
-      clientName: booking.clientName,
-      eventDate: booking.eventDate,
-      eventType: booking.eventType,
-      packageType: booking.packageType,
-      totalPrice: booking.totalPrice,
-      status: 'pending', // New bookings are pending by default in offline mode
-      notes: booking.notes,
-      additionalVendorIds: booking.additionalVendorIds,
-      additionalVendorNames: booking.additionalVendorNames,
-    );
-    
-    _bookings.add(newBooking);
-    await _saveBookingLocally(newBooking);
-    
-    _isLoading = false;
-    notifyListeners();
   }
   
   Future<void> _saveBookingLocally(Booking booking) async {
@@ -488,12 +265,6 @@ class BookingService extends ChangeNotifier {
     _error = null;
     notifyListeners();
     
-    // If offline mode is active, update locally
-    if (authService.isOfflineMode) {
-      await _updateOfflineBookingStatus(bookingId, status);
-      return true;
-    }
-    
     final user = authService.user;
     final token = authService.token;
     
@@ -505,11 +276,16 @@ class BookingService extends ChangeNotifier {
     }
     
     try {
+      print('Updating booking status via API: ${ApiConfig.bookingsEndpoint}/$bookingId/status');
+      print('Status data: ${json.encode({'status': status})}');
+      
       final response = await http.put(
         Uri.parse('${ApiConfig.bookingsEndpoint}/$bookingId/status'),
         headers: ApiConfig.authHeaders(token),
         body: json.encode({'status': status}),
       ).timeout(const Duration(seconds: 10));
+      
+      print('Update booking status response: ${response.statusCode} - ${response.body}');
       
       if (response.statusCode == 200) {
         // Update the booking in the list
@@ -533,7 +309,7 @@ class BookingService extends ChangeNotifier {
           
           _bookings[index] = updatedBooking;
           
-          // Update in local database
+          // Update in local database for caching
           await _updateBookingLocally(updatedBooking);
         }
         
@@ -550,42 +326,11 @@ class BookingService extends ChangeNotifier {
       _error = 'Network error: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
-      
-      // Try to update locally if network fails
-      await _updateOfflineBookingStatus(bookingId, status);
-      return true;
+      return false;
     }
   }
   
-  Future<void> _updateOfflineBookingStatus(int bookingId, String status) async {
-    // Update in memory
-    final index = _bookings.indexWhere((b) => b.id == bookingId);
-    if (index != -1) {
-      final updatedBooking = Booking(
-        id: _bookings[index].id,
-        clientId: _bookings[index].clientId,
-        vendorId: _bookings[index].vendorId,
-        vendorName: _bookings[index].vendorName,
-        clientName: _bookings[index].clientName,
-        eventDate: _bookings[index].eventDate,
-        eventType: _bookings[index].eventType,
-        packageType: _bookings[index].packageType,
-        totalPrice: _bookings[index].totalPrice,
-        status: status,
-        notes: _bookings[index].notes,
-        additionalVendorIds: _bookings[index].additionalVendorIds,
-        additionalVendorNames: _bookings[index].additionalVendorNames,
-      );
-      
-      _bookings[index] = updatedBooking;
-      
-      // Update in local database
-      await _updateBookingLocally(updatedBooking);
-    }
-    
-    _isLoading = false;
-    notifyListeners();
-  }
+
   
   Future<void> _updateBookingLocally(Booking booking) async {
     if (_database == null) {
