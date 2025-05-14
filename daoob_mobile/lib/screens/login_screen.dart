@@ -11,7 +11,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final success = await authService.login(
-        _emailController.text.trim(),
+        _usernameController.text.trim(),
         _passwordController.text,
       );
 
@@ -115,18 +115,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
                 
-                // Email field
+                // Username field
                 TextField(
-                  controller: _emailController,
+                  controller: _usernameController,
                   decoration: InputDecoration(
-                    labelText: isArabic ? 'البريد الإلكتروني' : 'Email',
-                    hintText: isArabic ? 'أدخل بريدك الإلكتروني' : 'Enter your email',
-                    prefixIcon: const Icon(Icons.email),
+                    labelText: isArabic ? 'اسم المستخدم' : 'Username',
+                    hintText: isArabic ? 'أدخل اسم المستخدم' : 'Enter your username',
+                    prefixIcon: const Icon(Icons.person),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 16),
@@ -200,6 +199,42 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? 'ليس لديك حساب؟ سجل الآن'
                       : 'Don\'t have an account? Register',
                     style: const TextStyle(color: Color(0xFF6A3DE8)),
+                  ),
+                ),
+                
+                // Debug info for test accounts
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Test Accounts:",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        "Username: testuser, Password: password",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        "Username: admin, Password: password",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
