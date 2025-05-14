@@ -678,118 +678,18 @@ class MessageService extends ChangeNotifier {
     }
   }
   
-  List<ChatUser> _generateSampleChatUsers() {
-    final currentUserType = _getCurrentUserType();
-    final otherUserType = currentUserType == 'client' ? 'vendor' : 'client';
-    
-    final List<String> vendorNames = [
-      'Elegant Events',
-      'Delicious Catering',
-      'Photography Masters',
-      'Dream Decorations',
-      'Sound Solutions'
-    ];
-    
-    final List<String> clientNames = [
-      'John Smith',
-      'Sarah Johnson',
-      'Mohammed Ali',
-      'Linda Chen',
-      'David Kim'
-    ];
-    
-    final List<String> messages = [
-      'Hello, I would like to inquire about your services.',
-      'Can you provide more details about your packages?',
-      'Is the date still available?',
-      'Thank you for the information.',
-      'What time can we meet to discuss further?'
-    ];
-    
-    final namesList = currentUserType == 'client' ? vendorNames : clientNames;
-    
-    return List.generate(5, (index) {
-      final chatUserId = 101 + index;
-      final name = namesList[index];
-      final hasUnread = index % 3 == 0; // Every third user has unread messages
-      
-      return ChatUser(
-        id: chatUserId,
-        name: name,
-        userType: otherUserType,
-        lastMessage: messages[index],
-        lastMessageTime: DateTime.now().subtract(Duration(hours: index * 2 + 1)),
-        hasUnreadMessages: hasUnread,
-      );
-    });
-  }
+  // Removed _generateSampleChatUsers method as we now fetch data from the API
   
-  List<Message> _generateSampleMessages(int otherUserId) {
-    if (_currentUserId == null) {
-      _currentUserId = 1; // Default for testing
-    }
-    
-    final currentUserType = _getCurrentUserType();
-    final otherUserName = _getChatUserName(otherUserId);
-    
-    // Create a conversation with 10 messages alternating between users
-    final List<Message> sampleMessages = [];
-    
-    for (int i = 0; i < 10; i++) {
-      final bool isFromCurrentUser = i % 2 == 0;
-      final senderId = isFromCurrentUser ? _currentUserId! : otherUserId;
-      final receiverId = isFromCurrentUser ? otherUserId : _currentUserId!;
-      final senderName = isFromCurrentUser ? 'You' : otherUserName;
-      final receiverName = isFromCurrentUser ? otherUserName : 'You';
-      
-      final List<String> clientMessages = [
-        'Hello, I\'m interested in your services for my event.',
-        'Can you tell me more about your pricing?',
-        'Is June 15th available?',
-        'That sounds perfect!',
-        'What time can we meet to discuss the details?'
-      ];
-      
-      final List<String> vendorMessages = [
-        'Hello! Thank you for your interest in our services.',
-        'Our packages start from \$500 for basic and go up to \$2000 for premium.',
-        'Yes, June 15th is currently available.',
-        'Great! We\'d be happy to work with you.',
-        'We can meet anytime between 9am and 5pm, what works for you?'
-      ];
-      
-      final List<String> messagePool = currentUserType == 'client' 
-        ? (isFromCurrentUser ? clientMessages : vendorMessages)
-        : (isFromCurrentUser ? vendorMessages : clientMessages);
-      
-      final messageIndex = i % messagePool.length;
-      
-      sampleMessages.add(
-        Message(
-          id: i + 1,
-          senderId: senderId,
-          receiverId: receiverId,
-          senderName: senderName,
-          receiverName: receiverName,
-          content: messagePool[messageIndex],
-          timestamp: DateTime.now().subtract(Duration(minutes: (10 - i) * 15)),
-          isRead: isFromCurrentUser || i < 8, // Only the last 2 messages might be unread if from other user
-        ),
-      );
-    }
-    
-    return sampleMessages;
-  }
+  // Removed _generateSampleMessages method as we now fetch data from the API
   
-  String _getCurrentUserType() {
+  Future<String> _getCurrentUserType() async {
     // Try to get the user type from shared preferences
     try {
-      final userData = SharedPreferences.getInstance().then((prefs) {
-        return prefs.getString('user');
-      });
+      final prefs = await SharedPreferences.getInstance();
+      final userData = prefs.getString('user');
       
       if (userData != null) {
-        final user = json.decode(userData.toString());
+        final user = json.decode(userData);
         return user['userType'] ?? 'client';
       }
     } catch (e) {
@@ -805,9 +705,7 @@ class MessageService extends ChangeNotifier {
       return _chatUsers[index].name;
     }
     
-    // If not found, generate a vendor name based on the ID
-    final vendorTypes = ['Events', 'Catering', 'Photography', 'Decorations', 'Sound'];
-    final vendorIndex = userId % vendorTypes.length;
-    return 'Vendor ${vendorTypes[vendorIndex]}';
+    // If not found, just return the user ID
+    return 'User $userId';
   }
 }

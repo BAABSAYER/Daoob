@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
@@ -39,18 +41,64 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       // Set the current category
       eventProvider.selectCategory(widget.categoryId);
       
-      // In a real app, we would load event types from API
-      // and get questionnaire items for this specific category
-      // For demo purposes, we'll create sample questions
-      setState(() {
-        _questions = _generateSampleQuestions(widget.categoryId);
-        _isLoading = false;
-      });
+      // Convert category ID to event type ID (assuming they match or have a mapping)
+      final eventTypeId = _getEventTypeIdFromCategory(widget.categoryId);
+      
+      // Get API configuration
+      final apiConfig = await authService.getApiConfig();
+      final token = await authService.getToken();
+      
+      // Fetch questions from API for this event type
+      final url = '${apiConfig.baseUrl}/api/event-types/$eventTypeId/questions';
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> questionsJson = jsonDecode(response.body);
+        final List<QuestionnaireItem> questions = questionsJson
+            .map((json) => QuestionnaireItem.fromJson(json))
+            .toList();
+        
+        setState(() {
+          _questions = questions;
+          _isLoading = false;
+        });
+      } else {
+        // API error, fallback to empty question list
+        print('Error loading questions: ${response.statusCode}');
+        setState(() {
+          _questions = [];
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       // Handle error
+      print('Exception loading questions: $e');
       setState(() {
+        _questions = [];
         _isLoading = false;
       });
+    }
+  }
+  
+  int _getEventTypeIdFromCategory(String categoryId) {
+    // Map category IDs to event type IDs
+    // This would typically come from API or configuration
+    switch (categoryId) {
+      case 'wedding':
+        return 1;
+      case 'corporate':
+        return 2;
+      case 'birthday':
+        return 3;
+      default:
+        return 4; // Other event types
     }
   }
 
