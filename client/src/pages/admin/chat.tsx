@@ -30,13 +30,13 @@ export default function AdminChat() {
   const [selectedUser, setSelectedUser] = useState<number | null>(userId ? parseInt(userId) : null);
   
   // Get all user/client chats for the admin
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery<any[]>({
     queryKey: ["/api/admin/clients"],
     enabled: !!user
   });
   
   // Get the selected user's details
-  const { data: selectedUserDetails, isLoading: isLoadingUserDetails } = useQuery({
+  const { data: selectedUserDetails, isLoading: isLoadingUserDetails } = useQuery<any>({
     queryKey: ["/api/users", selectedUser],
     enabled: !!selectedUser
   });
@@ -72,8 +72,8 @@ export default function AdminChat() {
     if (status === 'open') {
       sendMessage({
         type: "chat",
-        sender: user.id,
-        receiver: selectedUser,
+        senderId: user.id,
+        receiverId: selectedUser,
         content: messageText,
         timestamp: new Date()
       });
@@ -103,8 +103,8 @@ export default function AdminChat() {
   
   const filteredMessages = messages.filter(
     msg => 
-      (msg.sender === user?.id && msg.receiver === selectedUser) || 
-      (msg.sender === selectedUser && msg.receiver === user?.id)
+      (msg.senderId === user?.id && msg.receiverId === selectedUser) || 
+      (msg.senderId === selectedUser && msg.receiverId === user?.id)
   );
   
   return (
@@ -229,10 +229,10 @@ export default function AdminChat() {
                     <div
                       key={index}
                       className={`flex items-end gap-2 mb-4 ${
-                        msg.sender === user?.id ? "justify-end" : ""
+                        msg.senderId === user?.id ? "justify-end" : ""
                       }`}
                     >
-                      {msg.sender !== user?.id && (
+                      {msg.senderId !== user?.id && (
                         <Avatar className="h-8 w-8">
                           <AvatarFallback className="text-xs">
                             {getInitials(
@@ -246,18 +246,18 @@ export default function AdminChat() {
                       
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${
-                          msg.sender === user?.id
+                          msg.senderId === user?.id
                             ? "bg-primary text-primary-foreground"
                             : "bg-secondary text-secondary-foreground"
                         }`}
                       >
                         <div>{msg.content}</div>
                         <div className={`text-xs mt-1 ${
-                          msg.sender === user?.id
+                          msg.senderId === user?.id
                             ? "text-primary-foreground/70"
                             : "text-secondary-foreground/70"
                         }`}>
-                          {formatMessageDate(msg.timestamp)}
+                          {formatMessageDate(msg.timestamp || null)}
                         </div>
                       </div>
                     </div>
