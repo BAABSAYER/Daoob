@@ -8,6 +8,7 @@ import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/models/event_category.dart';
 import 'package:daoob_mobile/models/questionnaire_item.dart';
 import 'package:daoob_mobile/screens/request_confirmation_screen.dart';
+import 'package:daoob_mobile/config/api_config.dart';
 
 class EventQuestionnaireScreen extends StatefulWidget {
   final String categoryId;
@@ -44,19 +45,18 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       // Convert category ID to event type ID (assuming they match or have a mapping)
       final eventTypeId = _getEventTypeIdFromCategory(widget.categoryId);
       
-      // Get API configuration
-      final apiConfig = await authService.getApiConfig();
-      final token = await authService.getToken();
+      // Get token - we don't need to call getApiConfig() as we can access ApiConfig directly
+      final token = authService.token;
       
       // Fetch questions from API for this event type
-      final url = '${apiConfig.baseUrl}/api/event-types/$eventTypeId/questions';
+      final url = '${ApiConfig.apiUrl}/event-types/$eventTypeId/questions';
       
+      // Use ApiService or direct http call with proper headers
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: token != null 
+            ? ApiConfig.authHeaders(token)
+            : ApiConfig.jsonHeaders,
       );
       
       if (response.statusCode == 200) {
