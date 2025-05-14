@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:daoob_mobile/config/api_config.dart';
 
 class Message {
   final int id;
@@ -167,19 +168,17 @@ class MessageService extends ChangeNotifier {
     }
     
     try {
-      // Get the API base URL
-      final apiConfig = await authService.getApiConfig();
-      final token = await authService.getToken();
+      // Get the token - we don't need to call getApiConfig() as we can access ApiConfig directly
+      final token = authService.token;
       
       // Fetch chat users from API
-      final url = '${apiConfig.baseUrl}/api/messages/chats';
+      final url = '${ApiConfig.apiUrl}/messages/chats';
       
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: token != null 
+            ? ApiConfig.authHeaders(token)
+            : ApiConfig.jsonHeaders,
       );
       
       if (response.statusCode == 200) {
@@ -274,18 +273,16 @@ class MessageService extends ChangeNotifier {
     try {
       // If authService is provided, fetch messages from API
       if (authService != null) {
-        final apiConfig = await authService.getApiConfig();
-        final token = await authService.getToken();
+        final token = authService.token;
         
         // Fetch messages from API
-        final url = '${apiConfig.baseUrl}/api/messages/${_currentUserId}/${otherUserId}';
+        final url = '${ApiConfig.apiUrl}/messages/${_currentUserId}/${otherUserId}';
         
         final response = await http.get(
           Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
+          headers: token != null 
+              ? ApiConfig.authHeaders(token)
+              : ApiConfig.jsonHeaders,
         );
         
         if (response.statusCode == 200) {
@@ -460,8 +457,7 @@ class MessageService extends ChangeNotifier {
       
       // If authService is provided, send message to server
       if (authService != null) {
-        final apiConfig = await authService.getApiConfig();
-        final token = await authService.getToken();
+        final token = authService.token;
         
         // Prepare message data
         final messageData = {
