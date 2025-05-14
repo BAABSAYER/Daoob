@@ -131,28 +131,41 @@ class AuthService extends ChangeNotifier {
           final userResponse = await _apiService.get(ApiConfig.userEndpoint);
           
           if (userResponse.statusCode == 200) {
-            final Map<String, dynamic> userData = json.decode(userResponse.body);
+            final dynamic userData = json.decode(userResponse.body);
+            print("User data from server: $userData");
             
-            _user = User(
-              id: userData['id'],
-              name: userData['firstName'] ?? userData['username'],
-              email: userData['email'] ?? '$username@example.com',
-              userType: userData['permissions']?.contains('admin') ? 'admin' : 'client',
-              username: userData['username'] ?? username,
-            );
-            
-            // Cookie-based authentication is handled by the ApiService
-            _isLoggedIn = true;
-            
-            // Save user data to preferences
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('user', json.encode(_user!.toJson()));
-            
-            _isLoading = false;
-            notifyListeners();
-            return true;
+            try {
+              // Use more flexible parsing to handle different response formats
+              _user = User(
+                id: userData['id'],
+                name: userData['fullName'] ?? userData['username'] ?? username,
+                email: userData['email'] ?? '$username@example.com',
+                userType: userData['userType'] ?? 'client',
+                phone: userData['phone'],
+                username: userData['username'] ?? username,
+              );
+              
+              // For debugging
+              print("Successfully created user object: ${_user!.toJson()}");
+              
+              // Cookie-based authentication is handled by the ApiService
+              _isLoggedIn = true;
+              
+              // Save user data to preferences
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('user', json.encode(_user!.toJson()));
+              
+              _isLoading = false;
+              notifyListeners();
+              return true;
+            } catch (parseError) {
+              _error = 'Error parsing user data: ${parseError.toString()}\nData: $userData';
+              _isLoading = false;
+              notifyListeners();
+              return false;
+            }
           } else {
-            _error = 'Failed to get user info after login';
+            _error = 'Failed to get user info after login. Status: ${userResponse.statusCode}, Body: ${userResponse.body}';
             _isLoading = false;
             notifyListeners();
             return false;
@@ -282,6 +295,30 @@ class AuthService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('offline_mode', value);
     
+    // If turning off offline mode, test the connection
+    if (!value) {
+      try {
+        print("Testing connection to ${ApiConfig.apiUrl}/health");
+        final response = await http.get(Uri.parse("${ApiConfig.apiUrl}/health"))
+            .timeout(const Duration(seconds: 5));
+        print("Connection test result: ${response.statusCode} - ${response.body}");
+      } catch (e) {
+        print("Connection test failed: $e");
+      }
+    }
+    
     notifyListeners();
+  }
+  
+  // Add a method to test server connectivity
+  Future<bool> testServerConnectivity() async {
+    try {
+      final response = await http.get(Uri.parse("${ApiConfig.apiUrl}/health"))
+          .timeout(const Duration(seconds: 5));
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      print("Server connectivity test failed: $e");
+      return false;
+    }
   }
 }
