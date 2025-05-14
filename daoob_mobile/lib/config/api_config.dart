@@ -3,6 +3,8 @@ import 'dart:io';
 class ApiConfig {
   // API URLs for different environments
   static const String productionApiUrl = 'https://api.daoob.com';
+  
+  // Update this URL to match your actual Replit deployment URL
   static const String replitDeploymentUrl = 'https://daoob.replit.app';
   
   // Deployment environments
@@ -12,7 +14,7 @@ class ApiConfig {
   
   // Set the current environment (0=local, 1=replit, 2=production)
   // Change this value to connect to different environments
-  static const int currentEnvironment = ENV_REPLIT;
+  static const int currentEnvironment = ENV_REPLIT; // Set to ENV_REPLIT by default
   
   // Determine if we're in production mode (for Flutter build)
   static const bool isProductionBuild = bool.fromEnvironment('dart.vm.product');
@@ -38,7 +40,15 @@ class ApiConfig {
 
   // API endpoints
   static String get apiUrl => '$baseUrl/api';
-  static String get wsUrl => baseUrl.replaceFirst('http', 'ws') + '/ws';
+  
+  // WebSocket URL with proper protocol (ws or wss based on HTTP/HTTPS)
+  static String get wsUrl {
+    if (baseUrl.startsWith('https')) {
+      return baseUrl.replaceFirst('https', 'wss') + '/ws';
+    } else {
+      return baseUrl.replaceFirst('http', 'ws') + '/ws';
+    }
+  }
   
   // Auth endpoints
   static String get loginEndpoint => '$apiUrl/login';
@@ -63,8 +73,16 @@ class ApiConfig {
     'Accept': 'application/json',
   };
   
+  // Standard auth headers for token-based authentication
   static Map<String, String> authHeaders(String token) => {
     ...jsonHeaders,
     'Authorization': 'Bearer $token',
+  };
+  
+  // Cookie-based auth headers for session authentication
+  static Map<String, String> get cookieAuthHeaders => {
+    ...jsonHeaders,
+    // Enable these headers to ensure cookies are sent with requests
+    'withCredentials': 'true',
   };
 }
