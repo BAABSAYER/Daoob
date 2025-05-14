@@ -52,7 +52,6 @@ class AuthService extends ChangeNotifier {
   String? _error;
   bool _isLoading = false;
   bool _isLoggedIn = false;
-  bool _isOfflineMode = false;
   
   // API Service for consistent API communication
   final ApiService _apiService = ApiService();
@@ -62,7 +61,6 @@ class AuthService extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _isLoggedIn;
-  bool get isOfflineMode => _isOfflineMode;
 
   AuthService() {
     _loadStoredData();
@@ -72,9 +70,6 @@ class AuthService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final storedUser = prefs.getString('user');
     final storedToken = prefs.getString('token');
-    final offlineMode = prefs.getBool('offline_mode') ?? false;
-    
-    _isOfflineMode = offlineMode;
     
     if (storedUser != null) {
       _user = User.fromJson(json.decode(storedUser));
@@ -89,31 +84,6 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     _error = null;
     notifyListeners();
-    
-    // If offline mode is active, create a mock user and succeed
-    if (_isOfflineMode) {
-      await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
-      
-      _user = User(
-        id: 1,
-        name: 'Offline User',
-        email: '$username@example.com',
-        userType: 'client',
-        username: username,
-      );
-      
-      _token = 'offline_mock_token';
-      _isLoggedIn = true;
-      
-      // Save to preferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user', json.encode(_user!.toJson()));
-      await prefs.setString('token', _token!);
-      
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    }
     
     try {
       // Login using the ApiService
@@ -199,30 +169,6 @@ class AuthService extends ChangeNotifier {
     _error = null;
     notifyListeners();
     
-    // If offline mode is active, create a mock user and succeed
-    if (_isOfflineMode) {
-      await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
-      
-      _user = User(
-        id: 1,
-        name: name,
-        email: email,
-        userType: userType,
-      );
-      
-      _token = 'offline_mock_token';
-      _isLoggedIn = true;
-      
-      // Save to preferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user', json.encode(_user!.toJson()));
-      await prefs.setString('token', _token!);
-      
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    }
-    
     try {
       final response = await http.post(
         Uri.parse(ApiConfig.registerEndpoint),
@@ -265,14 +211,12 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    if (!_isOfflineMode) {
-      try {
-        // Call the logout endpoint using ApiService (which handles cookies)
-        await _apiService.post(ApiConfig.logoutEndpoint, {});
-      } catch (e) {
-        // Ignore errors during logout
-        print('Error during logout: $e');
-      }
+    try {
+      // Call the logout endpoint using ApiService (which handles cookies)
+      await _apiService.post(ApiConfig.logoutEndpoint, {});
+    } catch (e) {
+      // Ignore errors during logout
+      print('Error during logout: $e');
     }
     
     // Clear stored data
@@ -288,29 +232,7 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
   
-  Future<void> toggleOfflineMode(bool value) async {
-    _isOfflineMode = value;
-    
-    // Save offline mode preference
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('offline_mode', value);
-    
-    // If turning off offline mode, test the connection
-    if (!value) {
-      try {
-        print("Testing connection to ${ApiConfig.apiUrl}/health");
-        final response = await http.get(Uri.parse("${ApiConfig.apiUrl}/health"))
-            .timeout(const Duration(seconds: 5));
-        print("Connection test result: ${response.statusCode} - ${response.body}");
-      } catch (e) {
-        print("Connection test failed: $e");
-      }
-    }
-    
-    notifyListeners();
-  }
-  
-  // Add a method to test server connectivity
+  // Server connectivity check
   Future<bool> testServerConnectivity() async {
     try {
       final response = await http.get(Uri.parse("${ApiConfig.apiUrl}/health"))

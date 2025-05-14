@@ -29,6 +29,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   
+  // Health check endpoint for the mobile app
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      time: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+  
   // Add test endpoints for debugging
   app.get('/api/test', (req, res) => {
     res.json({ 

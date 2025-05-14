@@ -14,19 +14,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _offlineMode = false;
 
   @override
   void initState() {
     super.initState();
-    _loadOfflineMode();
-  }
-
-  Future<void> _loadOfflineMode() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    setState(() {
-      _offlineMode = authService.isOfflineMode;
-    });
   }
 
   Future<void> _login() async {
@@ -157,9 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 
-                // Forgot password and offline mode
+                // Forgot password
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     TextButton(
                       onPressed: () {
@@ -169,27 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         isArabic ? 'نسيت كلمة المرور؟' : 'Forgot Password?',
                         style: const TextStyle(color: Color(0xFF6A3DE8)),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          isArabic ? 'وضع عدم الاتصال' : 'Offline Mode',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _offlineMode ? Colors.green : Colors.grey.shade700,
-                          ),
-                        ),
-                        Switch(
-                          value: _offlineMode,
-                          onChanged: (value) async {
-                            await authService.toggleOfflineMode(value);
-                            setState(() {
-                              _offlineMode = value;
-                            });
-                          },
-                          activeColor: const Color(0xFF6A3DE8),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -216,6 +186,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                 ),
+                
+
                 const SizedBox(height: 16),
                 
                 // Register link
@@ -230,30 +202,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: const TextStyle(color: Color(0xFF6A3DE8)),
                   ),
                 ),
-                
-                // Info text showing offline mode is active
-                if (_offlineMode)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 24),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.shade200),
-                      ),
-                      child: Text(
-                        isArabic
-                          ? 'وضع عدم الاتصال نشط. يمكنك تسجيل الدخول بأي بيانات اعتماد.'
-                          : 'Offline mode is active. You can login with any credentials.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
