@@ -154,7 +154,7 @@ class _HomeTabState extends State<HomeTab> {
                             isArabic 
                                 ? _getArabicCategoryName(category.name) 
                                 : category.name,
-                            _getCategoryIcon(category.icon),
+                            _getCategoryIcon(category.icon ?? '📅'),
                             onTap: () => _navigateToCategory(category.id),
                           );
                         },
