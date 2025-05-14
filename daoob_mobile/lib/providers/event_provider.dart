@@ -328,20 +328,36 @@ class EventProvider with ChangeNotifier {
     AuthService authService,
   ) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/quotations/$quotationId'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
+      // Check authentication first
+      if (!authService.isLoggedIn) {
+        print('User not logged in, cannot get quotation');
+        return null;
+      }
+      
+      final response = await authService.apiService.get(
+        '${ApiConfig.baseUrl}/api/quotations/$quotationId'
       );
 
       if (response.statusCode == 200) {
         final dynamic data = json.decode(response.body);
         return Quotation.fromJson(data);
+      } else if (response.statusCode == 401) {
+        // Authentication error
+        _error = 'Your session has expired. Please log in again.';
+        notifyListeners();
+        
+        // If this is an auth error, attempt to clear session
+        print('Authentication error while getting quotation - clearing session');
+        await authService.logout();
+        return null;
       } else {
+        _error = 'Failed to load quotation: ${response.statusCode}';
+        notifyListeners();
         return null;
       }
     } catch (e) {
+      _error = 'Failed to load quotation: $e';
+      notifyListeners();
       return null;
     }
   }
@@ -352,20 +368,36 @@ class EventProvider with ChangeNotifier {
     AuthService authService,
   ) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/quotations/request/$requestId'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
+      // Check authentication first
+      if (!authService.isLoggedIn) {
+        print('User not logged in, cannot get quotations for request');
+        return [];
+      }
+      
+      final response = await authService.apiService.get(
+        '${ApiConfig.baseUrl}/api/quotations/request/$requestId'
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => Quotation.fromJson(item)).toList();
+      } else if (response.statusCode == 401) {
+        // Authentication error
+        _error = 'Your session has expired. Please log in again.';
+        notifyListeners();
+        
+        // If this is an auth error, attempt to clear session
+        print('Authentication error while getting quotations for request - clearing session');
+        await authService.logout();
+        return [];
       } else {
+        _error = 'Failed to load quotations for request: ${response.statusCode}';
+        notifyListeners();
         return [];
       }
     } catch (e) {
+      _error = 'Failed to load quotations for request: $e';
+      notifyListeners();
       return [];
     }
   }
@@ -377,12 +409,15 @@ class EventProvider with ChangeNotifier {
     AuthService authService,
   ) async {
     try {
-      final response = await http.patch(
-        Uri.parse('${ApiConfig.baseUrl}/api/quotations/$quotationId'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
-        body: json.encode(updateData),
+      // Check authentication first
+      if (!authService.isLoggedIn) {
+        print('User not logged in, cannot update quotation');
+        return null;
+      }
+      
+      final response = await authService.apiService.patch(
+        '${ApiConfig.baseUrl}/api/quotations/$quotationId',
+        updateData,
       );
 
       if (response.statusCode == 200) {
@@ -397,10 +432,23 @@ class EventProvider with ChangeNotifier {
         
         notifyListeners();
         return updatedQuotation;
+      } else if (response.statusCode == 401) {
+        // Authentication error
+        _error = 'Your session has expired. Please log in again.';
+        notifyListeners();
+        
+        // If this is an auth error, attempt to clear session
+        print('Authentication error while updating quotation - clearing session');
+        await authService.logout();
+        return null;
       } else {
+        _error = 'Failed to update quotation: ${response.statusCode}';
+        notifyListeners();
         return null;
       }
     } catch (e) {
+      _error = 'Failed to update quotation: $e';
+      notifyListeners();
       return null;
     }
   }

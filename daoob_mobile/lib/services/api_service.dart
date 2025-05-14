@@ -85,6 +85,22 @@ class ApiService {
     return response;
   }
   
+  // HTTP PATCH request with cookie handling
+  Future<http.Response> patch(String url, dynamic body) async {
+    final headers = await _getHeaders();
+    final response = await http.patch(
+      Uri.parse(url),
+      headers: headers,
+      body: json.encode(body),
+    );
+    
+    if (response.headers.containsKey('set-cookie')) {
+      await _saveCookies(response);
+    }
+    
+    return response;
+  }
+  
   // HTTP DELETE request with cookie handling
   Future<http.Response> delete(String url) async {
     final headers = await _getHeaders();
