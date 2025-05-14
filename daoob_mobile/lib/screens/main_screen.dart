@@ -18,6 +18,15 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  
+  // Method to allow other widgets to change the active tab
+  void setActiveTab(int index) {
+    if (index >= 0 && index < 4) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
 
   @override
   void initState() {

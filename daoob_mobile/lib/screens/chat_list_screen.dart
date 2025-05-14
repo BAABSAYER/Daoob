@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
+import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/screens/chat_screen.dart';
-import 'package:intl/intl.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -14,205 +13,221 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  bool _isLoading = false;
-  String? _error;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadChatUsers();
+    // Initialize message service and load chats
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final messageService = Provider.of<MessageService>(context, listen: false);
+      
+      // Make sure message service is initialized and load chat users
+      messageService.initialize(authService);
+      messageService.loadChatUsers(authService);
+    });
   }
 
-  Future<void> _loadChatUsers() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final messageService = Provider.of<MessageService>(context, listen: false);
-      final authService = Provider.of<AuthService>(context, listen: false);
-      
-      await messageService.loadChatUsers(authService);
-      
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _error = e.toString();
-      });
-    }
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final messageService = Provider.of<MessageService>(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
-    final translations = languageProvider.getTranslations();
-    final chatUsers = messageService.chatUsers;
+    final bool isArabic = languageProvider.locale.languageCode == 'ar';
+    final messageService = Provider.of<MessageService>(context);
     
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(translations['messages'] ?? 'Messages'),
-        backgroundColor: Theme.of(context).primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadChatUsers,
-            tooltip: translations['refresh'] ?? 'Refresh',
+    // Get chat users and filter based on search query if needed
+    final List<ChatUser> chatUsers = _searchQuery.isEmpty
+        ? messageService.chatUsers
+        : messageService.chatUsers
+            .where((user) =>
+                user.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
+
+    return Column(
+      children: [
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: isArabic ? 'بحث عن مستخدمين...' : 'Search users...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
+          ),
+        ),
+        
+        // Chat users list
+        Expanded(
+          child: messageService.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : chatUsers.isEmpty
+                  ? _buildEmptyState(isArabic)
+                  : ListView.builder(
+                      itemCount: chatUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = chatUsers[index];
+                        return _buildChatUserItem(context, user, isArabic);
+                      },
+                    ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(bool isArabic) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.chat_outlined,
+            size: 64,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            isArabic ? 'لا توجد محادثات' : 'No conversations yet',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isArabic
+                ? 'ستظهر هنا محادثاتك مع المسؤولين ومنظمي الفعاليات'
+                : 'Your conversations with admins and event organizers will appear here',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+            ),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadChatUsers,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                          const SizedBox(height: 16),
-                          Text(
-                            translations['errorLoadingChats'] ?? 'Error loading chats',
-                            style: Theme.of(context).textTheme.titleLarge,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _error!,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: _loadChatUsers,
-                            icon: const Icon(Icons.refresh),
-                            label: Text(translations['tryAgain'] ?? 'Try Again'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : chatUsers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
-                            const SizedBox(height: 16),
-                            Text(
-                              translations['noChats'] ?? 'No conversations yet',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              translations['noChatsDescription'] ?? 
-                              'When you have conversations with event organizers, they will appear here',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: chatUsers.length,
-                        itemBuilder: (context, index) {
-                          final chatUser = chatUsers[index];
-                          final lastMessageTime = chatUser.lastMessageTime != null
-                              ? _formatMessageTime(chatUser.lastMessageTime!)
-                              : '';
-                              
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                child: Text(
-                                  chatUser.name.isNotEmpty
-                                      ? chatUser.name[0].toUpperCase()
-                                      : '?',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              title: Text(
-                                chatUser.name,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: chatUser.lastMessage != null
-                                  ? Text(
-                                      chatUser.lastMessage!,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  : null,
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    lastMessageTime,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  if (chatUser.unreadCount > 0)
-                                    Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).primaryColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Text(
-                                        chatUser.unreadCount.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ChatScreen(
-                                      recipientId: chatUser.id,
-                                      recipientName: chatUser.name,
-                                    ),
-                                  ),
-                                ).then((_) => _loadChatUsers());
-                              },
-                            ),
-                          );
-                        },
-                      ),
+    );
+  }
+
+  Widget _buildChatUserItem(BuildContext context, ChatUser user, bool isArabic) {
+    return ListTile(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(recipientId: user.id),
+          ),
+        );
+      },
+      leading: CircleAvatar(
+        backgroundColor: const Color(0xFF6A3DE8).withOpacity(0.1),
+        child: Text(
+          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF6A3DE8),
+          ),
+        ),
+      ),
+      title: Text(
+        user.name,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      subtitle: Row(
+        children: [
+          Text(
+            user.userType.isNotEmpty ? '[${user.userType}] ' : '',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              user.lastMessage ?? (isArabic ? 'ابدأ المحادثة...' : 'Start conversation...'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: user.lastMessage != null ? Colors.black87 : Colors.grey.shade600,
+              ),
+            ),
+          ),
+        ],
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (user.lastMessageTime != null)
+            Text(
+              _formatLastMessageTime(user.lastMessageTime!, isArabic),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          const SizedBox(height: 4),
+          if (user.hasUnreadMessages)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: const BoxDecoration(
+                color: Color(0xFF6A3DE8),
+                shape: BoxShape.circle,
+              ),
+              child: const Text(
+                "●",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
-  
-  String _formatMessageTime(DateTime dateTime) {
+
+  String _formatLastMessageTime(DateTime time, bool isArabic) {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    final difference = now.difference(time);
     
-    if (messageDate == today) {
-      return DateFormat.jm().format(dateTime); // Today, show time
-    } else if (messageDate == yesterday) {
-      return 'Yesterday';
-    } else if (now.difference(dateTime).inDays < 7) {
-      return DateFormat.EEEE().format(dateTime); // Weekday name
+    if (difference.inDays > 0) {
+      return isArabic 
+          ? '${difference.inDays} ${difference.inDays == 1 ? 'يوم' : 'أيام'}'
+          : '${difference.inDays}${difference.inDays == 1 ? 'd' : 'd'}';
+    } else if (difference.inHours > 0) {
+      return isArabic 
+          ? '${difference.inHours} ${difference.inHours == 1 ? 'ساعة' : 'ساعات'}'
+          : '${difference.inHours}h';
+    } else if (difference.inMinutes > 0) {
+      return isArabic 
+          ? '${difference.inMinutes} ${difference.inMinutes == 1 ? 'دقيقة' : 'دقائق'}'
+          : '${difference.inMinutes}m';
     } else {
-      return DateFormat.yMd().format(dateTime); // Full date for older messages
+      return isArabic ? 'الآن' : 'Now';
     }
   }
 }

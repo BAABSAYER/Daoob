@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Timer(const Duration(seconds: 3), () {
       final authService = Provider.of<AuthService>(context, listen: false);
       if (authService.isLoggedIn) {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/home'); // This now routes to MainScreen
       } else {
         Navigator.pushReplacementNamed(context, '/login');
       }

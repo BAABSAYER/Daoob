@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
-import 'package:daoob_mobile/config/api_config.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -11,235 +10,302 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
-    final translations = languageProvider.getTranslations();
-    
-    // Check if user is logged in
-    if (authService.user == null) {
+    final bool isArabic = languageProvider.locale.languageCode == 'ar';
+    final user = authService.user;
+
+    if (user == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.account_circle, size: 80, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(translations['notLoggedIn'] ?? 'Please log in to view your profile', 
-                 style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 24),
+            Text(
+              isArabic ? 'لم يتم تسجيل الدخول' : 'Not logged in',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6A3DE8),
+                foregroundColor: Colors.white,
+              ),
               onPressed: () {
                 Navigator.pushReplacementNamed(context, '/login');
               },
-              child: Text(translations['login'] ?? 'Log In'),
+              child: Text(isArabic ? 'تسجيل الدخول' : 'Login'),
             ),
           ],
         ),
       );
     }
-    
-    final user = authService.user!;
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(translations['profile'] ?? 'My Profile'),
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 30),
-              color: Theme.of(context).primaryColor,
-              width: double.infinity,
-              child: Column(
-                children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 70, color: Color(0xFF6A3DE8)),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user.name ?? user.email,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user.email,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildProfileSection(context, translations),
-            const SizedBox(height: 16),
-            _buildSettingsSection(context, translations, languageProvider),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await authService.logout();
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(translations['logout'] ?? 'Log Out'),
-                ),
-              ),
-            ),
-            // API Config Information
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const Divider(),
-                  Text(
-                    'API: ${ApiConfig.baseUrl}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  Text(
-                    'Environment: ${ApiConfig.currentEnvironment == ApiConfig.ENV_LOCAL ? 'Local' : 
-                      ApiConfig.currentEnvironment == ApiConfig.ENV_REPLIT ? 'Replit' : 'Production'}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildProfileSection(BuildContext context, Map<String, String> translations) {
-    final authService = Provider.of<AuthService>(context);
-    final user = authService.user!;
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              translations['personalInfo'] ?? 'Personal Information',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow(Icons.email, translations['email'] ?? 'Email', user.email),
-            if (user.phone != null)
-              _buildInfoRow(Icons.phone, translations['phone'] ?? 'Phone', user.phone!),
-            _buildInfoRow(
-              Icons.person, 
-              translations['accountType'] ?? 'Account Type', 
-              user.userType.toUpperCase()
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildSettingsSection(
-    BuildContext context, 
-    Map<String, String> translations, 
-    LanguageProvider languageProvider
-  ) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              translations['settings'] ?? 'Settings',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.language),
-              title: Text(translations['language'] ?? 'Language'),
-              trailing: DropdownButton<String>(
-                value: languageProvider.currentLanguage,
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    languageProvider.setLanguage(newValue);
-                  }
-                },
-                items: [
-                  DropdownMenuItem(
-                    value: 'en',
-                    child: Text(translations['english'] ?? 'English'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'ar',
-                    child: Text(translations['arabic'] ?? 'العربية'),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.notifications),
-              title: Text(translations['notifications'] ?? 'Notifications'),
-              trailing: Switch(
-                value: true, // Default to enabled
-                onChanged: (bool value) {
-                  // Handle notification settings
-                },
-                activeColor: Theme.of(context).primaryColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.grey),
-          const SizedBox(width: 16),
-          Expanded(
+          // Profile header
+          Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 20),
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: const Color(0xFF6A3DE8).withOpacity(0.1),
+                  child: Text(
+                    user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6A3DE8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Text(
-                  label,
+                  user.name,
                   style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  value,
-                  style: const TextStyle(
+                  user.email ?? '',
+                  style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
                   ),
                 ),
+                if (user.phone != null && user.phone!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      user.phone!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 20),
               ],
+            ),
+          ),
+
+          const Divider(),
+
+          // Account settings section
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Text(
+              isArabic ? 'إعدادات الحساب' : 'Account Settings',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6A3DE8),
+              ),
+            ),
+          ),
+
+          _buildSettingsItem(
+            icon: Icons.person_outline,
+            title: isArabic ? 'تحرير الملف الشخصي' : 'Edit Profile',
+            onTap: () {
+              // Navigate to edit profile screen
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isArabic ? 'قريبًا' : 'Coming soon',
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+
+          _buildSettingsItem(
+            icon: Icons.notifications_outlined,
+            title: isArabic ? 'الإشعارات' : 'Notifications',
+            onTap: () {
+              // Navigate to notifications settings
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isArabic ? 'قريبًا' : 'Coming soon',
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+
+          _buildSettingsItem(
+            icon: Icons.language,
+            title: isArabic ? 'اللغة' : 'Language',
+            onTap: () {
+              // Toggle language
+              languageProvider.setLocale(
+                isArabic ? const Locale('en', '') : const Locale('ar', '')
+              );
+            },
+            trailing: Text(
+              isArabic ? 'العربية' : 'English',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+
+          const Divider(),
+
+          // Support section
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Text(
+              isArabic ? 'الدعم' : 'Support',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6A3DE8),
+              ),
+            ),
+          ),
+
+          _buildSettingsItem(
+            icon: Icons.help_outline,
+            title: isArabic ? 'المساعدة والدعم' : 'Help & Support',
+            onTap: () {
+              // Navigate to help & support
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isArabic ? 'قريبًا' : 'Coming soon',
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+
+          _buildSettingsItem(
+            icon: Icons.info_outline,
+            title: isArabic ? 'حول التطبيق' : 'About',
+            onTap: () {
+              // Show about dialog
+              showAboutDialog(
+                context: context,
+                applicationName: 'DAOOB',
+                applicationVersion: '1.0.0',
+                applicationIcon: Image.asset(
+                  'assets/images/logo.jpg',
+                  width: 50,
+                  height: 50,
+                ),
+                applicationLegalese: '© 2023 DAOOB. All rights reserved.',
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    isArabic 
+                      ? 'دؤوب هو منصة شاملة لإدارة الأحداث تتيح للعملاء التواصل مع منظمي الأحداث والحصول على اقتباسات.'
+                      : 'DAOOB is a comprehensive event management platform that allows clients to connect with event organizers and get quotations.',
+                  ),
+                ],
+              );
+            },
+          ),
+
+          const Spacer(),
+
+          // Logout button
+          Padding(
+            padding: const EdgeInsets.only(bottom: 24.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade100,
+                  foregroundColor: Colors.red.shade800,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () async {
+                  // Show confirmation dialog
+                  bool confirm = await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(
+                        isArabic ? 'تسجيل الخروج' : 'Logout',
+                      ),
+                      content: Text(
+                        isArabic 
+                          ? 'هل أنت متأكد أنك تريد تسجيل الخروج؟'
+                          : 'Are you sure you want to logout?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(
+                            isArabic ? 'إلغاء' : 'Cancel',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: Text(
+                            isArabic ? 'تسجيل الخروج' : 'Logout',
+                            style: TextStyle(
+                              color: Colors.red.shade800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ) ?? false;
+
+                  if (confirm) {
+                    await authService.logout();
+                    if (context.mounted) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    }
+                  }
+                },
+                child: Text(
+                  isArabic ? 'تسجيل الخروج' : 'Logout',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSettingsItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: const Color(0xFF6A3DE8),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
     );
   }
 }
