@@ -43,9 +43,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final messageService = Provider.of<MessageService>(context);
     
     // Get chat users and filter based on search query if needed
+    // Only show admin users - filter out any vendors
+    List<ChatUser> filteredUsers = messageService.chatUsers
+        .where((user) => user.userType == 'admin')
+        .toList();
+        
+    // Then apply search filter if needed
     final List<ChatUser> chatUsers = _searchQuery.isEmpty
-        ? messageService.chatUsers
-        : messageService.chatUsers
+        ? filteredUsers
+        : filteredUsers
             .where((user) =>
                 user.name.toLowerCase().contains(_searchQuery.toLowerCase()))
             .toList();
@@ -116,8 +122,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
           const SizedBox(height: 8),
           Text(
             isArabic
-                ? 'ستظهر هنا محادثاتك مع المسؤولين ومنظمي الفعاليات'
-                : 'Your conversations with admins and event organizers will appear here',
+                ? 'ستظهر هنا محادثاتك مع المسؤولين فقط'
+                : 'Your conversations with admins will appear here',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.grey.shade600,
