@@ -70,13 +70,7 @@ export default function AdminChat() {
     if (!messageText.trim() || !selectedUser || !user) return;
     
     if (status === 'open') {
-      sendMessage({
-        type: "chat",
-        senderId: user.id,
-        receiverId: selectedUser,
-        content: messageText,
-        timestamp: new Date()
-      });
+      sendMessage(selectedUser, messageText);
     } else {
       // Fallback to REST API if WebSocket is not available
       sendMessageMutation.mutate({

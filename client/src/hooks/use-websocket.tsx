@@ -47,8 +47,8 @@ export function useWebSocket() {
       // Authenticate the WebSocket connection
       ws.send(JSON.stringify({
         type: 'auth',
-        sender: user.id,
-        receiver: 0,
+        senderId: user.id,
+        receiverId: 0,
         content: user.id.toString(),
         timestamp: new Date()
       }));
