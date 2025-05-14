@@ -730,19 +730,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           
-          // Offline mode setting
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.cloud_off),
-            title: Text(isArabic ? 'وضع عدم الاتصال' : 'Offline Mode'),
-            trailing: Switch(
-              value: authService.isOfflineMode,
-              onChanged: (value) {
-                authService.toggleOfflineMode(value);
-              },
-              activeColor: const Color(0xFF6A3DE8),
-            ),
-          ),
+          // Removed offline mode toggle as we now always use server API
           
           const Divider(),
           

@@ -214,24 +214,8 @@ class MessagingService extends ChangeNotifier {
         }));
         
         // Message will be saved with proper ID when server acknowledges it
-      } else if (authService.isOfflineMode) {
-        // Generate a local message ID if offline
-        final tempId = DateTime.now().millisecondsSinceEpoch;
-        
-        final Message offlineMessage = Message(
-          id: tempId,
-          senderId: userId,
-          receiverId: receiverId,
-          content: content,
-          read: false,
-          createdAt: DateTime.now(),
-          senderName: authService.user?.name,
-        );
-        
-        _messages.add(offlineMessage);
-        _saveMessageLocally(offlineMessage);
-        notifyListeners();
       } else {
+        // Not connected to server
         _error = 'Not connected to server';
         notifyListeners();
       }
