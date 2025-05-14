@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
@@ -42,20 +44,76 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
       final eventProvider = Provider.of<EventProvider>(context, listen: false);
       final authService = Provider.of<AuthService>(context, listen: false);
       
-      // Load sample data for now
-      // In a real app, we would call the API through the provider
-      // await eventProvider.loadEventRequests(authService);
-      // await eventProvider.loadQuotations(authService);
+      if (authService.user == null) {
+        print('User not authenticated');
+        setState(() {
+          _isLoading = false;
+          _eventRequests = [];
+          _quotations = [];
+        });
+        return;
+      }
+      
+      // Get API configuration
+      final apiConfig = await authService.getApiConfig();
+      final token = await authService.getToken();
+      final userId = authService.user!.id;
+      
+      // Fetch event requests from API
+      final requestsUrl = '${apiConfig.baseUrl}/api/event-requests/client/$userId';
+      
+      final requestsResponse = await http.get(
+        Uri.parse(requestsUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      List<EventRequest> loadedRequests = [];
+      
+      if (requestsResponse.statusCode == 200) {
+        final List<dynamic> requestsJson = jsonDecode(requestsResponse.body);
+        loadedRequests = requestsJson
+            .map((json) => EventRequest.fromJson(json))
+            .toList();
+      } else {
+        print('Error loading event requests: ${requestsResponse.statusCode}');
+      }
+      
+      // Fetch quotations from API
+      final quotationsUrl = '${apiConfig.baseUrl}/api/quotations/client/$userId';
+      
+      final quotationsResponse = await http.get(
+        Uri.parse(quotationsUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      List<Quotation> loadedQuotations = [];
+      
+      if (quotationsResponse.statusCode == 200) {
+        final List<dynamic> quotationsJson = jsonDecode(quotationsResponse.body);
+        loadedQuotations = quotationsJson
+            .map((json) => Quotation.fromJson(json))
+            .toList();
+      } else {
+        print('Error loading quotations: ${quotationsResponse.statusCode}');
+      }
       
       setState(() {
-        // Use sample data for now
-        _eventRequests = _getSampleEventRequests();
-        _quotations = _getSampleQuotations();
+        _eventRequests = loadedRequests;
+        _quotations = loadedQuotations;
         _isLoading = false;
       });
     } catch (e) {
+      print('Exception while loading data: $e');
       setState(() {
         _isLoading = false;
+        _eventRequests = [];
+        _quotations = [];
       });
     }
   }
