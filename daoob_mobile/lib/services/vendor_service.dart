@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/models/vendor.dart';
+import 'package:daoob_mobile/config/api_config.dart';
 
 // Use the Vendor model from models/vendor.dart instead of redefining it here
 /* Commented out to avoid conflict
@@ -198,20 +199,18 @@ class VendorService extends ChangeNotifier {
     notifyListeners();
     
     try {
-      // Get the API base URL
-      final apiConfig = await authService.getApiConfig();
-      final token = await authService.getToken();
+      // Get token from auth service
+      final token = authService.token;
       
       // Fetch vendors from API
-      final url = '${apiConfig.baseUrl}/api/vendors';
+      final url = '${ApiConfig.apiUrl}/vendors';
       final categoryParam = category != null ? '?category=${Uri.encodeComponent(category)}' : '';
       
       final response = await http.get(
         Uri.parse('$url$categoryParam'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: token != null 
+            ? ApiConfig.authHeaders(token)
+            : ApiConfig.jsonHeaders,
       );
       
       if (response.statusCode == 200) {

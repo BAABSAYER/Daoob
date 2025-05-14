@@ -81,14 +81,13 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
       }
       
       // Fetch quotations from API
-      final quotationsUrl = '${apiConfig.baseUrl}/api/quotations/client/$userId';
+      final quotationsUrl = '${ApiConfig.apiUrl}/quotations/client/$userId';
       
       final quotationsResponse = await http.get(
         Uri.parse(quotationsUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: token != null 
+            ? ApiConfig.authHeaders(token)
+            : ApiConfig.jsonHeaders,
       );
       
       List<Quotation> loadedQuotations = [];
