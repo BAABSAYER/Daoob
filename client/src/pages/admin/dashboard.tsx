@@ -276,57 +276,44 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Placeholder for now - would fetch from API */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
-                          1
+                    {isLoadingEventRequests ? (
+                      <>
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                      </>
+                    ) : eventRequests.length > 0 ? (
+                      eventRequests.slice(0, 3).map((request: any, index: number) => (
+                        <div key={request.id} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{request.eventType}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Requested {request.createdAt ? format(new Date(request.createdAt), 'MMM d, yyyy') : 'recently'}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              request.status === 'pending' ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
+                              request.status === 'quoted' ? "bg-blue-100 text-blue-800 border-blue-300" :
+                              request.status === 'accepted' ? "bg-green-100 text-green-800 border-green-300" :
+                              "bg-gray-100 text-gray-800 border-gray-300"
+                            }
+                          >
+                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          </Badge>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">Wedding</p>
-                          <p className="text-xs text-muted-foreground">
-                            Requested 2 days ago
-                          </p>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        No event requests available
                       </div>
-                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                        Pending
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
-                          2
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">Corporate Event</p>
-                          <p className="text-xs text-muted-foreground">
-                            Requested 4 days ago
-                          </p>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
-                        Quoted
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
-                          3
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">Birthday Party</p>
-                          <p className="text-xs text-muted-foreground">
-                            Requested 1 week ago
-                          </p>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                        Accepted
-                      </Badge>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter>

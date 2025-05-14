@@ -32,31 +32,13 @@ export default function AdminChat() {
   // Get all user/client chats for the admin
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ["/api/admin/clients"],
-    enabled: !!user,
-    // Placeholder until the endpoint is implemented
-    queryFn: async () => {
-      // Demo placeholder data
-      return [
-        { id: 1, username: 'client1', fullName: 'Demo Client 1', unreadCount: 2, lastMessage: 'Hello, I need help with my event.' },
-        { id: 2, username: 'client2', fullName: 'Demo Client 2', unreadCount: 0, lastMessage: 'Thank you for your assistance.' },
-      ];
-    }
+    enabled: !!user
   });
   
   // Get the selected user's details
   const { data: selectedUserDetails, isLoading: isLoadingUserDetails } = useQuery({
     queryKey: ["/api/users", selectedUser],
-    enabled: !!selectedUser,
-    // Placeholder until the endpoint is implemented
-    queryFn: async () => {
-      // Return demo placeholder data for the selected user
-      if (selectedUser === 1) {
-        return { id: 1, username: 'client1', fullName: 'Demo Client 1' };
-      } else if (selectedUser === 2) {
-        return { id: 2, username: 'client2', fullName: 'Demo Client 2' };
-      }
-      return { id: selectedUser, username: `client${selectedUser}`, fullName: `Demo Client ${selectedUser}` };
-    }
+    enabled: !!selectedUser
   });
   
   // Send a message
