@@ -52,6 +52,7 @@ class AuthService extends ChangeNotifier {
   String? _error;
   bool _isLoading = false;
   bool _isLoggedIn = false;
+  int _unreadMessageCount = 0;
   
   // API Service for consistent API communication
   final ApiService _apiService = ApiService();
@@ -61,6 +62,13 @@ class AuthService extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _isLoggedIn;
+  int get unreadMessageCount => _unreadMessageCount;
+  
+  // Update unread message count
+  void updateUnreadMessageCount(int count) {
+    _unreadMessageCount = count;
+    notifyListeners();
+  }
 
   AuthService() {
     _loadStoredData();

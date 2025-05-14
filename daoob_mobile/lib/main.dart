@@ -9,6 +9,9 @@ import 'package:daoob_mobile/screens/categories_screen.dart';
 import 'package:daoob_mobile/screens/custom_event_screen.dart';
 import 'package:daoob_mobile/screens/event_questionnaire_screen.dart';
 import 'package:daoob_mobile/screens/booking_management_screen.dart';
+import 'package:daoob_mobile/screens/main_screen.dart';
+import 'package:daoob_mobile/screens/profile_screen.dart';
+import 'package:daoob_mobile/screens/chat_list_screen.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/services/message_service.dart';
@@ -78,11 +81,14 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => const MainScreen(),
+        '/old-home': (context) => const HomeScreen(), // Keep for backwards compatibility
         '/register': (context) => const RegisterScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/custom-event': (context) => const CustomEventScreen(),
         '/event-questionnaire': (context) => EventQuestionnaireScreen(categoryId: ModalRoute.of(context)!.settings.arguments as String),
+        '/profile': (context) => const ProfileScreen(),
+        '/chat-list': (context) => const ChatListScreen(),
       },
     );
   }
