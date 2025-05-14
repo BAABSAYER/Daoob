@@ -330,8 +330,6 @@ class BookingService extends ChangeNotifier {
     }
   }
   
-
-  
   Future<void> _updateBookingLocally(Booking booking) async {
     if (_database == null) {
       await _initDatabase();

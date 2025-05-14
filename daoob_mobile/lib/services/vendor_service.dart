@@ -198,24 +198,42 @@ class VendorService extends ChangeNotifier {
     notifyListeners();
     
     try {
-      if (!authService.isOfflineMode) {
-        // Online mode - would fetch from API
-        // Not implemented for now
-      }
+      // Get the API base URL
+      final apiConfig = await authService.getApiConfig();
+      final token = await authService.getToken();
       
-      // Check for local data
-      final List<Map<String, dynamic>> maps = await _database!.query('vendors');
+      // Fetch vendors from API
+      final url = '${apiConfig.baseUrl}/api/vendors';
+      final categoryParam = category != null ? '?category=${Uri.encodeComponent(category)}' : '';
       
-      if (maps.isNotEmpty) {
-        _vendors = maps.map((item) => Vendor.fromJson(item)).toList();
-      } else {
-        // Generate sample data for offline mode
-        _vendors = _generateSampleVendors();
+      final response = await http.get(
+        Uri.parse('$url$categoryParam'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> vendorsJson = jsonDecode(response.body);
+        _vendors = vendorsJson.map((json) => Vendor.fromJson(json)).toList();
+        
+        // Save to local database for caching
         await _saveVendorsLocally(_vendors);
+        
+        // Restore selected vendors
+        _selectedVendors = _vendors.where((v) => v.isSelected).toList();
+      } else {
+        // If API request fails, try to load from local cache
+        final List<Map<String, dynamic>> maps = await _database!.query('vendors');
+        
+        if (maps.isNotEmpty) {
+          _vendors = maps.map((item) => Vendor.fromJson(item)).toList();
+          _selectedVendors = _vendors.where((v) => v.isSelected).toList();
+        } else {
+          throw Exception('Failed to load vendors: ${response.statusCode}');
+        }
       }
-      
-      // Restore selected vendors
-      _selectedVendors = _vendors.where((v) => v.isSelected).toList();
       
       _isLoading = false;
       notifyListeners();
@@ -223,9 +241,18 @@ class VendorService extends ChangeNotifier {
       _error = 'Error loading vendors: ${e.toString()}';
       _isLoading = false;
       
-      // Fallback to sample data
-      _vendors = _generateSampleVendors();
-      _selectedVendors = [];
+      // Try to load from local cache as last resort
+      try {
+        final List<Map<String, dynamic>> maps = await _database!.query('vendors');
+        if (maps.isNotEmpty) {
+          _vendors = maps.map((item) => Vendor.fromJson(item)).toList();
+          _selectedVendors = _vendors.where((v) => v.isSelected).toList();
+        }
+      } catch (cacheError) {
+        // If all attempts fail, initialize with empty list
+        _vendors = [];
+        _selectedVendors = [];
+      }
       
       notifyListeners();
     }
