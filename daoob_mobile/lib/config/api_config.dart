@@ -4,8 +4,8 @@ class ApiConfig {
   // API URLs for different environments
   static const String productionApiUrl = 'https://api.daoob.com';
   
-  // Update this URL to match your actual Replit deployment URL
-  static const String replitDeploymentUrl = 'https://daoob.replit.app';
+  // Updated to match your specific Replit deployment URL
+  static const String replitDeploymentUrl = 'https://daoob-abdeez.replit.app';
   
   // Deployment environments
   static const int ENV_LOCAL = 0;
