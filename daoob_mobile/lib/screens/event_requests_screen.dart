@@ -118,81 +118,9 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
     }
   }
   
-  List<EventRequest> _getSampleEventRequests() {
-    return [
-      EventRequest(
-        id: 1,
-        clientId: 101,
-        eventTypeId: 1,
-        status: 'pending',
-        eventDate: DateTime.now().add(const Duration(days: 60)),
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        details: {
-          'location': 'New York',
-          'estimatedGuests': 150,
-          'eventType': 'Wedding',
-        },
-      ),
-      EventRequest(
-        id: 2,
-        clientId: 101,
-        eventTypeId: 2,
-        status: 'quoted',
-        eventDate: DateTime.now().add(const Duration(days: 45)),
-        createdAt: DateTime.now().subtract(const Duration(days: 5)),
-        details: {
-          'location': 'Chicago',
-          'estimatedGuests': 75,
-          'eventType': 'Corporate',
-        },
-      ),
-      EventRequest(
-        id: 3,
-        clientId: 101,
-        eventTypeId: 3,
-        status: 'canceled',
-        eventDate: DateTime.now().add(const Duration(days: 30)),
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-        details: {
-          'location': 'Los Angeles',
-          'estimatedGuests': 45,
-          'eventType': 'Birthday',
-        },
-      ),
-    ];
-  }
+  // Removed _getSampleEventRequests method as we now fetch data from the API
   
-  List<Quotation> _getSampleQuotations() {
-    return [
-      Quotation(
-        id: 1,
-        eventRequestId: 2,
-        totalAmount: 4500.0,
-        status: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        items: [
-          {'description': 'Venue Rental', 'amount': 2000.0},
-          {'description': 'Catering (75 guests)', 'amount': 1500.0},
-          {'description': 'Audio/Visual Equipment', 'amount': 1000.0},
-        ],
-        notes: 'This quotation includes standard setup and cleanup. Additional services can be arranged upon request.',
-      ),
-      Quotation(
-        id: 2,
-        eventRequestId: 1,
-        totalAmount: 8500.0,
-        status: 'pending',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        items: [
-          {'description': 'Venue Rental', 'amount': 3000.0},
-          {'description': 'Catering (150 guests)', 'amount': 3000.0},
-          {'description': 'Decoration', 'amount': 1500.0},
-          {'description': 'Photography', 'amount': 1000.0},
-        ],
-        notes: 'Wedding package includes 8 hours of venue rental, standard catering, basic decorations, and 4 hours of photography.',
-      ),
-    ];
-  }
+  // Removed _getSampleQuotations method as we now fetch data from the API
   
   @override
   Widget build(BuildContext context) {
