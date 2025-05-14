@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../config/api_config.dart';
+import './api_service.dart';
 
 class User {
   final int id;
@@ -52,6 +53,9 @@ class AuthService extends ChangeNotifier {
   bool _isLoading = false;
   bool _isLoggedIn = false;
   bool _isOfflineMode = false;
+  
+  // API Service for consistent API communication
+  final ApiService _apiService = ApiService();
 
   User? get user => _user;
   String? get token => _token;
@@ -112,74 +116,58 @@ class AuthService extends ChangeNotifier {
     }
     
     try {
-      final client = http.Client();
-      
-      // Set up a custom HttpClient to handle cookies
-      final httpClient = HttpClient();
-      httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-      
-      // First request to login and get the cookie
-      final response = await client.post(
-        Uri.parse(ApiConfig.loginEndpoint),
-        headers: ApiConfig.jsonHeaders,
-        body: json.encode({
+      // Login using the ApiService
+      final loginResponse = await _apiService.post(
+        ApiConfig.loginEndpoint,
+        {
           'username': username,
           'password': password,
-        }),
-      ).timeout(const Duration(seconds: 15));
+        },
+      );
       
-      if (response.statusCode == 200) {
-        // Store the session cookies
-        final cookies = response.headers['set-cookie'];
-        
-        if (cookies != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('cookies', cookies);
-        }
-        
-        // Get user info from the current session
-        final userResponse = await client.get(
-          Uri.parse(ApiConfig.userEndpoint),
-          headers: {
-            ...ApiConfig.jsonHeaders,
-            if (cookies != null) 'Cookie': cookies,
-          },
-        ).timeout(const Duration(seconds: 10));
-        
-        if (userResponse.statusCode == 200) {
-          final Map<String, dynamic> userData = json.decode(userResponse.body);
+      if (loginResponse.statusCode == 200) {
+        try {
+          // Get user info from the current session
+          final userResponse = await _apiService.get(ApiConfig.userEndpoint);
           
-          _user = User(
-            id: userData['id'],
-            name: userData['firstName'] ?? userData['username'],
-            email: userData['email'] ?? '$username@example.com',
-            userType: userData['permissions']?.contains('admin') ? 'admin' : 'client',
-            username: userData['username'] ?? username,
-          );
-          
-          // Use the cookies as the token for session-based auth
-          _token = cookies;
-          _isLoggedIn = true;
-          
-          // Save to preferences
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user', json.encode(_user!.toJson()));
-          await prefs.setString('token', _token!);
-          
-          _isLoading = false;
-          notifyListeners();
-          return true;
-        } else {
-          _error = 'Failed to get user info after login';
+          if (userResponse.statusCode == 200) {
+            final Map<String, dynamic> userData = json.decode(userResponse.body);
+            
+            _user = User(
+              id: userData['id'],
+              name: userData['firstName'] ?? userData['username'],
+              email: userData['email'] ?? '$username@example.com',
+              userType: userData['permissions']?.contains('admin') ? 'admin' : 'client',
+              username: userData['username'] ?? username,
+            );
+            
+            // Cookie-based authentication is handled by the ApiService
+            _isLoggedIn = true;
+            
+            // Save user data to preferences
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('user', json.encode(_user!.toJson()));
+            
+            _isLoading = false;
+            notifyListeners();
+            return true;
+          } else {
+            _error = 'Failed to get user info after login';
+            _isLoading = false;
+            notifyListeners();
+            return false;
+          }
+        } catch (e) {
+          _error = 'Error getting user data: ${e.toString()}';
           _isLoading = false;
           notifyListeners();
           return false;
         }
       } else {
         try {
-          _error = json.decode(response.body)['message'] ?? 'Login failed';
+          _error = json.decode(loginResponse.body)['message'] ?? 'Login failed';
         } catch (e) {
-          _error = 'Login failed: ${response.statusCode}';
+          _error = 'Login failed: ${loginResponse.statusCode}';
         }
         _isLoading = false;
         notifyListeners();
@@ -264,22 +252,21 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    if (!_isOfflineMode && _token != null) {
+    if (!_isOfflineMode) {
       try {
-        // Call the logout endpoint
-        await http.post(
-          Uri.parse(ApiConfig.logoutEndpoint),
-          headers: ApiConfig.authHeaders(_token!),
-        ).timeout(const Duration(seconds: 5));
+        // Call the logout endpoint using ApiService (which handles cookies)
+        await _apiService.post(ApiConfig.logoutEndpoint, {});
       } catch (e) {
         // Ignore errors during logout
         print('Error during logout: $e');
       }
     }
     
+    // Clear stored data
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user');
     await prefs.remove('token');
+    await prefs.remove('cookies');
     
     _user = null;
     _token = null;
