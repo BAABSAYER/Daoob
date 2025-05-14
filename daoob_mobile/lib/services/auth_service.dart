@@ -55,7 +55,7 @@ class AuthService extends ChangeNotifier {
   int _unreadMessageCount = 0;
   
   // API Service for consistent API communication
-  final ApiService _apiService = ApiService();
+  final ApiService apiService = ApiService();
 
   User? get user => _user;
   String? get token => _token;
@@ -95,7 +95,7 @@ class AuthService extends ChangeNotifier {
     
     try {
       // Login using the ApiService
-      final loginResponse = await _apiService.post(
+      final loginResponse = await apiService.post(
         ApiConfig.loginEndpoint,
         {
           'username': username,
@@ -106,7 +106,7 @@ class AuthService extends ChangeNotifier {
       if (loginResponse.statusCode == 200) {
         try {
           // Get user info from the current session
-          final userResponse = await _apiService.get(ApiConfig.userEndpoint);
+          final userResponse = await apiService.get(ApiConfig.userEndpoint);
           
           if (userResponse.statusCode == 200) {
             final dynamic userData = json.decode(userResponse.body);
@@ -221,7 +221,7 @@ class AuthService extends ChangeNotifier {
   Future<void> logout() async {
     try {
       // Call the logout endpoint using ApiService (which handles cookies)
-      await _apiService.post(ApiConfig.logoutEndpoint, {});
+      await apiService.post(ApiConfig.logoutEndpoint, {});
     } catch (e) {
       // Ignore errors during logout
       print('Error during logout: $e');

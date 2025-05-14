@@ -146,11 +146,8 @@ class EventProvider with ChangeNotifier {
     AuthService authService,
   ) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/event-types/$eventTypeId/questions'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
+      final response = await authService.apiService.get(
+        '${ApiConfig.baseUrl}/api/event-types/$eventTypeId/questions'
       );
 
       if (response.statusCode == 200) {
@@ -170,12 +167,10 @@ class EventProvider with ChangeNotifier {
     AuthService authService,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/api/event-requests'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
-        body: json.encode(requestData),
+      // Use the ApiService to ensure cookies are properly handled
+      final response = await authService.apiService.post(
+        '${ApiConfig.baseUrl}/api/event-requests',
+        requestData,
       );
 
       if (response.statusCode == 201) {
@@ -185,7 +180,10 @@ class EventProvider with ChangeNotifier {
         notifyListeners();
         return eventRequest;
       } else {
-        throw Exception('Failed to create event request: ${response.statusCode}');
+        final errorMessage = response.body.isNotEmpty 
+            ? 'Failed to create event request: ${response.body}'
+            : 'Failed to create event request: ${response.statusCode}';
+        throw Exception(errorMessage);
       }
     } catch (e) {
       throw Exception('Failed to create event request: $e');
@@ -200,11 +198,8 @@ class EventProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/event-requests/client/${authService.user!.id}'),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
+      final response = await authService.apiService.get(
+        '${ApiConfig.baseUrl}/api/event-requests/client/${authService.user!.id}'
       );
 
       if (response.statusCode == 200) {

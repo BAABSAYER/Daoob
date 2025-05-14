@@ -311,6 +311,11 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
       final eventProvider = Provider.of<EventProvider>(context, listen: false);
       final authService = Provider.of<AuthService>(context, listen: false);
       
+      // Check if user is logged in
+      if (authService.user == null) {
+        throw Exception('You must be logged in to submit a request');
+      }
+      
       // Add client info to request
       final completeRequestData = {
         ...widget.requestData,
@@ -320,11 +325,8 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
         'clientPhone': authService.user?.phone,
       };
       
-      // Simulate API call with a delay
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // In a real app, we would call the API
-      // await eventProvider.submitEventRequest(completeRequestData, authService);
+      // Call the API to submit the event request
+      await eventProvider.submitEventRequest(completeRequestData, authService);
       
       if (mounted) {
         setState(() {
