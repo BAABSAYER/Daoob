@@ -467,14 +467,13 @@ class MessageService extends ChangeNotifier {
         };
         
         // Send message to API
-        final url = '${apiConfig.baseUrl}/api/messages';
+        final url = '${ApiConfig.apiUrl}/messages';
         
         final response = await http.post(
           Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
+          headers: token != null 
+              ? ApiConfig.authHeaders(token)
+              : ApiConfig.jsonHeaders,
           body: jsonEncode(messageData),
         );
         

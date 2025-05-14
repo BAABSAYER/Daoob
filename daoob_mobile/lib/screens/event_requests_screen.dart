@@ -8,6 +8,7 @@ import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/models/event_request.dart';
 import 'package:daoob_mobile/models/quotation.dart';
 import 'package:daoob_mobile/screens/request_detail_screen.dart';
+import 'package:daoob_mobile/config/api_config.dart';
 
 class EventRequestsScreen extends StatefulWidget {
   const EventRequestsScreen({super.key});
@@ -54,20 +55,18 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
         return;
       }
       
-      // Get API configuration
-      final apiConfig = await authService.getApiConfig();
-      final token = await authService.getToken();
+      // Get token from auth service
+      final token = authService.token;
       final userId = authService.user!.id;
       
       // Fetch event requests from API
-      final requestsUrl = '${apiConfig.baseUrl}/api/event-requests/client/$userId';
+      final requestsUrl = '${ApiConfig.apiUrl}/event-requests/client/$userId';
       
       final requestsResponse = await http.get(
         Uri.parse(requestsUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: token != null 
+            ? ApiConfig.authHeaders(token)
+            : ApiConfig.jsonHeaders,
       );
       
       List<EventRequest> loadedRequests = [];
