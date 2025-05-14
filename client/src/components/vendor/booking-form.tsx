@@ -31,38 +31,10 @@ interface PackageOption {
   price: number;
 }
 
-// Generate packages based on vendor category
+// Get packages based on vendor category - using empty array to remove mock data
 const getPackagesForVendor = (vendor: Vendor): PackageOption[] => {
-  const basePrice = vendor.category === 'venue' ? 2000 : 
-                   vendor.category === 'catering' ? 1000 :
-                   vendor.category === 'photography' ? 1500 : 800;
-  
-  return [
-    {
-      id: 'basic',
-      name: 'Basic Package',
-      description: vendor.category === 'venue' 
-        ? 'Venue rental only (8 hours)'
-        : `Basic ${vendor.category} service`,
-      price: basePrice
-    },
-    {
-      id: 'standard',
-      name: 'Standard Package',
-      description: vendor.category === 'venue' 
-        ? 'Venue rental + basic decor + sound system (10 hours)'
-        : `Standard ${vendor.category} service with additional options`,
-      price: basePrice * 1.75
-    },
-    {
-      id: 'premium',
-      name: 'Premium Package',
-      description: vendor.category === 'venue' 
-        ? 'All inclusive: venue, decor, catering, bar (12 hours)'
-        : `Premium ${vendor.category} service with all features`,
-      price: basePrice * 2.5
-    }
-  ];
+  // No mock packages, should be loaded from the database
+  return [];
 };
 
 // Booking form validation schema

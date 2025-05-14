@@ -46,14 +46,23 @@ export default function AdminDashboard() {
     return bookings.filter((booking: any) => booking.status === BOOKING_STATUS.PENDING).length;
   };
   
+  const { data: eventRequests = [], isLoading: isLoadingEventRequests } = useQuery<any[]>({
+    queryKey: ["/api/admin/event-requests"],
+  });
+
   const getTotalEventRequestsCount = () => {
-    // This would count active event requests
-    return 10; // Placeholder 
+    // Count active event requests
+    return eventRequests.length;
   };
   
+  // Fetch all users
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+  });
+  
   const getRecentClientsCount = () => {
-    // This would typically count new clients registered in the timeframe
-    return 5; // Placeholder
+    // Count non-admin users
+    return users.filter((user) => user.userType !== 'admin').length;
   };
   
   const getRecentBookingsCount = () => {
