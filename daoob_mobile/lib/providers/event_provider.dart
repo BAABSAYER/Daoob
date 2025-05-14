@@ -65,16 +65,19 @@ class EventProvider with ChangeNotifier {
       Map<String, EventCategory> categoryMap = {};
       
       for (var eventType in _eventTypes) {
-        if (eventType.category != null && eventType.category!.isNotEmpty) {
-          // Use the first event type's icon for the category if available
-          final categoryId = eventType.category!.toLowerCase().replaceAll(' ', '-');
+        if (eventType.categoryId != null && eventType.categoryId!.isNotEmpty) {
+          // Use the event type's icon for the category if available
+          final categoryId = eventType.categoryId!;
           
           if (!categoryMap.containsKey(categoryId)) {
+            // Use name as the display name for the category
+            final categoryName = eventType.name;
+            
             categoryMap[categoryId] = EventCategory(
               id: categoryId,
-              name: eventType.category!,
-              icon: _getCategoryIcon(categoryId),
-              description: 'Events related to ${eventType.category}',
+              name: categoryName,
+              icon: eventType.icon ?? _getCategoryIcon(categoryId),
+              description: eventType.description ?? 'Events related to ${eventType.name}',
             );
           }
         }
