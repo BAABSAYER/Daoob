@@ -52,46 +52,54 @@ class EventProvider with ChangeNotifier {
     notifyListeners();
   }
   
-  // Initialize with some default categories
+  // Initialize with empty categories
   EventProvider() {
-    _categories = [
-      EventCategory(
-        id: 'wedding',
-        name: 'Wedding',
-        icon: '💍',
-        description: 'Wedding planning and coordination services',
-      ),
-      EventCategory(
-        id: 'corporate',
-        name: 'Corporate',
-        icon: '🏢',
-        description: 'Business meetings, conferences, and corporate events',
-      ),
-      EventCategory(
-        id: 'birthday',
-        name: 'Birthday',
-        icon: '🎂',
-        description: 'Birthday parties and celebrations',
-      ),
-      EventCategory(
-        id: 'graduation',
-        name: 'Graduation',
-        icon: '🎓',
-        description: 'Graduation ceremonies and celebrations',
-      ),
-      EventCategory(
-        id: 'baby-shower',
-        name: 'Baby Shower',
-        icon: '👶',
-        description: 'Baby shower events and celebrations',
-      ),
-      EventCategory(
-        id: 'cultural',
-        name: 'Cultural',
-        icon: '🎭',
-        description: 'Cultural events and traditional celebrations',
-      ),
-    ];
+    _categories = [];
+  }
+  
+  // Load categories from event types
+  Future<void> loadCategories() async {
+    try {
+      // Categories are derived from event types in this application
+      // Group event types by their category property
+      Map<String, EventCategory> categoryMap = {};
+      
+      for (var eventType in _eventTypes) {
+        if (eventType.category != null && eventType.category!.isNotEmpty) {
+          // Use the first event type's icon for the category if available
+          final categoryId = eventType.category!.toLowerCase().replaceAll(' ', '-');
+          
+          if (!categoryMap.containsKey(categoryId)) {
+            categoryMap[categoryId] = EventCategory(
+              id: categoryId,
+              name: eventType.category!,
+              icon: _getCategoryIcon(categoryId),
+              description: 'Events related to ${eventType.category}',
+            );
+          }
+        }
+      }
+      
+      _categories = categoryMap.values.toList();
+      notifyListeners();
+    } catch (e) {
+      _error = 'Failed to load categories: $e';
+      notifyListeners();
+    }
+  }
+  
+  // Get appropriate icon for category
+  String _getCategoryIcon(String categoryId) {
+    final iconMap = {
+      'wedding': '💍',
+      'corporate': '🏢',
+      'birthday': '🎂',
+      'graduation': '🎓',
+      'baby-shower': '👶',
+      'cultural': '🎭',
+    };
+    
+    return iconMap[categoryId] ?? '📅'; // Default icon
   }
 
   // Load event types from the server
@@ -112,6 +120,10 @@ class EventProvider with ChangeNotifier {
         final List<dynamic> data = json.decode(response.body);
         _eventTypes = data.map((item) => EventType.fromJson(item)).toList();
         _isLoading = false;
+        
+        // Now load categories based on event types
+        await loadCategories();
+        
         notifyListeners();
       } else {
         _error = 'Failed to load event types: ${response.statusCode}';

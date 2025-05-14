@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:daoob_mobile/screens/home_screen.dart';
+import 'package:daoob_mobile/screens/home_tab.dart';
 import 'package:daoob_mobile/screens/event_requests_screen.dart';
 import 'package:daoob_mobile/screens/chat_list_screen.dart';
 import 'package:daoob_mobile/screens/profile_screen.dart';
 import 'package:daoob_mobile/services/auth_service.dart';
+import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
+import 'package:daoob_mobile/providers/event_provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,68 +18,92 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  final List<Widget> _screenOptions = [];
-  
+
   @override
   void initState() {
     super.initState();
-    
-    // Initialize screens once
-    _screenOptions.addAll([
-      const HomeScreen(),
-      const EventRequestsScreen(),
-      const ChatListScreen(),
-      const ProfileScreen(),
-    ]);
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
+    // Load data when the main screen is created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final messageService = Provider.of<MessageService>(context, listen: false);
+      final eventProvider = Provider.of<EventProvider>(context, listen: false);
+      
+      // Load event types and categories
+      eventProvider.loadEventTypes(authService);
+      
+      // Initialize message service
+      messageService.initialize(authService);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
-    final translations = languageProvider.getTranslations();
-    final authService = Provider.of<AuthService>(context);
+    bool isArabic = languageProvider.locale.languageCode == 'ar';
     
+    // The main tabs of the application
+    final List<Widget> pages = [
+      const HomeTab(), // Home tab content
+      const EventRequestsScreen(), // Event requests tab
+      const ChatListScreen(), // Messages tab
+      const ProfileScreen(), // Profile tab
+    ];
+
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screenOptions,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Theme.of(context).primaryColor,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white.withOpacity(0.6),
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home),
-            label: translations['home'] ?? 'Home',
+      appBar: AppBar(
+        title: Text(
+          isArabic ? 'دؤوب' : 'DAOOB',
+          style: TextStyle(
+            fontFamily: isArabic ? 'Almarai' : 'Roboto',
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.event_note),
-            label: translations['myRequests'] ?? 'My Requests',
-          ),
-          BottomNavigationBarItem(
-            icon: Badge(
-              isLabelVisible: authService.unreadMessageCount > 0,
-              label: Text(
-                authService.unreadMessageCount.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 10),
-              ),
-              child: const Icon(Icons.chat),
+        ),
+        backgroundColor: const Color(0xFF6A3DE8),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(
+              isArabic ? Icons.language : Icons.translate,
+              color: Colors.white,
             ),
-            label: translations['messages'] ?? 'Messages',
+            onPressed: () {
+              // Toggle language
+              languageProvider.setLocale(
+                isArabic ? const Locale('en', '') : const Locale('ar', '')
+              );
+            },
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person),
-            label: translations['profile'] ?? 'Profile',
+        ],
+      ),
+      body: pages[_selectedIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            label: isArabic ? 'الرئيسية' : 'Home',
+            selectedIcon: const Icon(Icons.home),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.event_note_outlined),
+            label: isArabic ? 'الطلبات' : 'Requests',
+            selectedIcon: const Icon(Icons.event_note),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.chat_outlined),
+            label: isArabic ? 'الرسائل' : 'Messages',
+            selectedIcon: const Icon(Icons.chat),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline),
+            label: isArabic ? 'حسابي' : 'Profile',
+            selectedIcon: const Icon(Icons.person),
           ),
         ],
       ),
