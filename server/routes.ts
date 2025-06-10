@@ -2093,6 +2093,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all event requests for admin
+  app.get('/api/admin/event-requests', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== USER_TYPES.ADMIN) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    try {
+      const eventRequests = await storage.getAllEventRequests();
+      res.json(eventRequests);
+    } catch (error) {
+      console.error('Error fetching event requests for admin:', error);
+      res.status(500).json({ message: 'Error fetching event requests' });
+    }
+  });
+  
   // QUOTATION ROUTES (Admin)
   
   // Create a quotation for an event request (Admin only)
