@@ -7,24 +7,28 @@ const { eq } = require('drizzle-orm');
 const scryptAsync = promisify(scrypt);
 
 // Define schema inline to avoid import issues
-const { pgTable, serial, varchar, timestamp, text } = require('drizzle-orm/pg-core');
+const { pgTable, serial, varchar, timestamp, text, boolean, integer } = require('drizzle-orm/pg-core');
 
 const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  username: varchar('username', { length: 255 }).unique().notNull(),
-  email: varchar('email', { length: 255 }).unique(),
-  password: varchar('password', { length: 255 }).notNull(),
-  fullName: varchar('full_name', { length: 255 }),
-  userType: varchar('user_type', { length: 50 }).default('client'),
+  username: text('username').notNull().unique(),
+  password: text('password').notNull(),
+  email: text('email').notNull().unique(),
+  fullName: text('full_name'),
+  phone: text('phone'),
+  userType: text('user_type').notNull(),
+  avatarUrl: text('avatar_url'),
   createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 const adminPermissions = pgTable('admin_permissions', {
   id: serial('id').primaryKey(),
-  userId: serial('user_id').references(() => users.id),
-  permission: varchar('permission', { length: 100 }).notNull(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  permission: text('permission').notNull(),
+  granted: boolean('granted').default(true),
+  grantedBy: integer('granted_by').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 async function createAdminUser() {
