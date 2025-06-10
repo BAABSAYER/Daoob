@@ -2,7 +2,7 @@ import 'dart:io';
 
 class ApiConfig {
   // API URLs for different environments
-  static const String productionApiUrl = 'http://YOUR_DROPLET_IP_HERE'; // Replace with your actual DigitalOcean droplet IP
+  static const String productionApiUrl = 'http://178.62.41.245'; // Your DigitalOcean droplet IP
   
   // Updated to match your specific Replit deployment URL
   static const String replitDeploymentUrl = 'https://daoob-abdeez.replit.app';
