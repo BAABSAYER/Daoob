@@ -32,6 +32,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       HOST: 0.0.0.0
+      DOCKER_CONTAINER: true
       DATABASE_URL: postgresql://daoob_user:daoob_secure_password_2024@postgres:5432/daoob_production
       PGHOST: postgres
       PGPORT: 5432

@@ -1,10 +1,10 @@
-const { storage } = require('./dist/storage.js');
-const { scrypt, randomBytes } = require('crypto');
-const { promisify } = require('util');
+import { storage } from './server/storage.js';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
 
 const scryptAsync = promisify(scrypt);
 
-async function createAdmin() {
+async function createAdminUser() {
   try {
     console.log('Creating admin user...');
     
@@ -15,10 +15,12 @@ async function createAdmin() {
       return;
     }
     
+    // Create password hash
     const salt = randomBytes(16).toString('hex');
     const buf = await scryptAsync('admin123', salt, 64);
     const hashedPassword = buf.toString('hex') + '.' + salt;
     
+    // Create admin user
     const admin = await storage.createUser({
       username: 'admin',
       email: 'admin@daoob.com',
@@ -43,7 +45,8 @@ async function createAdmin() {
       permission: 'view_quotations'
     });
     
-    console.log('✅ Admin user setup completed!');
+    console.log('Admin user setup completed!');
+    console.log('Login credentials:');
     console.log('Username: admin');
     console.log('Password: admin123');
     console.log('Web Dashboard: http://178.62.41.245:8080');
@@ -55,4 +58,4 @@ async function createAdmin() {
   process.exit(0);
 }
 
-createAdmin();
+createAdminUser();
