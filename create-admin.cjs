@@ -1,5 +1,5 @@
-const { Pool } = require('@neondatabase/serverless');
-const { drizzle } = require('drizzle-orm/neon-serverless');
+const { Pool } = require('pg');
+const { drizzle } = require('drizzle-orm/node-postgres');
 const { scrypt, randomBytes } = require('crypto');
 const { promisify } = require('util');
 const { eq } = require('drizzle-orm');
@@ -36,7 +36,7 @@ async function createAdminUser() {
     }
     
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const db = drizzle({ client: pool, schema: { users, adminPermissions } });
+    const db = drizzle(pool, { schema: { users, adminPermissions } });
     
     // Check if admin already exists
     const existingAdmin = await db.select().from(users).where(eq(users.username, 'admin'));
