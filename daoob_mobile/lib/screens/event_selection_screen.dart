@@ -34,11 +34,8 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       
-      final response = await http.get(
-        Uri.parse(ApiConfig.eventTypesEndpoint),
-        headers: authService.token != null 
-            ? ApiConfig.authHeaders(authService.token!)
-            : <String, String>{},
+      final response = await authService.apiService.get(
+        ApiConfig.eventTypesEndpoint
       );
 
       if (response.statusCode == 200) {

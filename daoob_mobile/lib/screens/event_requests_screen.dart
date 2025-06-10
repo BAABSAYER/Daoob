@@ -59,14 +59,9 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
       final token = authService.token;
       final userId = authService.user!.id;
       
-      // Fetch event requests from API
-      final requestsUrl = '${ApiConfig.apiUrl}/event-requests/client/$userId';
-      
-      final requestsResponse = await http.get(
-        Uri.parse(requestsUrl),
-        headers: token != null 
-            ? ApiConfig.authHeaders(token)
-            : ApiConfig.jsonHeaders,
+      // Fetch event requests from API using ApiService with session auth
+      final requestsResponse = await authService.apiService.get(
+        '${ApiConfig.apiUrl}/event-requests'
       );
       
       List<EventRequest> loadedRequests = [];
@@ -80,14 +75,9 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
         print('Error loading event requests: ${requestsResponse.statusCode}');
       }
       
-      // Fetch quotations from API
-      final quotationsUrl = '${ApiConfig.apiUrl}/quotations/client/$userId';
-      
-      final quotationsResponse = await http.get(
-        Uri.parse(quotationsUrl),
-        headers: token != null 
-            ? ApiConfig.authHeaders(token)
-            : ApiConfig.jsonHeaders,
+      // Fetch quotations from API using ApiService with session auth
+      final quotationsResponse = await authService.apiService.get(
+        '${ApiConfig.apiUrl}/quotations'
       );
       
       List<Quotation> loadedQuotations = [];

@@ -214,40 +214,50 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String name, String email, String password, String userType) async {
+  Future<bool> register(String username, String email, String password, String fullName, String userType) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
     
     try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.registerEndpoint),
-        headers: ApiConfig.jsonHeaders,
-        body: json.encode({
-          'name': name,
+      final registrationResponse = await apiService.post(
+        ApiConfig.registerEndpoint,
+        {
+          'username': username,
           'email': email,
           'password': password,
+          'fullName': fullName,
           'userType': userType,
-        }),
-      ).timeout(const Duration(seconds: 10));
+        },
+      );
       
-      if (response.statusCode == 201) {
-        final Map<String, dynamic> data = json.decode(response.body);
+      if (registrationResponse.statusCode == 201) {
+        final dynamic userData = json.decode(registrationResponse.body);
         
-        _user = User.fromJson(data['user']);
-        _token = data['token'];
+        _user = User(
+          id: userData['id'],
+          name: userData['fullName'] ?? userData['username'],
+          email: userData['email'],
+          userType: userData['userType'] ?? 'client',
+          phone: userData['phone'],
+          username: userData['username'],
+        );
+        
         _isLoggedIn = true;
         
-        // Save to preferences
+        // Save to preferences  
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user', json.encode(_user!.toJson()));
-        await prefs.setString('token', _token!);
         
         _isLoading = false;
         notifyListeners();
         return true;
       } else {
-        _error = json.decode(response.body)['message'] ?? 'Registration failed';
+        try {
+          _error = json.decode(registrationResponse.body)['message'] ?? 'Registration failed';
+        } catch (e) {
+          _error = 'Registration failed: ${registrationResponse.statusCode}';
+        }
         _isLoading = false;
         notifyListeners();
         return false;
