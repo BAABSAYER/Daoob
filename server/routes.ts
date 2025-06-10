@@ -2138,9 +2138,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: new Date()
       });
       
-      // Debug logging
-      console.log('Request body:', req.body);
-      
       // Create the quotation
       const quotationData: InsertQuotation = {
         eventRequestId,
@@ -2154,8 +2151,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiryDate: req.body.validUntil ? new Date(req.body.validUntil) : req.body.expiryDate ? new Date(req.body.expiryDate) : null,
         status: BOOKING_STATUS.QUOTATION_SENT
       };
-      
-      console.log('Quotation data:', quotationData);
       
       const quotation = await storage.createQuotation(quotationData);
       res.status(201).json(quotation);
