@@ -8,6 +8,7 @@ import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/models/event_request.dart';
 import 'package:daoob_mobile/models/quotation.dart';
 import 'package:daoob_mobile/screens/request_detail_screen.dart';
+import 'package:daoob_mobile/screens/quotation_detail_screen.dart';
 import 'package:daoob_mobile/config/api_config.dart';
 
 class EventRequestsScreen extends StatefulWidget {
@@ -409,7 +410,20 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
       elevation: 2,
       child: InkWell(
         onTap: () {
-          // Navigate to quotation detail (not implemented yet)
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QuotationDetailScreen(
+                quotation: quotation,
+                eventRequest: eventRequest,
+              ),
+            ),
+          ).then((result) {
+            // Refresh data if quotation status was changed
+            if (result == true) {
+              _loadData();
+            }
+          });
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
