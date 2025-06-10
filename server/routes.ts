@@ -2138,18 +2138,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: new Date()
       });
       
+      // Debug logging
+      console.log('Request body:', req.body);
+      
       // Create the quotation
       const quotationData: InsertQuotation = {
         eventRequestId,
         adminId: req.user.id,
-        totalPrice: req.body.totalPrice,
-        details: req.body.details,
-        notes: req.body.notes || '',
-        expiryDate: req.body.expiryDate ? new Date(req.body.expiryDate) : null,
-        status: BOOKING_STATUS.QUOTATION_SENT,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        totalPrice: Number(req.body.totalAmount || req.body.totalPrice),
+        details: {
+          description: req.body.description || req.body.details || '',
+          breakdown: req.body.breakdown || {}
+        },
+        notes: req.body.notes || (req.body.breakdown ? JSON.stringify(req.body.breakdown) : ''),
+        expiryDate: req.body.validUntil ? new Date(req.body.validUntil) : req.body.expiryDate ? new Date(req.body.expiryDate) : null,
+        status: BOOKING_STATUS.QUOTATION_SENT
       };
+      
+      console.log('Quotation data:', quotationData);
       
       const quotation = await storage.createQuotation(quotationData);
       res.status(201).json(quotation);
