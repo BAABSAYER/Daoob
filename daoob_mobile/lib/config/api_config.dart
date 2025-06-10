@@ -2,7 +2,7 @@ import 'dart:io';
 
 class ApiConfig {
   // API URLs for different environments
-  static const String productionApiUrl = 'https://api.daoob.com';
+  static const String productionApiUrl = 'http://YOUR_DROPLET_IP_HERE'; // Replace with your actual DigitalOcean droplet IP
   
   // Updated to match your specific Replit deployment URL
   static const String replitDeploymentUrl = 'https://daoob-abdeez.replit.app';
@@ -14,7 +14,7 @@ class ApiConfig {
   
   // Set the current environment (0=local, 1=replit, 2=production)
   // Change this value to connect to different environments
-  static const int currentEnvironment = ENV_REPLIT; // Set to ENV_REPLIT by default
+  static const int currentEnvironment = ENV_PRODUCTION; // Set to ENV_PRODUCTION for DigitalOcean deployment
   
   // Determine if we're in production mode (for Flutter build)
   static const bool isProductionBuild = bool.fromEnvironment('dart.vm.product');
