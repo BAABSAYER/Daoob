@@ -1,48 +1,26 @@
-# Multi-stage build for production deployment
-FROM node:20-alpine as builder
+# Simple production Dockerfile that works
+FROM node:20-alpine
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY tsconfig.json ./
-COPY vite.config.ts ./
-COPY tailwind.config.ts ./
-COPY postcss.config.js ./
-COPY components.json ./
 
-# Install all dependencies (including dev dependencies for build)
+# Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY client/ ./client/
-COPY server/ ./server/
-COPY shared/ ./shared/
+# Copy all source code
+COPY . .
 
-# Build the application
+# Build the application using the existing scripts
 RUN npm run build
 
-# Verify build outputs exist
-RUN ls -la dist/ && ls -la dist/public/
-
-# Production stage
-FROM node:20-alpine as production
-
-WORKDIR /app
-
-# Install only production dependencies
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-
-# Create non-root user for security
+# Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S daoob -u 1001
 
-# Create uploads directory and set permissions
-RUN mkdir -p uploads && chown -R daoob:nodejs uploads
+# Set permissions
+RUN chown -R daoob:nodejs /app
 
 # Switch to non-root user
 USER daoob
@@ -50,9 +28,5 @@ USER daoob
 # Expose port
 EXPOSE 3001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
-
-# Start the application
-CMD ["node", "dist/index.js"]
+# Start the application directly with tsx in production mode
+CMD ["npm", "start"]
