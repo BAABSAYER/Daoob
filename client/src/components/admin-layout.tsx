@@ -36,8 +36,9 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
     { name: t('navigation.dashboard'), path: "/admin", icon: <Home className="h-5 w-5" /> },
     { name: t('navigation.eventManagement'), path: "/admin/events", icon: <CalendarDays className="h-5 w-5" /> },
     { name: t('navigation.bookings'), path: "/admin/bookings", icon: <Calendar className="h-5 w-5" /> },
+    { name: t('navigation.users'), path: "/admin/users-list", icon: <Users className="h-5 w-5" /> },
     { name: t('navigation.messages'), path: "/admin/messages", icon: <MessageSquare className="h-5 w-5" /> },
-    { name: t('navigation.users'), path: "/admin/users", icon: <UserCog className="h-5 w-5" /> },
+    { name: "Admin Settings", path: "/admin/users", icon: <UserCog className="h-5 w-5" /> },
     { name: "Profile", path: "/admin/profile", icon: <UserCircle className="h-5 w-5" /> },
   ];
 

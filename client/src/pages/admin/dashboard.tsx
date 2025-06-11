@@ -327,6 +327,44 @@ export default function AdminDashboard() {
             </div>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              {/* Quick Actions */}
+              <Card className="col-span-4">
+                <CardHeader>
+                  <CardTitle>{t('dashboard.quickActions')}</CardTitle>
+                  <CardDescription>
+                    Common administrative tasks
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Link href="/admin/users-list">
+                      <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                        <Users className="h-6 w-6" />
+                        <span className="text-sm">{t('dashboard.manageUsers')}</span>
+                      </Button>
+                    </Link>
+                    <Link href="/admin/events">
+                      <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                        <CalendarIcon className="h-6 w-6" />
+                        <span className="text-sm">{t('dashboard.createEvent')}</span>
+                      </Button>
+                    </Link>
+                    <Link href="/admin/bookings">
+                      <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                        <ClipboardCheck className="h-6 w-6" />
+                        <span className="text-sm">{t('dashboard.viewRequests')}</span>
+                      </Button>
+                    </Link>
+                    <Link href="/admin/messages">
+                      <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                        <MessageSquare className="h-6 w-6" />
+                        <span className="text-sm">{t('navigation.messages')}</span>
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Popular Event Types */}
               <Card className="col-span-3">
                 <CardHeader>
