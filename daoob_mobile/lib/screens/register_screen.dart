@@ -50,10 +50,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final success = await authService.register(
-        _nameController.text.trim(),
-        _emailController.text.trim(),
-        _passwordController.text,
-        _selectedUserType,
+        _emailController.text.trim(), // username (using email as username)
+        _emailController.text.trim(), // email
+        _passwordController.text,     // password
+        _nameController.text.trim(),  // fullName
+        _selectedUserType,            // userType
       );
 
       if (success) {
