@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { 
   Home, 
   Users, 
@@ -15,6 +16,7 @@ import {
 import appIcon from '@/assets/images/app_icon.svg';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -26,15 +28,16 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, title }: AdminLayoutProps) {
   const { logoutMutation, user } = useAuth();
+  const { t } = useTranslation();
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { name: "Dashboard", path: "/admin", icon: <Home className="h-5 w-5" /> },
-    { name: "Events", path: "/admin/events", icon: <CalendarDays className="h-5 w-5" /> },
-    { name: "Bookings", path: "/admin/bookings", icon: <Calendar className="h-5 w-5" /> },
-    { name: "Messages", path: "/admin/messages", icon: <MessageSquare className="h-5 w-5" /> },
-    { name: "Admin Users", path: "/admin/users", icon: <UserCog className="h-5 w-5" /> },
+    { name: t('navigation.dashboard'), path: "/admin", icon: <Home className="h-5 w-5" /> },
+    { name: t('navigation.eventManagement'), path: "/admin/events", icon: <CalendarDays className="h-5 w-5" /> },
+    { name: t('navigation.bookings'), path: "/admin/bookings", icon: <Calendar className="h-5 w-5" /> },
+    { name: t('navigation.messages'), path: "/admin/messages", icon: <MessageSquare className="h-5 w-5" /> },
+    { name: t('navigation.users'), path: "/admin/users", icon: <UserCog className="h-5 w-5" /> },
     { name: "Profile", path: "/admin/profile", icon: <UserCircle className="h-5 w-5" /> },
   ];
 
@@ -78,7 +81,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
             onClick={handleLogout}
           >
             <LogOut className="mr-2 h-5 w-5" />
-            Logout
+            {t('navigation.logout')}
           </Button>
         </div>
       </aside>
@@ -141,6 +144,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
         <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
           <h1 className="text-xl font-bold">{title}</h1>
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             {user && (
               <div className="hidden md:flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">

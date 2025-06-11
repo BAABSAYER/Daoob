@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month'>('week');
   
   // Fetch bookings
@@ -111,14 +113,14 @@ export default function AdminDashboard() {
   };
 
   return (
-    <AdminLayout title="Dashboard">
+    <AdminLayout title={t('dashboard.title')}>
       <div className="flex-1 space-y-6">
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="col-span-1">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Pending Bookings
+                {t('dashboard.stats.pendingRequests')}
               </CardTitle>
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
