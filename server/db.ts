@@ -1,14 +1,11 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
 // Load environment variables from .env file
 dotenv.config({ path: resolve(process.cwd(), '.env') });
-
-neonConfig.webSocketConstructor = ws;
 
 console.log("Database URL:", process.env.DATABASE_URL ? "Set (not showing for security)" : "Not set");
 
@@ -19,4 +16,4 @@ if (!process.env.DATABASE_URL) {
 }
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });
