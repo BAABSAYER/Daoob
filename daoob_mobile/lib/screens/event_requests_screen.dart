@@ -118,6 +118,10 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
     
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           isArabic ? 'طلبات الحدث' : 'Event Requests',
           style: const TextStyle(
@@ -126,6 +130,7 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
           ),
         ),
         backgroundColor: const Color(0xFF6A3DE8),
+        iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
