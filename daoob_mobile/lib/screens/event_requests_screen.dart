@@ -493,7 +493,7 @@ class _EventRequestsScreenState extends State<EventRequestsScreen> with SingleTi
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${quotation.items.length} ${isArabic ? 'عناصر' : 'items'}',
+                      '${quotation.breakdown?.length ?? 1} ${isArabic ? 'عناصر' : 'items'}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
