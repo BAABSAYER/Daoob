@@ -119,15 +119,52 @@ class AuthService extends ChangeNotifier {
   Future<void> _loadStoredData() async {
     final prefs = await SharedPreferences.getInstance();
     final storedUser = prefs.getString('user');
-    final storedToken = prefs.getString('token');
+    final loginTimestamp = prefs.getInt('login_timestamp');
     
     if (storedUser != null) {
       _user = User.fromJson(json.decode(storedUser));
-      _token = storedToken;
-      _isLoggedIn = true;
+      
+      // Check if login is recent (within 7 days)
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+      
+      if (loginTimestamp != null && (now - loginTimestamp) < sevenDaysInMs) {
+        // Validate session by checking with server
+        try {
+          final response = await apiService.get(ApiConfig.userEndpoint);
+          if (response.statusCode == 200) {
+            _isLoggedIn = true;
+            print("Session restored successfully for user: ${_user!.email}");
+          } else {
+            // Session expired, clear stored data
+            await _clearStoredData();
+            print("Session expired, cleared stored data");
+          }
+        } catch (e) {
+          // Network error, assume session is valid for offline use
+          // Will validate again when network is available
+          _isLoggedIn = true;
+          print("Network error validating session, assuming valid: $e");
+        }
+      } else {
+        // Login too old, clear data
+        await _clearStoredData();
+        print("Login session too old, cleared stored data");
+      }
     }
     
     notifyListeners();
+  }
+
+  Future<void> _clearStoredData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user');
+    await prefs.remove('token');
+    await prefs.remove('cookies');
+    await prefs.remove('login_timestamp');
+    _user = null;
+    _token = null;
+    _isLoggedIn = false;
   }
 
   Future<bool> login(String username, String password) async {
@@ -171,9 +208,10 @@ class AuthService extends ChangeNotifier {
               // Cookie-based authentication is handled by the ApiService
               _isLoggedIn = true;
               
-              // Save user data to preferences
+              // Save user data to preferences with login timestamp
               final prefs = await SharedPreferences.getInstance();
               await prefs.setString('user', json.encode(_user!.toJson()));
+              await prefs.setInt('login_timestamp', DateTime.now().millisecondsSinceEpoch);
               
               _isLoading = false;
               notifyListeners();
@@ -245,9 +283,10 @@ class AuthService extends ChangeNotifier {
         
         _isLoggedIn = true;
         
-        // Save to preferences  
+        // Save to preferences with login timestamp
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user', json.encode(_user!.toJson()));
+        await prefs.setInt('login_timestamp', DateTime.now().millisecondsSinceEpoch);
         
         _isLoading = false;
         notifyListeners();
@@ -279,16 +318,8 @@ class AuthService extends ChangeNotifier {
       print('Error during logout: $e');
     }
     
-    // Clear stored data
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user');
-    await prefs.remove('token');
-    await prefs.remove('cookies');
-    
-    _user = null;
-    _token = null;
-    _isLoggedIn = false;
-    
+    // Clear all stored authentication data
+    await _clearStoredData();
     notifyListeners();
   }
   
