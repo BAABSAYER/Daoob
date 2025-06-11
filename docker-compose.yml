@@ -40,8 +40,9 @@ services:
       PGPASSWORD: daoob_secure_password_2024
       PGDATABASE: daoob_production
       SESSION_SECRET: your_super_secure_session_secret_min_32_characters_long_2024
-    ports:
-      - "80:3001"
+    # Remove direct port mapping since nginx will handle it
+    expose:
+      - "3001"
     volumes:
       - app_uploads:/app/uploads
     networks:
@@ -62,11 +63,10 @@ services:
     image: nginx:alpine
     container_name: daoob_nginx
     ports:
-      - "443:443"
+      - "80:80"
       - "8080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
     networks:
       - daoob_network
     depends_on:
