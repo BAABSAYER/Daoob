@@ -133,7 +133,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-5 w-5" />
-              Logout
+              {t('navigation.logout')}
             </Button>
           </div>
         </SheetContent>
