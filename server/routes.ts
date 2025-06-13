@@ -779,14 +779,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Booking request body:", JSON.stringify(req.body, null, 2));
       
       // Validate that required fields are present
-      if (!req.body.vendorId) {
-        return res.status(400).json({ message: 'Missing required field: vendorId' });
-      }
-      
-      if (!req.body.eventType) {
-        return res.status(400).json({ message: 'Missing required field: eventType' });
-      }
-      
       if (!req.body.eventDate) {
         return res.status(400).json({ message: 'Missing required field: eventDate' });
       }
@@ -795,14 +787,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         bookingData = {
           clientId: req.user.id,
-          vendorId: req.body.vendorId,
+          vendorId: req.body.vendorId || null, // Allow null vendorId for mobile app submissions
           eventTypeId: req.body.eventTypeId,
           eventDate: new Date(req.body.eventDate),
-          guestCount: req.body.guestCount || 0,
-          specialRequests: req.body.specialRequests || "",
+          eventTime: req.body.eventTime || '',
+          estimatedGuests: req.body.estimatedGuests || req.body.guestCount || 0,
+          specialRequests: req.body.specialRequests || req.body.notes || "",
           totalPrice: req.body.totalPrice || 0,
           status: BOOKING_STATUS.PENDING,
           serviceId: req.body.serviceId !== undefined ? req.body.serviceId : null,
+          questionnaireResponses: req.body.questionnaireResponses || {},
+          notes: req.body.notes || req.body.specialRequests || "",
         };
       } catch (parseError: any) {
         console.error("Error parsing booking data:", parseError);
