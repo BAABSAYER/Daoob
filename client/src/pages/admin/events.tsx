@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { AdminLayout } from "@/components/admin-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,10 +36,9 @@ type QuestionnaireItem = {
 
 export default function EventsAdminPage() {
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Event Types Management</h1>
+    <AdminLayout title="Event Types Management">
       <EventTypesTab />
-    </div>
+    </AdminLayout>
   );
 }
 
@@ -63,7 +63,7 @@ function EventTypesTab() {
   const [questionFormData, setQuestionFormData] = useState({
     questionText: "",
     questionType: "text",
-    options: [],
+    options: [] as string[],
     required: false,
     displayOrder: 1
   });
@@ -175,7 +175,7 @@ function EventTypesTab() {
     setQuestionFormData({
       questionText: "",
       questionType: "text",
-      options: [],
+      options: [] as string[],
       required: false,
       displayOrder: 1
     });
