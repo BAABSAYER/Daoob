@@ -83,9 +83,9 @@ echo -e "${GREEN}✓ Environment file created${NC}"
 echo -e "${YELLOW}Configuring firewall...${NC}"
 ufw --force enable
 ufw allow ssh
-ufw allow 80/tcp
+ufw allow 8080/tcp
 ufw allow 443/tcp
-echo -e "${GREEN}✓ Firewall configured${NC}"
+echo -e "${GREEN}✓ Firewall configured (port 8080)${NC}"
 
 # Create backup directory and script
 echo -e "${YELLOW}Setting up backup system...${NC}"
@@ -132,7 +132,7 @@ docker-compose ps
 
 # Check application health
 echo -e "\nChecking application health..."
-curl -s http://localhost/health | head -5
+curl -s http://localhost:8080/health | head -5
 
 # Check logs for errors
 echo -e "\nChecking recent logs for errors..."

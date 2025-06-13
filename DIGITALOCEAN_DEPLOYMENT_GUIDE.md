@@ -182,10 +182,10 @@ exit
 ### Test Health Endpoints
 ```bash
 # Test application health
-curl http://localhost/health
+curl http://localhost:8080/health
 
 # Test from external (replace with your domain/IP)
-curl http://your_droplet_ip/health
+curl http://your_droplet_ip:8080/health
 ```
 
 ### Check Logs
@@ -200,7 +200,7 @@ docker-compose logs -f postgres
 ```
 
 ### Test Web Dashboard
-1. Open browser to `http://your_droplet_ip` or `https://yourdomain.com`
+1. Open browser to `http://your_droplet_ip:8080` or `https://yourdomain.com:8080`
 2. Login with credentials: `admin` / `admin123`
 3. Verify all features work correctly
 
@@ -211,9 +211,9 @@ docker-compose logs -f postgres
 # Enable UFW firewall
 ufw enable
 
-# Allow SSH, HTTP, HTTPS
+# Allow SSH, Custom Port, HTTPS
 ufw allow ssh
-ufw allow 80/tcp
+ufw allow 8080/tcp
 ufw allow 443/tcp
 
 # Check status
@@ -380,12 +380,12 @@ REINDEX DATABASE daoob_production;
 ## Production URLs
 
 **Web Admin Dashboard:**
-- HTTP: `http://your_droplet_ip`
-- HTTPS: `https://yourdomain.com`
+- HTTP: `http://your_droplet_ip:8080`
+- HTTPS: `https://yourdomain.com:8080`
 
 **Mobile API Endpoints:**
-- Base URL: `https://yourdomain.com/api`
-- WebSocket: `wss://yourdomain.com/ws`
+- Base URL: `http://your_droplet_ip:8080/api` or `https://yourdomain.com:8080/api`
+- WebSocket: `ws://your_droplet_ip:8080/ws` or `wss://yourdomain.com:8080/ws`
 
 **Admin Login:**
 - Username: `admin`
