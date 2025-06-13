@@ -10,6 +10,7 @@ import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
 import 'package:daoob_mobile/models/booking.dart';
+import 'package:daoob_mobile/models/chat_user.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +37,43 @@ class _HomeScreenState extends State<HomeScreen> {
       // Initialize message service
       messageService.initialize(authService);
     });
+  }
+
+  void _startChatWithAdmin(BuildContext context) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    bool isArabic = languageProvider.locale.languageCode == 'ar';
+    
+    try {
+      // Get admin user ID (assuming admin has ID 7 based on logs)
+      const int adminUserId = 7;
+      
+      // Create ChatUser object for admin
+      final adminUser = ChatUser(
+        id: adminUserId,
+        name: isArabic ? 'الإدارة' : 'Admin',
+        email: 'admin@daoob.com',
+        unreadCount: 0,
+      );
+      
+      // Navigate to chat screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            otherUser: adminUser,
+            authService: authService,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? 'خطأ في فتح المحادثة' : 'Error opening chat'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -100,6 +138,40 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(width: 10),
                     Text(
                       isArabic ? 'طلب تنظيم حدث جديد' : 'Plan a New Event',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            SizedBox(height: 16),
+            
+            // Message Admin button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  _startChatWithAdmin(context);
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.chat, size: 24),
+                    SizedBox(width: 10),
+                    Text(
+                      isArabic ? 'تواصل مع الإدارة' : 'Message Admin',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
