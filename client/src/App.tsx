@@ -13,7 +13,7 @@ import AdminBookings from "./pages/admin/bookings";
 import AdminChat from "./pages/admin/chat";
 import AdminUsers from "./pages/admin/users";
 import AdminUsersList from "./pages/admin/users-list";
-import AdminEvents from "./pages/admin/events-new";
+import AdminEvents from "./pages/admin/events";
 
 // Client Pages
 import Messages from "./pages/messages";
