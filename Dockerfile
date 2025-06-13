@@ -9,8 +9,8 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev deps for build)
+RUN npm ci
 
 # Copy source code (excluding unnecessary files)
 COPY client ./client
@@ -25,6 +25,9 @@ COPY drizzle.config.ts ./
 
 # Build the application
 RUN npm run build
+
+# Clean up development dependencies to reduce image size
+RUN npm prune --production
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
