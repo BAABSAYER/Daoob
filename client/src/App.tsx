@@ -10,7 +10,8 @@ import AuthPage from "@/pages/auth-page";
 // Admin Dashboard Pages
 import AdminDashboard from "./pages/admin/dashboard";
 import AdminBookings from "./pages/admin/bookings";
-import AdminChat from "./pages/admin/chat";
+import AdminMessages from "./pages/admin/admin-messages";
+import AdminChat from "./pages/admin/admin-chat";
 import AdminUsers from "./pages/admin/users";
 import AdminUsersList from "./pages/admin/users-list";
 import AdminEvents from "./pages/admin/events";
@@ -45,7 +46,7 @@ function Router() {
       <AdminRoute path="/admin/events" component={AdminEvents} />
       <AdminRoute path="/admin/users" component={AdminUsers} />
       <AdminRoute path="/admin/users-list" component={AdminUsersList} />
-      <AdminRoute path="/admin/messages" component={Messages} />
+      <AdminRoute path="/admin/messages" component={AdminMessages} />
       <AdminRoute path="/admin/chat/:userId" component={AdminChat} />
       <AdminRoute path="/admin/profile" component={Profile} />
       

@@ -125,6 +125,7 @@ DAOOB is a comprehensive event management platform that combines a React.js web 
 ## Changelog
 - June 13, 2025: Initial setup
 - June 13, 2025: Streamlined booking flow - removed separate event requests, unified everything through bookings table with JSON questionnaire responses. Standardized message model across platform.
+- June 13, 2025: Fixed admin dashboard consistency - Events, Messages, and Chat pages now use AdminLayout with proper sidebar navigation and routing structure.
 
 ## User Preferences
 
