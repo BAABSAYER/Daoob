@@ -26,15 +26,15 @@ class QuestionnaireItem {
   
   factory QuestionnaireItem.fromJson(Map<String, dynamic> json) {
     return QuestionnaireItem(
-      id: json['id'],
-      eventTypeId: json['eventTypeId'],
-      questionText: json['questionText'],
-      answerType: json['answerType'],
+      id: json['id'] as int,
+      eventTypeId: json['eventTypeId'] as int,
+      questionText: json['questionText'] as String? ?? '',
+      answerType: json['questionType'] as String? ?? 'text', // Database uses questionType
       options: json['options'] != null 
           ? List<String>.from(json['options']) 
           : null,
-      isRequired: json['isRequired'],
-      orderIndex: json['orderIndex'],
+      isRequired: json['required'] as bool? ?? false, // Database uses required
+      orderIndex: json['displayOrder'] as int? ?? 0, // Database uses displayOrder
     );
   }
   

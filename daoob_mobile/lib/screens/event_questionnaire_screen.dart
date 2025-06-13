@@ -145,17 +145,17 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
   }
   
   Widget _buildQuestionWidget(QuestionnaireItem question) {
-    switch (question.type) {
+    switch (question.answerType) {
       case 'text':
         return TextFormField(
           decoration: InputDecoration(
-            labelText: question.question,
+            labelText: question.questionText,
             border: OutlineInputBorder(),
           ),
           onChanged: (value) {
             _responses[question.id] = value;
           },
-          validator: question.required ? (value) {
+          validator: question.isRequired ? (value) {
             if (value == null || value.isEmpty) {
               return 'This field is required';
             }
@@ -166,14 +166,14 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       case 'number':
         return TextFormField(
           decoration: InputDecoration(
-            labelText: question.question,
+            labelText: question.questionText,
             border: OutlineInputBorder(),
           ),
           keyboardType: TextInputType.number,
           onChanged: (value) {
             _responses[question.id] = double.tryParse(value) ?? 0;
           },
-          validator: question.required ? (value) {
+          validator: question.isRequired ? (value) {
             if (value == null || value.isEmpty) {
               return 'This field is required';
             }
@@ -181,10 +181,10 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
           } : null,
         );
         
-      case 'select':
+      case 'single_choice':
         return DropdownButtonFormField<String>(
           decoration: InputDecoration(
-            labelText: question.question,
+            labelText: question.questionText,
             border: OutlineInputBorder(),
           ),
           items: question.options?.map((option) {
@@ -196,7 +196,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
           onChanged: (value) {
             _responses[question.id] = value;
           },
-          validator: question.required ? (value) {
+          validator: question.isRequired ? (value) {
             if (value == null || value.isEmpty) {
               return 'Please select an option';
             }
@@ -207,7 +207,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       default:
         return TextFormField(
           decoration: InputDecoration(
-            labelText: question.question,
+            labelText: question.questionText,
             border: OutlineInputBorder(),
           ),
           onChanged: (value) {
