@@ -665,11 +665,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (data.type === 'message' && userId !== null) {
           // Store message in database
           const savedMessage = await storage.createMessage({
-            senderId: data.sender,
+            senderId: userId, // Use authenticated user ID as sender
             receiverId: data.receiver,
             content: data.content,
-            read: false,
-            createdAt: new Date()
+            read: false
           });
           
           // Forward message to recipient if online

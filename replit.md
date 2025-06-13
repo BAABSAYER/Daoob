@@ -123,7 +123,8 @@ DAOOB is a comprehensive event management platform that combines a React.js web 
 - Docker Compose for orchestration
 
 ## Changelog
-- June 13, 2025. Initial setup
+- June 13, 2025: Initial setup
+- June 13, 2025: Streamlined booking flow - removed separate event requests, unified everything through bookings table with JSON questionnaire responses. Standardized message model across platform.
 
 ## User Preferences
 
