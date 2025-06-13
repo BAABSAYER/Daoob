@@ -90,11 +90,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<Widget> pages = [
       // Home page content with improved UI
       SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Welcome Section
               Container(
                 width: double.infinity,
@@ -304,7 +305,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             
             // Recent bookings list
-            Expanded(
+            SizedBox(
+              height: 200,
               child: bookingService.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : bookingService.bookings.isEmpty
@@ -331,7 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
+          ),
+        ),
       
       // Event Requests page (replacing Bookings)
       const EventRequestsScreen(),

@@ -59,45 +59,30 @@ export function useWebSocket() {
         const data = JSON.parse(event.data);
         
         if (data.type === 'message') {
-          // Parse timestamp as Date object
-          const message: Message = {
+          const newMessage: Message = {
             id: data.id,
-            senderId: data.sender,
-            receiverId: data.receiver,
+            senderId: data.senderId,
+            receiverId: data.receiverId,
             content: data.content,
             timestamp: new Date(data.timestamp),
             read: data.read || false
           };
-          
-          // Store message in the appropriate conversation
-          const conversationId = message.senderId === user.id 
-            ? message.receiverId 
-            : message.senderId;
-            
-          const existingConversation = conversationsRef.current.get(conversationId) || [];
-          conversationsRef.current.set(conversationId, [...existingConversation, message]);
-          
-          setMessages(prev => [...prev, message]);
-        } else if (data.type === 'history') {
-          // Parse timestamps in message history
-          const history = data.messages.map((msg: any) => ({
-            ...msg,
-            senderId: msg.senderId || msg.sender_id,
-            receiverId: msg.receiverId || msg.receiver_id,
-            timestamp: new Date(msg.timestamp || msg.createdAt || msg.created_at)
-          }));
-          
-          // Group messages by conversation
-          history.forEach((message: Message) => {
-            const conversationId = message.senderId === user.id 
-              ? message.receiverId 
-              : message.senderId;
-              
-            const existingConversation = conversationsRef.current.get(conversationId) || [];
-            conversationsRef.current.set(conversationId, [...existingConversation, message]);
+
+          // Store in conversation map
+          const otherUserId = data.senderId === user.id ? data.receiverId : data.senderId;
+          const currentConversation = conversationsRef.current.get(otherUserId) || [];
+          conversationsRef.current.set(otherUserId, [...currentConversation, newMessage]);
+
+          setMessages(prev => [...prev, newMessage]);
+        } else if (data.type === 'auth_success') {
+          console.log('WebSocket authenticated successfully');
+        } else if (data.type === 'error') {
+          console.error('WebSocket error:', data.message);
+          toast({
+            title: "Connection Error",
+            description: data.message,
+            variant: "destructive",
           });
-          
-          setMessages(history);
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
@@ -112,68 +97,85 @@ export function useWebSocket() {
       console.error('WebSocket error:', error);
       setStatus('error');
       toast({
-        title: 'Connection Error',
-        description: 'Failed to connect to chat server. Messages will be sent via REST API.',
-        variant: 'destructive',
+        title: "Connection Error",
+        description: "Failed to connect to chat server",
+        variant: "destructive",
       });
     };
 
-    // Cleanup function
     return () => {
-      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-        ws.close();
-      }
+      ws.close();
     };
   }, [user, toast]);
 
-  // Get conversation messages for a specific user
-  const getConversationMessages = useCallback((recipientId: number) => {
+  // Get messages for a specific conversation
+  const getConversationMessages = useCallback((userId: number) => {
     if (!user) return [];
     
     return messages.filter(msg => 
-      (msg.senderId === user.id && msg.receiverId === recipientId) || 
-      (msg.senderId === recipientId && msg.receiverId === user.id)
-    ).sort((a, b) => {
-      const dateA = a.timestamp ? a.timestamp.getTime() : a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.timestamp ? b.timestamp.getTime() : b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return dateA - dateB;
-    });
+      (msg.senderId === user.id && msg.receiverId === userId) ||
+      (msg.senderId === userId && msg.receiverId === user.id)
+    ).sort((a, b) => 
+      new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+    );
   }, [user, messages]);
 
-  // Send message handler
-  const sendMessage = useCallback((recipientId: number, content: string) => {
-    if (!user) return;
+  // Get all conversations (unique user pairs)
+  const getConversations = useCallback(() => {
+    if (!user) return [];
     
-    const message: Message = {
-      senderId: user.id,
-      receiverId: recipientId,
-      content,
-      timestamp: new Date(),
-      type: 'message'
-    };
-    
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
-      
-      // Optimistically add the message to the UI
-      const conversationId = recipientId;
-      const existingConversation = conversationsRef.current.get(conversationId) || [];
-      conversationsRef.current.set(conversationId, [...existingConversation, message]);
-      
-      setMessages(prev => [...prev, message]);
-    } else {
+    const conversations = messages.reduce((acc, msg) => {
+      const otherUserId = msg.senderId === user.id ? msg.receiverId : msg.senderId;
+      if (!acc.some(conv => conv.userId === otherUserId)) {
+        acc.push({ userId: otherUserId, lastMessage: msg });
+      }
+      return acc;
+    }, [] as { userId: number; lastMessage: Message }[]);
+
+    return conversations;
+  }, [user, messages]);
+
+  // Send a message
+  const sendMessage = useCallback((receiverId: number, content: string) => {
+    if (!user || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       toast({
-        title: 'Connection Error',
-        description: 'Not connected to chat server. Message will be sent via REST API only.',
-        variant: 'destructive',
+        title: "Connection Error",
+        description: "Cannot send message - not connected",
+        variant: "destructive",
       });
+      return;
     }
+
+    const message = {
+      type: 'message',
+      senderId: user.id,
+      receiverId,
+      content,
+      timestamp: new Date()
+    };
+
+    wsRef.current.send(JSON.stringify(message));
+
+    // Add to local state immediately for better UX
+    const newMessage: Message = {
+      senderId: user.id,
+      receiverId,
+      content,
+      timestamp: new Date()
+    };
+
+    // Store in conversation map
+    const currentConversation = conversationsRef.current.get(receiverId) || [];
+    conversationsRef.current.set(receiverId, [...currentConversation, newMessage]);
+
+    setMessages(prev => [...prev, newMessage]);
   }, [user, toast]);
 
   return {
-    status,
     messages,
+    status,
     sendMessage,
     getConversationMessages,
+    getConversations
   };
 }
