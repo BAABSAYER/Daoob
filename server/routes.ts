@@ -1459,7 +1459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user.userType === 'admin') {
         // Admin sees all mobile users (clients) who have submitted bookings
         const allBookings = await storage.getAllBookings();
-        const clientIds = [...new Set(allBookings.map(b => b.clientId))];
+        const clientIds = Array.from(new Set(allBookings.map(b => b.clientId)));
         
         conversations = await Promise.all(
           clientIds.map(async clientId => {
