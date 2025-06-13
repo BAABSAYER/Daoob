@@ -93,71 +93,139 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text(isArabic ? 'الرسائل' : 'Messages'),
-        backgroundColor: Colors.orange,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Container(
-            padding: EdgeInsets.all(16),
-            color: Colors.orange.shade50,
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: isArabic ? 'البحث عن المحادثات...' : 'Search conversations...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
+        title: Text(
+          isArabic ? 'الرسائل' : 'Messages',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 20,
           ),
+        ),
+        backgroundColor: Color(0xFF6A3DE8),
+        elevation: 0,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add_comment, color: Colors.white),
+            onPressed: () => _startChatWithAdmin(context, isArabic),
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF6A3DE8).withOpacity(0.1),
+              Color(0xFFF8F9FA),
+            ],
+            stops: [0.0, 0.3],
+          ),
+        ),
+        child: Column(
+          children: [
+            // Enhanced Search Bar
+            Container(
+              padding: EdgeInsets.all(20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: isArabic ? 'البحث عن المحادثات...' : 'Search conversations...',
+                    hintStyle: TextStyle(color: Colors.grey.shade500),
+                    prefixIcon: Icon(Icons.search, color: Color(0xFF6A3DE8)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
+              ),
+            ),
 
-          // Chat List
-          Expanded(
-            child: messageService.isLoading
-                ? Center(child: CircularProgressIndicator())
-                : filteredUsers.isEmpty
-                    ? Center(
+            // Enhanced Chat List
+            Expanded(
+              child: messageService.isLoading
+                  ? Center(
+                      child: Container(
+                        padding: EdgeInsets.all(40),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.chat_bubble_outline,
-                              size: 64,
-                              color: Colors.grey,
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6A3DE8)),
                             ),
                             SizedBox(height: 16),
                             Text(
-                              _searchQuery.isNotEmpty
-                                  ? (isArabic ? 'لا توجد محادثات مطابقة' : 'No matching conversations')
-                                  : (isArabic ? 'لا توجد محادثات بعد' : 'No conversations yet'),
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
-                              ),
+                              isArabic ? 'جاري تحميل المحادثات...' : 'Loading conversations...',
+                              style: TextStyle(color: Colors.grey.shade600),
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              isArabic 
-                                  ? 'ابدأ محادثة جديدة مع الإدارة'
-                                  : 'Start a new conversation with admin',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
+                          ],
+                        ),
+                      ),
+                    )
+                  : filteredUsers.isEmpty
+                      ? Container(
+                          padding: EdgeInsets.all(40),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(32),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF6A3DE8).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                child: Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 80,
+                                  color: Color(0xFF6A3DE8),
+                                ),
                               ),
-                              textAlign: TextAlign.center,
+                              SizedBox(height: 32),
+                              Text(
+                                _searchQuery.isNotEmpty
+                                    ? (isArabic ? 'لا توجد محادثات مطابقة' : 'No matching conversations')
+                                    : (isArabic ? 'لا توجد محادثات بعد' : 'No conversations yet'),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2D3748),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                isArabic 
+                                    ? 'ابدأ محادثة جديدة مع الإدارة\nللحصول على المساعدة والدعم'
+                                    : 'Start a new conversation with admin\nto get help and support',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade600,
+                                ),
+                                textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 24),
                             ElevatedButton(

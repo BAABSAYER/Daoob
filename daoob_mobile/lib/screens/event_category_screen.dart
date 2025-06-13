@@ -148,6 +148,116 @@ class EventCategoryScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildEnhancedCategoryCard(
+    BuildContext context,
+    EventCategory category,
+    bool isArabic, {
+    required VoidCallback onTap,
+  }) {
+    // Define gradient colors based on category
+    List<Color> gradientColors = _getCategoryGradient(category.name);
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors.first.withOpacity(0.3),
+              blurRadius: 15,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  _getCategoryIcon(category.name),
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                category.name,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (category.description.isNotEmpty) ...[
+                SizedBox(height: 8),
+                Text(
+                  category.description,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Color> _getCategoryGradient(String categoryName) {
+    final name = categoryName.toLowerCase();
+    if (name.contains('wedding') || name.contains('زفاف')) {
+      return [Color(0xFFFFB6C1), Color(0xFFFF69B4)];
+    } else if (name.contains('corporate') || name.contains('شركات')) {
+      return [Color(0xFF87CEEB), Color(0xFF4682B4)];
+    } else if (name.contains('birthday') || name.contains('ميلاد')) {
+      return [Color(0xFFFFE4B5), Color(0xFFFF8C00)];
+    } else if (name.contains('graduation') || name.contains('تخرج')) {
+      return [Color(0xFF98FB98), Color(0xFF32CD32)];
+    } else if (name.contains('anniversary') || name.contains('ذكرى')) {
+      return [Color(0xFFDDA0DD), Color(0xFF9370DB)];
+    } else {
+      return [Color(0xFF6A3DE8), Color(0xFF8B5CF6)];
+    }
+  }
+
+  IconData _getCategoryIcon(String categoryName) {
+    final name = categoryName.toLowerCase();
+    if (name.contains('wedding') || name.contains('زفاف')) {
+      return Icons.favorite;
+    } else if (name.contains('corporate') || name.contains('شركات')) {
+      return Icons.business;
+    } else if (name.contains('birthday') || name.contains('ميلاد')) {
+      return Icons.cake;
+    } else if (name.contains('graduation') || name.contains('تخرج')) {
+      return Icons.school;
+    } else if (name.contains('anniversary') || name.contains('ذكرى')) {
+      return Icons.celebration;
+    } else {
+      return Icons.event;
+    }
+  }
+
   Widget _buildCategoryCard(
     BuildContext context,
     EventCategory category,
