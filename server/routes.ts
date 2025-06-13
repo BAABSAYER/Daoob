@@ -470,7 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: 'Booking deleted successfully' });
     } catch (error) {
       console.error('Error deleting booking:', error);
-      res.status(500).json({ message: 'Error deleting booking' });
+      res.status(500).json({ message: 'Failed to delete booking' });
     }
   });
   
