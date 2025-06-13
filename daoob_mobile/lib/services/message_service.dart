@@ -134,11 +134,13 @@ class MessageService extends ChangeNotifier {
         CREATE TABLE chat_users(
           id INTEGER PRIMARY KEY,
           name TEXT,
+          email TEXT,
           avatar TEXT,
           userType TEXT,
           lastMessage TEXT,
           lastMessageTime TEXT,
-          hasUnreadMessages INTEGER
+          hasUnreadMessages INTEGER,
+          unreadCount INTEGER DEFAULT 0
         )
         ''');
       },
@@ -208,6 +210,7 @@ class MessageService extends ChangeNotifier {
             return ChatUser(
               id: item['id'],
               name: item['name'],
+              email: item['email'] ?? '',
               avatar: item['avatar'],
               userType: item['userType'],
               lastMessage: item['lastMessage'],
@@ -215,6 +218,7 @@ class MessageService extends ChangeNotifier {
                 ? DateTime.parse(item['lastMessageTime']) 
                 : null,
               hasUnreadMessages: item['hasUnreadMessages'] == 1,
+              unreadCount: item['unreadCount'] ?? 0,
             );
           }).toList();
         } else {
@@ -234,6 +238,7 @@ class MessageService extends ChangeNotifier {
             return ChatUser(
               id: item['id'],
               name: item['name'],
+              email: item['email'] ?? '',
               avatar: item['avatar'],
               userType: item['userType'],
               lastMessage: item['lastMessage'],
@@ -241,6 +246,7 @@ class MessageService extends ChangeNotifier {
                 ? DateTime.parse(item['lastMessageTime']) 
                 : null,
               hasUnreadMessages: item['hasUnreadMessages'] == 1,
+              unreadCount: item['unreadCount'] ?? 0,
             );
           }).toList();
         } else {
@@ -397,11 +403,13 @@ class MessageService extends ChangeNotifier {
       final updatedUser = ChatUser(
         id: _chatUsers[index].id,
         name: _chatUsers[index].name,
+        email: _chatUsers[index].email,
         avatar: _chatUsers[index].avatar,
         userType: _chatUsers[index].userType,
         lastMessage: _chatUsers[index].lastMessage,
         lastMessageTime: _chatUsers[index].lastMessageTime,
         hasUnreadMessages: false,
+        unreadCount: 0,
       );
       
       _chatUsers[index] = updatedUser;
@@ -554,11 +562,13 @@ class MessageService extends ChangeNotifier {
         _chatUsers[index] = ChatUser(
           id: _chatUsers[index].id,
           name: _chatUsers[index].name,
+          email: _chatUsers[index].email,
           avatar: _chatUsers[index].avatar,
           userType: _chatUsers[index].userType,
           lastMessage: lastMessage,
           lastMessageTime: timestamp,
           hasUnreadMessages: true,
+          unreadCount: _chatUsers[index].unreadCount + 1,
         );
       }
     } else {
@@ -577,10 +587,12 @@ class MessageService extends ChangeNotifier {
       final newChatUser = ChatUser(
         id: userId,
         name: 'User $userId',
+        email: 'user$userId@example.com',
         userType: currentUserType == 'client' ? 'vendor' : 'client',
         lastMessage: lastMessage,
         lastMessageTime: timestamp,
         hasUnreadMessages: true,
+        unreadCount: 1,
       );
       
       await _database!.insert(
@@ -588,11 +600,13 @@ class MessageService extends ChangeNotifier {
         {
           'id': newChatUser.id,
           'name': newChatUser.name,
+          'email': newChatUser.email,
           'avatar': newChatUser.avatar,
           'userType': newChatUser.userType,
           'lastMessage': newChatUser.lastMessage,
           'lastMessageTime': newChatUser.lastMessageTime?.toIso8601String(),
           'hasUnreadMessages': newChatUser.hasUnreadMessages ? 1 : 0,
+          'unreadCount': newChatUser.unreadCount,
         },
       );
       
@@ -649,11 +663,13 @@ class MessageService extends ChangeNotifier {
         {
           'id': user.id,
           'name': user.name,
+          'email': user.email,
           'avatar': user.avatar,
           'userType': user.userType,
           'lastMessage': user.lastMessage,
           'lastMessageTime': user.lastMessageTime?.toIso8601String(),
           'hasUnreadMessages': user.hasUnreadMessages ? 1 : 0,
+          'unreadCount': user.unreadCount,
         },
       );
     }
