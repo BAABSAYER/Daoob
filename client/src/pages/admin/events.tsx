@@ -47,6 +47,7 @@ function EventTypesTab() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [questionsDialogOpen, setQuestionsDialogOpen] = useState(false);
+  const [addQuestionDialogOpen, setAddQuestionDialogOpen] = useState(false);
   const [currentEventType, setCurrentEventType] = useState<EventType | null>(null);
   const [selectedEventTypeForQuestions, setSelectedEventTypeForQuestions] = useState<number | null>(null);
   
@@ -56,6 +57,15 @@ function EventTypesTab() {
     description: "",
     icon: "",
     isActive: true
+  });
+
+  // Question form state
+  const [questionFormData, setQuestionFormData] = useState({
+    questionText: "",
+    questionType: "text",
+    options: [],
+    required: false,
+    displayOrder: 1
   });
 
   // Queries
@@ -129,6 +139,28 @@ function EventTypesTab() {
     },
   });
 
+  const createQuestionMutation = useMutation({
+    mutationFn: async (questionData: any) => {
+      const res = await fetch('/api/questionnaire-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(questionData),
+      });
+      if (!res.ok) throw new Error('Failed to create question');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/questionnaire-items"] });
+      setAddQuestionDialogOpen(false);
+      resetQuestionForm();
+      toast({
+        title: "Question created",
+        description: "The question has been added successfully.",
+      });
+    },
+  });
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -137,6 +169,16 @@ function EventTypesTab() {
       isActive: true
     });
     setCurrentEventType(null);
+  };
+
+  const resetQuestionForm = () => {
+    setQuestionFormData({
+      questionText: "",
+      questionType: "text",
+      options: [],
+      required: false,
+      displayOrder: 1
+    });
   };
 
   const handleCreate = () => {
@@ -164,6 +206,26 @@ function EventTypesTab() {
   const handleViewQuestions = (eventTypeId: number) => {
     setSelectedEventTypeForQuestions(eventTypeId);
     setQuestionsDialogOpen(true);
+  };
+
+  const handleAddQuestion = () => {
+    setAddQuestionDialogOpen(true);
+    resetQuestionForm();
+  };
+
+  const handleSubmitQuestion = () => {
+    if (!selectedEventTypeForQuestions) return;
+
+    const questionData = {
+      eventTypeId: selectedEventTypeForQuestions,
+      questionText: questionFormData.questionText,
+      questionType: questionFormData.questionType,
+      options: questionFormData.options,
+      required: questionFormData.required,
+      displayOrder: questionFormData.displayOrder
+    };
+
+    createQuestionMutation.mutate(questionData);
   };
 
   const getQuestionsForEventType = (eventTypeId: number) => {
@@ -352,6 +414,13 @@ function EventTypesTab() {
               )}
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="flex justify-end mb-4">
+            <Button onClick={handleAddQuestion}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Question
+            </Button>
+          </div>
           
           <div className="space-y-4 py-4 max-h-96 overflow-y-auto">
             {selectedEventTypeForQuestions && getQuestionsForEventType(selectedEventTypeForQuestions).length > 0 ? (
