@@ -57,7 +57,7 @@ class ApiConfig {
   static String get logoutEndpoint => '$apiUrl/logout';
   
   // Event Management endpoints
-  static String get eventTypesEndpoint => '$apiUrl/event-types';
+  static String get eventTypesEndpoint => '$apiUrl/event-types/active';
   static String get eventRequestsEndpoint => '$apiUrl/event-requests';
   static String get quotationsEndpoint => '$apiUrl/quotations';
   

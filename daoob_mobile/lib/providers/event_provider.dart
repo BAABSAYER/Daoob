@@ -154,7 +154,7 @@ class EventProvider with ChangeNotifier {
   ) async {
     try {
       final response = await authService.apiService.get(
-        '${ApiConfig.baseUrl}/api/event-types/$eventTypeId/questions'
+        '${ApiConfig.baseUrl}/api/event-types/$eventTypeId/questionnaire-items'
       );
 
       if (response.statusCode == 200) {
