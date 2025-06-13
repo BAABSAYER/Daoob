@@ -87,13 +87,19 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
     final authService = Provider.of<AuthService>(context, listen: false);
     
     // Prepare the request data with correct field names for backend
+    // Convert responses to JSON-serializable format
+    final Map<String, dynamic> serializedResponses = {};
+    _responses.forEach((key, value) {
+      serializedResponses[key.toString()] = value?.toString() ?? '';
+    });
+    
     final requestData = {
       'eventTypeId': widget.eventType.id,
       'eventDate': _eventDate?.toIso8601String(),
       'eventTime': '00:00', // Default time
       'estimatedGuests': 0, // Default guest count
       'specialRequests': _specialRequestsController.text,
-      'questionnaireResponses': _responses,
+      'questionnaireResponses': serializedResponses,
       'totalPrice': _budget ?? 0,
       'notes': _specialRequestsController.text,
     };
