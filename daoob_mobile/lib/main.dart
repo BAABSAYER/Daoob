@@ -17,6 +17,7 @@ import 'package:daoob_mobile/services/booking_service.dart';
 import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/providers/event_provider.dart';
+import 'package:daoob_mobile/models/event_type.dart';
 
 void main() {
   runApp(
@@ -86,7 +87,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/categories': (context) => const CategoriesScreen(),
         '/custom-event': (context) => const CustomEventScreen(),
-        '/event-questionnaire': (context) => EventQuestionnaireScreen(categoryId: ModalRoute.of(context)!.settings.arguments as String),
+        '/event-questionnaire': (context) => EventQuestionnaireScreen(eventType: ModalRoute.of(context)!.settings.arguments as EventType),
         '/profile': (context) => const ProfileScreen(),
         '/chat-list': (context) => const ChatListScreen(),
       },
