@@ -61,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         MaterialPageRoute(
           builder: (context) => ChatScreen(
-            otherUser: adminUser,
-            authService: authService,
+            userId: adminUser.id,
+            userName: adminUser.name,
           ),
         ),
       );
