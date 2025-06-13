@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
     
     final List<Widget> pages = [
       // Home page content with categories
-      Center(
+      SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 24),

@@ -86,39 +86,39 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
   Future<void> _submitEventRequest() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     
-    // Validate required fields
-    if (_eventDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select an event date'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     // Prepare the request data with correct field names for backend
-    // Convert responses to JSON-serializable format
-    final Map<String, String> serializedResponses = {};
-    _responses.forEach((key, value) {
+    // Convert responses to JSON-serializable format ensuring all values are strings
+    final Map<String, String> cleanResponses = {};
+    
+    for (final entry in _responses.entries) {
+      final key = entry.key.toString();
+      final value = entry.value;
+      
       if (value is List) {
         // For multiple choice questions, join with commas
-        serializedResponses[key.toString()] = (value as List).map((e) => e.toString()).join(', ');
-      } else if (value != null) {
-        serializedResponses[key.toString()] = value.toString();
+        final stringList = value.where((item) => item != null).map((item) => item.toString()).toList();
+        if (stringList.isNotEmpty) {
+          cleanResponses[key] = stringList.join(', ');
+        }
+      } else if (value != null && value.toString().trim().isNotEmpty) {
+        cleanResponses[key] = value.toString().trim();
       }
-    });
+    }
     
-    final requestData = {
+    final Map<String, dynamic> requestData = {
       'eventTypeId': widget.eventType.id,
-      'eventDate': _eventDate!.toIso8601String(),
-      'eventTime': '00:00',
-      'estimatedGuests': 0,
+      'eventDate': DateTime.now().add(Duration(days: 7)).toIso8601String(), // Default to next week
+      'eventTime': '12:00',
+      'estimatedGuests': 50,
       'specialRequests': _specialRequestsController.text.trim(),
-      'questionnaireResponses': serializedResponses,
-      'totalPrice': _budget ?? 0.0,
+      'questionnaireResponses': cleanResponses,
+      'totalPrice': 0,
       'notes': _specialRequestsController.text.trim(),
     };
+    
+    // Debug logging
+    print('Submitting request data: $requestData');
+    print('Clean responses: $cleanResponses');
     
     try {
       final response = await authService.apiService.post(
@@ -385,51 +385,6 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Event Information',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      SizedBox(height: 16),
-                      
-                      // Event Date
-                      ListTile(
-                        title: Text('Event Date'),
-                        subtitle: Text(_eventDate != null 
-                            ? DateFormat('yyyy-MM-dd').format(_eventDate!)
-                            : 'Select date'),
-                        trailing: Icon(Icons.calendar_today),
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(Duration(days: 365)),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _eventDate = date;
-                            });
-                          }
-                        },
-                      ),
-                      
-                      SizedBox(height: 16),
-                      
-                      // Budget
-                      TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Budget (optional)',
-                          border: OutlineInputBorder(),
-                          prefixText: '\$',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          _budget = double.tryParse(value);
-                        },
-                      ),
-                      
-                      SizedBox(height: 24),
-                      
                       // Questions
                       if (_questions.isNotEmpty) ...[
                         Text(
