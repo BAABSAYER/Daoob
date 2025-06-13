@@ -204,6 +204,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch questions' });
     }
   });
+
+  // Mobile app endpoint for questionnaire items
+  app.get('/api/event-types/:eventTypeId/questionnaire-items', async (req, res) => {
+    try {
+      const eventTypeId = parseInt(req.params.eventTypeId);
+      if (isNaN(eventTypeId)) {
+        return res.status(400).json({ message: 'Invalid event type ID' });
+      }
+      
+      const questions = await storage.getQuestionnaireItemsByEventType(eventTypeId);
+      res.json(questions);
+    } catch (error) {
+      console.error('Error fetching questionnaire items for event type:', error);
+      res.status(500).json({ message: 'Failed to fetch questionnaire items' });
+    }
+  });
   
   app.post('/api/questionnaire-items', async (req, res) => {
     // Only admin can create questionnaire items
