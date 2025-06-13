@@ -208,8 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
               
               const SizedBox(height: 24),
             
-            SizedBox(height: 24),
-            
             // Categories section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
