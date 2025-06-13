@@ -28,11 +28,11 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'],
-      name: json['name'],
+      name: json['fullName'] ?? json['name'], // Backend sends fullName
       email: json['email'],
       userType: json['userType'],
-      phone: json['phone'],  // Added to fromJson
-      username: json['username'],  // Added to fromJson
+      phone: json['phone'],
+      username: json['username'],
     );
   }
   

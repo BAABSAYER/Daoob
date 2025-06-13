@@ -14,7 +14,7 @@ class ApiConfig {
   
   // Set the current environment (0=local, 1=replit, 2=production)
   // Change this value to connect to different environments
-  static const int currentEnvironment = ENV_LOCAL; // Changed to ENV_LOCAL for development testing
+  static const int currentEnvironment = ENV_PRODUCTION; // Set to ENV_PRODUCTION for DigitalOcean deployment
   
   // Determine if we're in production mode (for Flutter build)
   static const bool isProductionBuild = bool.fromEnvironment('dart.vm.product');

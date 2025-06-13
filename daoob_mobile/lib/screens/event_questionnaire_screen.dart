@@ -85,7 +85,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       eventTypeId ??= _getEventTypeIdFromCategory(widget.categoryId);
       
       // Fetch questions from API for this event type using authService.apiService
-      final url = '${ApiConfig.apiUrl}/event-types/$eventTypeId/questions';
+      final url = '${ApiConfig.apiUrl}/event-types/$eventTypeId/questionnaire-items';
       
       // Use ApiService for consistent cookie handling
       final response = await authService.apiService.get(url);
