@@ -261,13 +261,16 @@ export class DatabaseStorage implements IStorage {
         insertBooking.eventDate = new Date(insertBooking.eventDate);
       }
       
-      // Convert guestCount to number if it's a string
-      if (typeof insertBooking.guestCount === 'string') {
+      // Handle guest count conversion - support both guestCount and estimatedGuests
+      if (insertBooking.guestCount !== undefined && typeof insertBooking.guestCount === 'string') {
         insertBooking.guestCount = parseInt(insertBooking.guestCount, 10);
+      }
+      if (insertBooking.estimatedGuests !== undefined && typeof insertBooking.estimatedGuests === 'string') {
+        insertBooking.estimatedGuests = parseInt(insertBooking.estimatedGuests, 10);
       }
       
       // Convert totalPrice to number if it's a string
-      if (typeof insertBooking.totalPrice === 'string') {
+      if (insertBooking.totalPrice !== undefined && typeof insertBooking.totalPrice === 'string') {
         insertBooking.totalPrice = parseFloat(insertBooking.totalPrice);
       }
       
@@ -276,7 +279,11 @@ export class DatabaseStorage implements IStorage {
         ...insertBooking,
         status: insertBooking.status || BOOKING_STATUS.PENDING,
         specialRequests: insertBooking.specialRequests || null,
-        serviceId: insertBooking.serviceId || null
+        serviceId: insertBooking.serviceId || null,
+        // Ensure numeric fields have valid defaults
+        estimatedGuests: insertBooking.estimatedGuests || 0,
+        guestCount: insertBooking.guestCount || insertBooking.estimatedGuests || 0,
+        totalPrice: insertBooking.totalPrice || 0
       };
       
       const [booking] = await db.insert(bookings).values(bookingToCreate).returning();
