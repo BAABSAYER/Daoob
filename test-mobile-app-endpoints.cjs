@@ -3,8 +3,8 @@
 const http = require('http');
 const https = require('https');
 
-// Production server configuration
-const PROD_SERVER = 'http://178.62.41.245';
+// Local development server configuration
+const PROD_SERVER = 'http://localhost:5000';
 
 // Test mobile app endpoints and functionality
 async function testMobileAppEndpoints() {
