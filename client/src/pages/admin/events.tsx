@@ -451,6 +451,93 @@ function EventTypesTab() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Question Dialog */}
+      <Dialog open={addQuestionDialogOpen} onOpenChange={setAddQuestionDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Question</DialogTitle>
+            <DialogDescription>
+              Create a new question for the event type questionnaire
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Question Text</label>
+              <Textarea
+                placeholder="Enter your question..."
+                value={questionFormData.questionText}
+                onChange={(e) => setQuestionFormData(prev => ({ ...prev, questionText: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Question Type</label>
+              <select
+                className="w-full p-2 border border-input rounded-md bg-background"
+                value={questionFormData.questionType}
+                onChange={(e) => setQuestionFormData(prev => ({ ...prev, questionType: e.target.value }))}
+              >
+                <option value="text">Text Input</option>
+                <option value="number">Number Input</option>
+                <option value="select">Multiple Choice</option>
+                <option value="checkbox">Checkbox</option>
+                <option value="textarea">Long Text</option>
+                <option value="date">Date</option>
+                <option value="time">Time</option>
+              </select>
+            </div>
+
+            {questionFormData.questionType === 'select' && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Options (comma-separated)</label>
+                <Input
+                  placeholder="Option 1, Option 2, Option 3"
+                  onChange={(e) => {
+                    const options = e.target.value.split(',').map(opt => opt.trim()).filter(opt => opt);
+                    setQuestionFormData(prev => ({ ...prev, options }));
+                  }}
+                />
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={questionFormData.required}
+                onCheckedChange={(checked) => setQuestionFormData(prev => ({ ...prev, required: checked }))}
+              />
+              <label className="text-sm font-medium">Required field</label>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Display Order</label>
+              <Input
+                type="number"
+                min="1"
+                value={questionFormData.displayOrder}
+                onChange={(e) => setQuestionFormData(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 1 }))}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setAddQuestionDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitQuestion}
+              disabled={createQuestionMutation.isPending || !questionFormData.questionText.trim()}
+            >
+              {createQuestionMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Add Question
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
