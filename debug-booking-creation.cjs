@@ -6,7 +6,7 @@ const http = require('http');
 async function debugBookingCreation() {
   console.log('=== Debug Booking Creation ===\n');
   
-  const PROD_SERVER = 'http://178.62.41.245';
+  const PROD_SERVER = 'http://localhost:5000';
   
   try {
     // Login first

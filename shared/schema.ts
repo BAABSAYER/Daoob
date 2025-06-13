@@ -93,10 +93,11 @@ export const services = pgTable("services", {
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
   clientId: integer("client_id").notNull().references(() => users.id),
-  eventTypeId: integer("event_type_id").references(() => eventTypes.id),
+  eventTypeId: integer("eventTypeId").references(() => eventTypes.id),
   vendorId: integer("vendor_id").references(() => vendors.id),
   serviceId: integer("service_id").references(() => services.id),
   status: text("status").notNull().default(BOOKING_STATUS.PENDING),
+  eventType: text("event_type"), // Legacy field
   eventDate: timestamp("event_date").notNull(),
   eventTime: text("event_time"),
   location: text("location"),
