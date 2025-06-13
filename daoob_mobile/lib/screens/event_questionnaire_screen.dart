@@ -90,7 +90,12 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
     // Convert responses to JSON-serializable format
     final Map<String, dynamic> serializedResponses = {};
     _responses.forEach((key, value) {
-      serializedResponses[key.toString()] = value?.toString() ?? '';
+      if (value is List) {
+        // For multiple choice questions, join with commas
+        serializedResponses[key.toString()] = (value as List<String>).join(', ');
+      } else {
+        serializedResponses[key.toString()] = value?.toString() ?? '';
+      }
     });
     
     final requestData = {
@@ -177,7 +182,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
           ),
           keyboardType: TextInputType.number,
           onChanged: (value) {
-            _responses[question.id] = double.tryParse(value) ?? 0;
+            _responses[question.id] = value;
           },
           validator: question.isRequired ? (value) {
             if (value == null || value.isEmpty) {
@@ -210,6 +215,12 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
           } : null,
         );
         
+      case 'multiple_choice':
+        return _buildMultipleChoiceWidget(question);
+        
+      case 'date':
+        return _buildDatePickerWidget(question);
+        
       default:
         return TextFormField(
           decoration: InputDecoration(
@@ -221,6 +232,95 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
           },
         );
     }
+  }
+  
+  Widget _buildMultipleChoiceWidget(QuestionnaireItem question) {
+    // Initialize selected options if not exists
+    if (!_responses.containsKey(question.id)) {
+      _responses[question.id] = <String>[];
+    }
+    
+    List<String> selectedOptions = List<String>.from(_responses[question.id] ?? []);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          question.questionText,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 8),
+        ...question.options?.map((option) {
+          return CheckboxListTile(
+            title: Text(option),
+            value: selectedOptions.contains(option),
+            onChanged: (bool? value) {
+              setState(() {
+                if (value == true) {
+                  selectedOptions.add(option);
+                } else {
+                  selectedOptions.remove(option);
+                }
+                _responses[question.id] = selectedOptions;
+              });
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+          );
+        }).toList() ?? [],
+        if (question.isRequired && selectedOptions.isEmpty)
+          Padding(
+            padding: EdgeInsets.only(left: 16, top: 4),
+            child: Text(
+              'Please select at least one option',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+  
+  Widget _buildDatePickerWidget(QuestionnaireItem question) {
+    DateTime? selectedDate = _responses[question.id] != null 
+        ? DateTime.tryParse(_responses[question.id].toString()) 
+        : null;
+    
+    return InkWell(
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: selectedDate ?? DateTime.now(),
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(Duration(days: 365 * 2)),
+        );
+        if (picked != null) {
+          setState(() {
+            _responses[question.id] = picked.toIso8601String();
+          });
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              selectedDate != null
+                  ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
+                  : question.questionText,
+              style: TextStyle(
+                fontSize: 16,
+                color: selectedDate != null ? Colors.black : Colors.grey[600],
+              ),
+            ),
+            Icon(Icons.calendar_today, color: Colors.grey[600]),
+          ],
+        ),
+      ),
+    );
   }
   
   @override
