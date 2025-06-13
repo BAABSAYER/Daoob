@@ -67,20 +67,24 @@ class Message {
 class ChatUser {
   final int id;
   final String name;
+  final String email;
   final String? avatar;
   final String userType;
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final bool hasUnreadMessages;
+  final int unreadCount;
   
   ChatUser({
     required this.id,
     required this.name,
+    required this.email,
     this.avatar,
     required this.userType,
     this.lastMessage,
     this.lastMessageTime,
     this.hasUnreadMessages = false,
+    this.unreadCount = 0,
   });
 }
 
@@ -181,6 +185,7 @@ class MessageService extends ChangeNotifier {
           return ChatUser(
             id: json['id'],
             name: json['name'],
+            email: json['email'] ?? '',
             avatar: json['avatar'],
             userType: json['userType'],
             lastMessage: json['lastMessage'],
@@ -188,6 +193,7 @@ class MessageService extends ChangeNotifier {
               ? DateTime.parse(json['lastMessageTime']) 
               : null,
             hasUnreadMessages: json['hasUnreadMessages'] ?? false,
+            unreadCount: json['unreadCount'] ?? 0,
           );
         }).toList();
         
