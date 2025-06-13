@@ -105,15 +105,22 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       }
     }
     
+    // Create properly structured request data
     final Map<String, dynamic> requestData = {
       'eventTypeId': widget.eventType.id,
-      'eventDate': DateTime.now().add(Duration(days: 7)).toIso8601String(), // Default to next week
-      'eventTime': '12:00',
+      'eventDate': DateTime.now().add(Duration(days: 7)).toIso8601String(),
+      'eventTime': '12:00:00',
       'estimatedGuests': 50,
-      'specialRequests': _specialRequestsController.text.trim(),
-      'questionnaireResponses': cleanResponses,
+      'guestCount': 50,
+      'specialRequests': _specialRequestsController.text.trim().isEmpty 
+          ? null 
+          : _specialRequestsController.text.trim(),
+      'questionnaireResponses': cleanResponses.isEmpty ? {} : cleanResponses,
       'totalPrice': 0,
-      'notes': _specialRequestsController.text.trim(),
+      'notes': _specialRequestsController.text.trim().isEmpty 
+          ? null 
+          : _specialRequestsController.text.trim(),
+      'status': 'pending'
     };
     
     // Debug logging

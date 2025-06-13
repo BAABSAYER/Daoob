@@ -88,99 +88,122 @@ class _HomeScreenState extends State<HomeScreen> {
     final eventProvider = Provider.of<EventProvider>(context);
     
     final List<Widget> pages = [
-      // Home page content with categories
-      SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              isArabic ? 'مرحبًا، ${user?.name ?? ''}!' : 'Welcome, ${user?.name ?? ''}!',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              isArabic 
-                ? 'ماذا تخطط اليوم؟'
-                : 'What are you planning today?',
-              style: const TextStyle(
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // New Event Request button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6A3DE8),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      // Home page content with improved UI
+      SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6A3DE8), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EventSelectionScreen(),
-                    ),
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.celebration, size: 24),
-                    SizedBox(width: 10),
                     Text(
-                      isArabic ? 'طلب تنظيم حدث جديد' : 'Plan a New Event',
-                      style: TextStyle(
-                        fontSize: 18,
+                      isArabic ? 'مرحبًا، ${user?.name ?? 'صديق'}!' : 'Welcome, ${user?.name ?? 'Friend'}!',
+                      style: const TextStyle(
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isArabic 
+                        ? 'دعنا نخطط لحدثك المثالي'
+                        : 'Let\'s plan your perfect event',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            
-            SizedBox(height: 16),
-            
-            // Message Admin button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              
+              const SizedBox(height: 32),
+              
+              // Action Buttons
+              Container(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6A3DE8),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EventSelectionScreen(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.celebration, size: 28),
+                      SizedBox(width: 12),
+                      Text(
+                        isArabic ? 'طلب تنظيم حدث جديد' : 'Plan a New Event',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                onPressed: () {
-                  _startChatWithAdmin(context);
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.chat, size: 24),
-                    SizedBox(width: 10),
-                    Text(
-                      isArabic ? 'تواصل مع الإدارة' : 'Message Admin',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              Container(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Color(0xFF6A3DE8),
+                    side: BorderSide(color: Color(0xFF6A3DE8), width: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ],
+                  ),
+                  onPressed: () {
+                    _startChatWithAdmin(context);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.support_agent, size: 28),
+                      SizedBox(width: 12),
+                      Text(
+                        isArabic ? 'تواصل مع الدعم' : 'Contact Support',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
             
             SizedBox(height: 24),
             

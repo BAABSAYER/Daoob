@@ -440,6 +440,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Error fetching bookings for admin' });
     }
   });
+
+  // Delete booking/event request (Admin only)
+  app.delete('/api/admin/bookings/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      const bookingId = parseInt(req.params.id);
+      if (isNaN(bookingId)) {
+        return res.status(400).json({ message: 'Invalid booking ID' });
+      }
+      
+      // Check if booking exists
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+      
+      // Delete the booking
+      await storage.deleteBooking(bookingId);
+      
+      res.json({ message: 'Booking deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      res.status(500).json({ message: 'Error deleting booking' });
+    }
+  });
   
   // Admin Users Management Endpoints
   
@@ -717,21 +750,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         if (data.type === 'message' && userId !== null) {
-          // Store message in database
-          const savedMessage = await storage.createMessage({
-            senderId: userId, // Use authenticated user ID as sender
+          // Store message in database with correct sender/receiver mapping
+          const messageData = {
+            senderId: data.sender, // Use the sender from the message data
             receiverId: data.receiver,
             content: data.content,
             read: false
-          });
+          };
           
-          // Forward message to recipient if online
+          const savedMessage = await storage.createMessage(messageData);
+          
+          // Broadcast message to both sender and receiver
+          const senderConnection = connections.find(conn => conn.userId === data.sender);
           const recipientConnection = connections.find(conn => conn.userId === data.receiver);
+          
+          const messagePayload = {
+            type: 'message',
+            id: savedMessage.id,
+            sender: data.sender,
+            receiver: data.receiver,
+            content: data.content,
+            timestamp: savedMessage.createdAt
+          };
+          
+          // Send to recipient
           if (recipientConnection && recipientConnection.socket.readyState === WebSocket.OPEN) {
-            recipientConnection.socket.send(JSON.stringify({
-              ...data,
-              id: savedMessage.id,
-              timestamp: savedMessage.createdAt
+            recipientConnection.socket.send(JSON.stringify(messagePayload));
+          }
+          
+          // Send confirmation back to sender (but not the same message)
+          if (senderConnection && senderConnection.socket.readyState === WebSocket.OPEN) {
+            senderConnection.socket.send(JSON.stringify({
+              ...messagePayload,
+              type: 'message_sent'
             }));
           }
         }

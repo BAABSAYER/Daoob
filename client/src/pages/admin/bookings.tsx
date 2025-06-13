@@ -123,6 +123,26 @@ export default function AdminBookings() {
     },
   });
 
+  const deleteBookingMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/admin/bookings/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Booking deleted",
+        description: "The event request has been removed",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to delete booking",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const getPendingCount = () => {
     return bookings.filter(b => b.status === BOOKING_STATUS.PENDING).length;
   };

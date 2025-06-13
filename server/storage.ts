@@ -74,6 +74,7 @@ export interface IStorage {
   getAllBookings(): Promise<Booking[]>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: number, booking: Partial<Booking>): Promise<Booking | undefined>;
+  deleteBooking(id: number): Promise<void>;
   
   // Messages
   getMessage(id: number): Promise<Message | undefined>;
@@ -301,6 +302,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.id, id))
       .returning();
     return booking;
+  }
+
+  async deleteBooking(id: number): Promise<void> {
+    try {
+      await db.delete(bookings).where(eq(bookings.id, id));
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      throw error;
+    }
   }
 
   // Messages
