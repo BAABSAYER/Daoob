@@ -292,6 +292,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Event request and quotation functionality has been moved to enhanced bookings table
   
+  // Get all users (admin only)
+  app.get('/api/users', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Only admins can view all users
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      const users = await storage.getAllUsers();
+      // Remove passwords from response
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Error fetching users' });
+    }
+  });
+  
   // Users map for admin dashboard
   app.get('/api/users/map', async (req, res) => {
     // Only admins can access user map
