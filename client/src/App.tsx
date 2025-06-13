@@ -17,8 +17,17 @@ import AdminUsersList from "./pages/admin/users-list";
 import AdminEvents from "./pages/admin/events";
 
 // Client Pages
+import ClientHome from "./pages/client-home";
 import Messages from "./pages/messages";
 import Chat from "./pages/chat";
+import Bookings from "./pages/bookings";
+import Dashboard from "./pages/dashboard";
+
+// Vendor Pages
+import VendorDashboard from "./pages/vendor/dashboard";
+import VendorBookings from "./pages/vendor/bookings";
+import VendorServices from "./pages/vendor/services";
+import VendorProfile from "./pages/vendor/profile";
 
 // Shared Pages
 import Profile from "./pages/profile";
@@ -37,10 +46,21 @@ function Router() {
       <ProtectedRoute path="/messages" component={Messages} />
       <ProtectedRoute path="/chat/:userId" component={Chat} />
       
+      {/* Default Route - Role-based redirect */}
+      <ProtectedRoute path="/" component={Dashboard} />
+      
+      {/* Client Routes */}
+      <ProtectedRoute path="/client/home" component={ClientHome} />
+      <ProtectedRoute path="/bookings" component={Bookings} />
+      <ProtectedRoute path="/profile" component={Profile} />
+      
+      {/* Vendor Routes */}
+      <ProtectedRoute path="/vendor/dashboard" component={VendorDashboard} />
+      <ProtectedRoute path="/vendor/bookings" component={VendorBookings} />
+      <ProtectedRoute path="/vendor/services" component={VendorServices} />
+      <ProtectedRoute path="/vendor/profile" component={VendorProfile} />
+      
       {/* Admin Dashboard Routes */}
-      <Route path="/">
-        <Redirect to="/admin" />
-      </Route>
       <AdminRoute path="/admin" component={AdminDashboard} />
       <AdminRoute path="/admin/bookings" component={AdminBookings} />
       <AdminRoute path="/admin/events" component={AdminEvents} />
