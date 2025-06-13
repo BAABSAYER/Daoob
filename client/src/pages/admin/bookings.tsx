@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { 
   Dialog, 
   DialogContent, 
@@ -37,6 +40,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Booking, Vendor, BOOKING_STATUS, EVENT_TYPES } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { DollarSign, Calendar, FileText } from "lucide-react";
 
 // Extend Booking type to include vendor info
 type BookingWithDetails = Booking & {
@@ -48,7 +52,19 @@ export default function AdminBookings() {
   const { toast } = useToast();
   const [selectedBooking, setSelectedBooking] = useState<BookingWithDetails | null>(null);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
+  const [isCreatingQuotation, setIsCreatingQuotation] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  
+  // Quotation form state
+  const [quotationForm, setQuotationForm] = useState({
+    totalPrice: "",
+    quotationNotes: "",
+    quotationValidUntil: "",
+    quotationDetails: {
+      items: [{ service: "", price: "", description: "" }],
+      breakdown: ""
+    }
+  });
 
   // Fetch all bookings
   const { data: bookings = [], isLoading: isLoadingBookings } = useQuery<BookingWithDetails[]>({
@@ -79,6 +95,34 @@ export default function AdminBookings() {
     },
   });
 
+  // Create quotation mutation
+  const createQuotationMutation = useMutation({
+    mutationFn: async ({ id, quotationData }: { id: number; quotationData: any }) => {
+      const res = await apiRequest("PATCH", `/api/bookings/${id}`, {
+        ...quotationData,
+        status: BOOKING_STATUS.QUOTATION_SENT
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Quotation created",
+        description: "The quotation has been sent to the client",
+      });
+      setIsCreatingQuotation(false);
+      setSelectedBooking(null);
+      resetQuotationForm();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to create quotation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const getPendingCount = () => {
     return bookings.filter(b => b.status === BOOKING_STATUS.PENDING).length;
   };
@@ -91,6 +135,18 @@ export default function AdminBookings() {
     return bookings.filter(b => b.status === BOOKING_STATUS.CANCELLED).length;
   };
 
+  const resetQuotationForm = () => {
+    setQuotationForm({
+      totalPrice: "",
+      quotationNotes: "",
+      quotationValidUntil: "",
+      quotationDetails: {
+        items: [{ service: "", price: "", description: "" }],
+        breakdown: ""
+      }
+    });
+  };
+
   const handleStatusChange = (status: string) => {
     if (selectedBooking) {
       updateBookingStatusMutation.mutate({
@@ -98,6 +154,60 @@ export default function AdminBookings() {
         status,
       });
     }
+  };
+
+  const handleCreateQuotation = (booking: BookingWithDetails) => {
+    setSelectedBooking(booking);
+    setIsCreatingQuotation(true);
+    resetQuotationForm();
+  };
+
+  const handleSubmitQuotation = () => {
+    if (!selectedBooking) return;
+
+    const quotationData = {
+      totalPrice: parseFloat(quotationForm.totalPrice),
+      quotationNotes: quotationForm.quotationNotes,
+      quotationValidUntil: quotationForm.quotationValidUntil ? new Date(quotationForm.quotationValidUntil) : null,
+      quotationDetails: quotationForm.quotationDetails
+    };
+
+    createQuotationMutation.mutate({
+      id: selectedBooking.id,
+      quotationData
+    });
+  };
+
+  const addQuotationItem = () => {
+    setQuotationForm(prev => ({
+      ...prev,
+      quotationDetails: {
+        ...prev.quotationDetails,
+        items: [...prev.quotationDetails.items, { service: "", price: "", description: "" }]
+      }
+    }));
+  };
+
+  const removeQuotationItem = (index: number) => {
+    setQuotationForm(prev => ({
+      ...prev,
+      quotationDetails: {
+        ...prev.quotationDetails,
+        items: prev.quotationDetails.items.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const updateQuotationItem = (index: number, field: string, value: string) => {
+    setQuotationForm(prev => ({
+      ...prev,
+      quotationDetails: {
+        ...prev.quotationDetails,
+        items: prev.quotationDetails.items.map((item, i) => 
+          i === index ? { ...item, [field]: value } : item
+        )
+      }
+    }));
   };
 
   const getStatusBadge = (status: string) => {
@@ -206,20 +316,46 @@ export default function AdminBookings() {
                     <TableCell>#{booking.id}</TableCell>
                     <TableCell>{booking.clientName || `Client #${booking.clientId}`}</TableCell>
                     <TableCell>{booking.vendor?.businessName || `Vendor #${booking.vendorId}`}</TableCell>
-                    <TableCell>{EVENT_TYPES[booking.eventType as keyof typeof EVENT_TYPES] || booking.eventType}</TableCell>
+                    <TableCell>{EVENT_TYPES[booking.eventTypeId as keyof typeof EVENT_TYPES] || `Event Type #${booking.eventTypeId}`}</TableCell>
                     <TableCell>{new Date(booking.eventDate).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(booking.status)}</TableCell>
                     <TableCell>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setIsViewingDetails(true);
-                        }}
-                      >
-                        View Details
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setIsViewingDetails(true);
+                          }}
+                        >
+                          View Details
+                        </Button>
+                        {booking.status === BOOKING_STATUS.PENDING && (
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => handleCreateQuotation(booking)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            Create Quote
+                          </Button>
+                        )}
+                        {booking.status === BOOKING_STATUS.QUOTATION_SENT && booking.totalPrice && (
+                          <Button 
+                            variant="secondary" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBooking(booking);
+                              setIsViewingDetails(true);
+                            }}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            View Quote
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
