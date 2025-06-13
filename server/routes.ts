@@ -926,7 +926,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Not authorized to update this booking' });
       }
       
-      const updatedBooking = await storage.updateBooking(id, req.body);
+      // Handle timestamp fields properly
+      const updateData = { ...req.body };
+      console.log('Update data before processing:', JSON.stringify(updateData, null, 2));
+      
+      // Only include fields that should be updated, excluding timestamp conversion issues
+      const allowedFields = ['status', 'totalPrice', 'quotationNotes', 'quotationDetails', 'specialRequests', 'notes', 'guestCount', 'eventTime', 'location', 'estimatedGuests', 'budget'];
+      const filteredData = {};
+      
+      allowedFields.forEach(field => {
+        if (updateData[field] !== undefined) {
+          filteredData[field] = updateData[field];
+        }
+      });
+      
+      console.log('Filtered update data:', JSON.stringify(filteredData, null, 2));
+      
+      const updatedBooking = await storage.updateBooking(id, filteredData);
       res.json(updatedBooking);
     } catch (error) {
       console.error('Booking update error:', error);
