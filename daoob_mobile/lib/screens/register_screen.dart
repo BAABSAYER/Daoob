@@ -146,6 +146,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Username field
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'اسم المستخدم' : 'Username',
+                    hintText: isArabic ? 'أدخل اسم المستخدم' : 'Enter your username',
+                    prefixIcon: const Icon(Icons.account_circle),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return isArabic ? 'يرجى إدخال اسم المستخدم' : 'Please enter your username';
+                    }
+                    if (value.length < 3) {
+                      return isArabic ? 'اسم المستخدم قصير جداً' : 'Username too short';
+                    }
+                    return null;
+                  },
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+
                 // Email field
                 TextFormField(
                   controller: _emailController,
