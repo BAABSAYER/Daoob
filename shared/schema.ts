@@ -164,7 +164,7 @@ export const questionnaireItems = pgTable("questionnaire_items", {
   id: serial("id").primaryKey(),
   eventTypeId: integer("event_type_id").notNull().references(() => eventTypes.id),
   questionText: text("question_text").notNull(),
-  questionType: text("question_type").notNull(), // text, single_choice, multiple_choice, number, date
+  questionType: text("question_type").notNull(), // text, textarea, single_choice, multiple_choice, checkbox, number, date
   options: jsonb("options"), // For choice questions, array of options
   required: boolean("required").default(false),
   displayOrder: integer("display_order"),

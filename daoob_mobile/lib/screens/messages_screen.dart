@@ -37,6 +37,42 @@ class _MessagesScreenState extends State<MessagesScreen> {
     super.dispose();
   }
 
+  void _startChatWithAdmin(BuildContext context, bool isArabic) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    try {
+      // Get admin user ID (assuming admin has ID 7 based on logs)
+      const int adminUserId = 7;
+      
+      // Create ChatUser object for admin
+      final adminUser = ChatUser(
+        id: adminUserId,
+        name: isArabic ? 'الإدارة' : 'Admin',
+        email: 'admin@daoob.com',
+        userType: 'admin',
+        unreadCount: 0,
+      );
+      
+      // Navigate to chat screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            userId: adminUser.id,
+            userName: adminUser.name,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? 'خطأ في فتح المحادثة' : 'Error opening chat'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
@@ -115,13 +151,39 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             SizedBox(height: 8),
                             Text(
                               isArabic 
-                                  ? 'ابدأ محادثة جديدة من خلال إرسال طلب حدث'
-                                  : 'Start a new conversation by submitting an event request',
+                                  ? 'ابدأ محادثة جديدة مع الإدارة'
+                                  : 'Start a new conversation with admin',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
                               ),
                               textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 24),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                              ),
+                              onPressed: () => _startChatWithAdmin(context, isArabic),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.chat, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    isArabic ? 'تواصل مع الإدارة' : 'Message Admin',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),

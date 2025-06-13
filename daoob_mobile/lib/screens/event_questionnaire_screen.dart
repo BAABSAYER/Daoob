@@ -86,27 +86,38 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
   Future<void> _submitEventRequest() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     
+    // Validate required fields
+    if (_eventDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select an event date'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     // Prepare the request data with correct field names for backend
     // Convert responses to JSON-serializable format
-    final Map<String, dynamic> serializedResponses = {};
+    final Map<String, String> serializedResponses = {};
     _responses.forEach((key, value) {
       if (value is List) {
         // For multiple choice questions, join with commas
-        serializedResponses[key.toString()] = (value as List<String>).join(', ');
-      } else {
-        serializedResponses[key.toString()] = value?.toString() ?? '';
+        serializedResponses[key.toString()] = (value as List).map((e) => e.toString()).join(', ');
+      } else if (value != null) {
+        serializedResponses[key.toString()] = value.toString();
       }
     });
     
     final requestData = {
       'eventTypeId': widget.eventType.id,
-      'eventDate': _eventDate?.toIso8601String(),
-      'eventTime': '00:00', // Default time
-      'estimatedGuests': 0, // Default guest count
-      'specialRequests': _specialRequestsController.text,
+      'eventDate': _eventDate!.toIso8601String(),
+      'eventTime': '00:00',
+      'estimatedGuests': 0,
+      'specialRequests': _specialRequestsController.text.trim(),
       'questionnaireResponses': serializedResponses,
-      'totalPrice': _budget ?? 0,
-      'notes': _specialRequestsController.text,
+      'totalPrice': _budget ?? 0.0,
+      'notes': _specialRequestsController.text.trim(),
     };
     
     try {
@@ -174,6 +185,24 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
           } : null,
         );
         
+      case 'textarea':
+        return TextFormField(
+          decoration: InputDecoration(
+            labelText: question.questionText,
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 4,
+          onChanged: (value) {
+            _responses[question.id] = value;
+          },
+          validator: question.isRequired ? (value) {
+            if (value == null || value.isEmpty) {
+              return 'This field is required';
+            }
+            return null;
+          } : null,
+        );
+        
       case 'number':
         return TextFormField(
           decoration: InputDecoration(
@@ -216,6 +245,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
         );
         
       case 'multiple_choice':
+      case 'checkbox':
         return _buildMultipleChoiceWidget(question);
         
       case 'date':
