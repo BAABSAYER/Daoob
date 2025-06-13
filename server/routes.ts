@@ -796,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingData = {
           clientId: req.user.id,
           vendorId: req.body.vendorId,
-          eventType: req.body.eventType,
+          eventTypeId: req.body.eventTypeId,
           eventDate: new Date(req.body.eventDate),
           guestCount: req.body.guestCount || 0,
           specialRequests: req.body.specialRequests || "",

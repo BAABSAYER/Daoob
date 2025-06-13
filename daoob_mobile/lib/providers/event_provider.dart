@@ -168,8 +168,8 @@ class EventProvider with ChangeNotifier {
     }
   }
 
-  // Submit a new event request
-  Future<EventRequest> submitEventRequest(
+  // Submit a new booking (updated to use bookings-centric workflow)
+  Future<Map<String, dynamic>> submitEventRequest(
     Map<String, dynamic> requestData,
     AuthService authService,
   ) async {
@@ -184,32 +184,42 @@ class EventProvider with ChangeNotifier {
         requestData['clientId'] = authService.user!.id;
       }
       
+      // Transform the request data to match the new booking structure
+      final bookingData = {
+        'clientId': requestData['clientId'],
+        'eventDate': requestData['eventDate'],
+        'eventTime': requestData['eventTime'] ?? '',
+        'estimatedGuests': requestData['estimatedGuests'] ?? 50,
+        'status': 'pending',
+        'eventTypeId': null, // Will be determined by the backend based on category
+        'questionnaireResponses': requestData['answers'] ?? {},
+        'notes': 'Submitted from mobile app for category: ${requestData['categoryId']}',
+      };
+      
       // For debugging, log what we're sending
-      print('Submitting event request: ${json.encode(requestData)}');
+      print('Submitting booking: ${json.encode(bookingData)}');
       
       // Use the ApiService to ensure cookies are properly handled
       final response = await authService.apiService.post(
-        '${ApiConfig.baseUrl}/api/event-requests',
-        requestData,
+        '${ApiConfig.baseUrl}/api/bookings',
+        bookingData,
       );
 
       if (response.statusCode == 201) {
         final dynamic data = json.decode(response.body);
-        final eventRequest = EventRequest.fromJson(data);
-        _eventRequests.add(eventRequest);
         notifyListeners();
-        return eventRequest;
+        return data;
       } else if (response.statusCode == 401) {
         // Authentication error
         throw Exception('Your session has expired. Please log in again.');
       } else {
         final errorMessage = response.body.isNotEmpty 
-            ? 'Failed to create event request: ${response.body}'
-            : 'Failed to create event request: ${response.statusCode}';
+            ? 'Failed to create booking: ${response.body}'
+            : 'Failed to create booking: ${response.statusCode}';
         throw Exception(errorMessage);
       }
     } catch (e) {
-      throw Exception('Failed to create event request: $e');
+      throw Exception('Failed to create booking: $e');
     }
   }
 
