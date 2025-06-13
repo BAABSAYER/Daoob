@@ -89,18 +89,24 @@ export const services = pgTable("services", {
   isPackage: boolean("is_package").default(false),
 });
 
-// Bookings table
+// Bookings table (main flow - replaces event requests)
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
   clientId: integer("client_id").notNull().references(() => users.id),
-  vendorId: integer("vendor_id").notNull().references(() => vendors.id),
+  eventTypeId: integer("event_type_id").notNull().references(() => eventTypes.id),
+  vendorId: integer("vendor_id").references(() => vendors.id),
   serviceId: integer("service_id").references(() => services.id),
   status: text("status").notNull().default(BOOKING_STATUS.PENDING),
-  eventType: text("event_type").notNull(),
   eventDate: timestamp("event_date").notNull(),
+  location: text("location"),
   guestCount: integer("guest_count"),
+  budget: doublePrecision("budget"),
   specialRequests: text("special_requests"),
+  questionnaireResponses: jsonb("questionnaire_responses"),
   totalPrice: doublePrecision("total_price"),
+  quotationDetails: jsonb("quotation_details"),
+  quotationNotes: text("quotation_notes"),
+  quotationValidUntil: timestamp("quotation_valid_until"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -162,33 +168,7 @@ export const questionnaireItems = pgTable("questionnaire_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Event Requests table (client requests for events)
-export const eventRequests = pgTable("event_requests", {
-  id: serial("id").primaryKey(),
-  clientId: integer("client_id").notNull().references(() => users.id),
-  eventTypeId: integer("event_type_id").notNull().references(() => eventTypes.id),
-  status: text("status").notNull().default(BOOKING_STATUS.PENDING),
-  responses: jsonb("responses").notNull(), // JSON of question IDs and answers
-  eventDate: timestamp("event_date"),
-  budget: doublePrecision("budget"),
-  specialRequests: text("special_requests"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Quotations table (admin responses to event requests)
-export const quotations = pgTable("quotations", {
-  id: serial("id").primaryKey(),
-  eventRequestId: integer("event_request_id").notNull().references(() => eventRequests.id),
-  adminId: integer("admin_id").notNull().references(() => users.id),
-  totalPrice: doublePrecision("total_price").notNull(),
-  details: jsonb("details").notNull(), // Breakdown of services and costs
-  notes: text("notes"),
-  expiryDate: timestamp("expiry_date"),
-  status: text("status").notNull().default(BOOKING_STATUS.QUOTATION_SENT),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+// Removed event requests and quotations tables - now using enhanced bookings table
 
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -221,11 +201,9 @@ export const insertMessageSchema = createInsertSchema(messages);
 export const insertReviewSchema = createInsertSchema(reviews);
 export const insertAdminPermissionSchema = createInsertSchema(adminPermissions);
 
-// New schemas for the event flow
+// Event management schemas
 export const insertEventTypeSchema = createInsertSchema(eventTypes);
 export const insertQuestionnaireItemSchema = createInsertSchema(questionnaireItems);
-export const insertEventRequestSchema = createInsertSchema(eventRequests);
-export const insertQuotationSchema = createInsertSchema(quotations);
 
 // Relation definitions
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -236,10 +214,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   reviews: many(reviews, { relationName: "client" }),
   permissions: many(adminPermissions, { relationName: "user_permissions" }),
   grantedPermissions: many(adminPermissions, { relationName: "grantor" }),
-  eventRequests: many(eventRequests),
   createdEventTypes: many(eventTypes),
   createdQuestionnaireItems: many(questionnaireItems),
-  createdQuotations: many(quotations)
 }));
 
 export const vendorsRelations = relations(vendors, ({ one, many }) => ({
@@ -256,6 +232,7 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
 
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   client: one(users, { fields: [bookings.clientId], references: [users.id] }),
+  eventType: one(eventTypes, { fields: [bookings.eventTypeId], references: [eventTypes.id] }),
   vendor: one(vendors, { fields: [bookings.vendorId], references: [vendors.id] }),
   service: one(services, { fields: [bookings.serviceId], references: [services.id] }),
   reviews: many(reviews)
@@ -272,27 +249,16 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   booking: one(bookings, { fields: [reviews.bookingId], references: [bookings.id] })
 }));
 
-// Relations for new tables
+// Event management relations
 export const eventTypesRelations = relations(eventTypes, ({ one, many }) => ({
   creator: one(users, { fields: [eventTypes.createdBy], references: [users.id] }),
   questionnaireItems: many(questionnaireItems),
-  eventRequests: many(eventRequests)
+  bookings: many(bookings)
 }));
 
 export const questionnaireItemsRelations = relations(questionnaireItems, ({ one }) => ({
   eventType: one(eventTypes, { fields: [questionnaireItems.eventTypeId], references: [eventTypes.id] }),
   creator: one(users, { fields: [questionnaireItems.createdBy], references: [users.id] })
-}));
-
-export const eventRequestsRelations = relations(eventRequests, ({ one, many }) => ({
-  client: one(users, { fields: [eventRequests.clientId], references: [users.id] }),
-  eventType: one(eventTypes, { fields: [eventRequests.eventTypeId], references: [eventTypes.id] }),
-  quotations: many(quotations)
-}));
-
-export const quotationsRelations = relations(quotations, ({ one }) => ({
-  eventRequest: one(eventRequests, { fields: [quotations.eventRequestId], references: [eventRequests.id] }),
-  admin: one(users, { fields: [quotations.adminId], references: [users.id] })
 }));
 
 // Type exports
@@ -324,8 +290,4 @@ export type InsertEventType = z.infer<typeof insertEventTypeSchema>;
 export type QuestionnaireItem = typeof questionnaireItems.$inferSelect;
 export type InsertQuestionnaireItem = z.infer<typeof insertQuestionnaireItemSchema>;
 
-export type EventRequest = typeof eventRequests.$inferSelect;
-export type InsertEventRequest = z.infer<typeof insertEventRequestSchema>;
-
-export type Quotation = typeof quotations.$inferSelect;
-export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
+// Removed EventRequest and Quotation types - functionality moved to enhanced bookings table

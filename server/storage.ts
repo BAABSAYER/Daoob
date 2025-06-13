@@ -1,11 +1,11 @@
 import { db } from "./db";
 import { 
   users, vendors, services, bookings, messages, reviews, adminPermissions,
-  eventTypes, questionnaireItems, eventRequests, quotations,
+  eventTypes, questionnaireItems,
   User, Vendor, Service, Booking, Message, Review, AdminPermission,
-  EventType, QuestionnaireItem, EventRequest, Quotation,
+  EventType, QuestionnaireItem,
   InsertUser, InsertVendor, InsertService, InsertBooking, InsertMessage, InsertReview, InsertAdminPermission,
-  InsertEventType, InsertQuestionnaireItem, InsertEventRequest, InsertQuotation,
+  InsertEventType, InsertQuestionnaireItem,
   BOOKING_STATUS, USER_TYPES, ADMIN_PERMISSIONS
 } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql } from "drizzle-orm";
