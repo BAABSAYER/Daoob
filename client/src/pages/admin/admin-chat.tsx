@@ -19,7 +19,7 @@ export default function AdminChat() {
   return (
     <AdminLayout title="Chat">
       <div className="h-full">
-        <ChatWindow userId={userIdNumber} />
+        <ChatWindow recipientId={userIdNumber} />
       </div>
     </AdminLayout>
   );
