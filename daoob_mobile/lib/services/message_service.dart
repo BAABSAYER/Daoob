@@ -7,6 +7,7 @@ import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:daoob_mobile/config/api_config.dart';
+import 'package:daoob_mobile/models/chat_user.dart';
 
 class Message {
   final int id;
@@ -62,30 +63,6 @@ class Message {
       'receiverAvatar': receiverAvatar,
     };
   }
-}
-
-class ChatUser {
-  final int id;
-  final String name;
-  final String email;
-  final String? avatar;
-  final String userType;
-  final String? lastMessage;
-  final DateTime? lastMessageTime;
-  final bool hasUnreadMessages;
-  final int unreadCount;
-  
-  ChatUser({
-    required this.id,
-    required this.name,
-    required this.email,
-    this.avatar,
-    required this.userType,
-    this.lastMessage,
-    this.lastMessageTime,
-    this.hasUnreadMessages = false,
-    this.unreadCount = 0,
-  });
 }
 
 class MessageService extends ChangeNotifier {
