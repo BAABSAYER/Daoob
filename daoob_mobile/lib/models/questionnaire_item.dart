@@ -12,6 +12,7 @@ class QuestionnaireItem {
   bool get required => isRequired;
   int get displayOrder => orderIndex;
   String get questionType => answerType;
+  String get type => answerType;
   
   const QuestionnaireItem({
     required this.id,
