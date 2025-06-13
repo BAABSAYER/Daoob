@@ -686,6 +686,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Health check endpoint for Docker
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+
   const httpServer = createServer(app);
   
   // Set up WebSocket server
