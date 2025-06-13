@@ -1447,64 +1447,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get conversations (distinct users with whom the current user has exchanged messages)
+  // Get conversations with proper cross-platform routing
   app.get('/api/conversations', async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
     
     try {
-      // Get all users the current user has exchanged messages with
-      const allMessages = await db.select().from(messages).where(
-        or(
-          eq(messages.senderId, req.user.id),
-          eq(messages.receiverId, req.user.id)
-        )
-      );
+      let conversations = [];
       
-      // Get unique user IDs the current user has conversations with
-      const conversationUserIds = Array.from(
-        new Set(
-          allMessages.map(message => 
-            message.senderId === req.user.id ? message.receiverId : message.senderId
-          )
-        )
-      );
-      
-      // Get user details and last message for each conversation
-      const conversations = await Promise.all(
-        conversationUserIds.map(async userId => {
-          const user = await storage.getUser(userId);
-          
-          if (!user) return null;
-          
-          // Get last message between users
-          const messages = await storage.getMessagesBetweenUsers(req.user.id, userId);
-          const lastMessage = messages.length > 0 
-            ? messages[messages.length - 1] 
-            : null;
-          
-          // Get unread count
-          const unreadCount = messages.filter(
-            m => m.receiverId === req.user.id && !m.read
-          ).length;
-          
-          return {
-            userId: user.id,
-            username: user.username,
-            fullName: user.fullName,
-            userType: user.userType,
-            avatarUrl: user.avatarUrl,
-            lastMessage: lastMessage ? {
-              id: lastMessage.id,
-              content: lastMessage.content,
-              createdAt: lastMessage.createdAt,
-              senderId: lastMessage.senderId
-            } : null,
-            unreadCount
-          };
-        })
-      );
+      if (req.user.userType === 'admin') {
+        // Admin sees all mobile users (clients) who have submitted bookings
+        const allBookings = await storage.getAllBookings();
+        const clientIds = [...new Set(allBookings.map(b => b.clientId))];
+        
+        conversations = await Promise.all(
+          clientIds.map(async clientId => {
+            const client = await storage.getUser(clientId);
+            if (!client || client.userType !== 'client') return null;
+            
+            // Get messages between admin and this client
+            const messagesBetween = await storage.getMessagesBetweenUsers(req.user.id, clientId);
+            const lastMessage = messagesBetween.length > 0 
+              ? messagesBetween[messagesBetween.length - 1] 
+              : null;
+            
+            const unreadCount = messagesBetween.filter(
+              m => m.receiverId === req.user.id && !m.read
+            ).length;
+            
+            return {
+              userId: client.id,
+              username: client.username,
+              fullName: client.fullName || client.username,
+              userType: client.userType,
+              avatarUrl: client.avatarUrl,
+              lastMessage: lastMessage ? {
+                id: lastMessage.id,
+                content: lastMessage.content,
+                createdAt: lastMessage.createdAt,
+                senderId: lastMessage.senderId
+              } : null,
+              unreadCount
+            };
+          })
+        );
+      } else {
+        // Mobile users see admin conversations
+        const adminUsers = await storage.getAdminUsers();
+        
+        conversations = await Promise.all(
+          adminUsers.map(async admin => {
+            const messagesBetween = await storage.getMessagesBetweenUsers(req.user.id, admin.id);
+            const lastMessage = messagesBetween.length > 0 
+              ? messagesBetween[messagesBetween.length - 1] 
+              : null;
+            
+            const unreadCount = messagesBetween.filter(
+              m => m.receiverId === req.user.id && !m.read
+            ).length;
+            
+            return {
+              userId: admin.id,
+              username: admin.username,
+              fullName: admin.fullName || 'Admin',
+              userType: admin.userType,
+              avatarUrl: admin.avatarUrl,
+              lastMessage: lastMessage ? {
+                id: lastMessage.id,
+                content: lastMessage.content,
+                createdAt: lastMessage.createdAt,
+                senderId: lastMessage.senderId
+              } : null,
+              unreadCount
+            };
+          })
+        );
+      }
       
       // Remove null entries and sort by last message time
       const validConversations = conversations

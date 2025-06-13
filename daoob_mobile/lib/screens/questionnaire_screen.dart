@@ -52,14 +52,26 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     });
     
     try {
-      // Since questionnaire items endpoint might not be working due to routing issues,
-      // we'll create a streamlined flow where users can proceed without questionnaire items
-      // and provide responses in a simple format that works with the current backend
+      final authService = Provider.of<AuthService>(context, listen: false);
       
-      setState(() {
-        _questions = []; // No specific questionnaire items - simplified flow
-        _isLoading = false;
-      });
+      final response = await authService.apiService.get(
+        '${ApiConfig.baseUrl}/api/event-types/${widget.eventType.id}/questionnaire-items'
+      );
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        final questions = data.map((item) => QuestionnaireItem.fromJson(item)).toList();
+        
+        setState(() {
+          _questions = questions;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load questionnaire: ${response.statusCode}';
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         _error = 'Network error: $e';
