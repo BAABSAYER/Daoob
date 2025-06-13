@@ -55,7 +55,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       final authService = Provider.of<AuthService>(context, listen: false);
       
       final response = await authService.apiService.get(
-        '${ApiConfig.apiUrl}/questionnaire-items/${widget.eventType.id}',
+        '${ApiConfig.apiUrl}/event-types/${widget.eventType.id}/questionnaire-items',
       );
       
       if (response.statusCode == 200) {
@@ -86,14 +86,16 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
   Future<void> _submitEventRequest() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     
-    // Prepare the request data
+    // Prepare the request data with correct field names for backend
     final requestData = {
-      'event_type_id': widget.eventType.id,
-      'event_date': _eventDate?.toIso8601String(),
-      'budget': _budget,
-      'special_requests': _specialRequestsController.text,
-      'questionnaire_responses': _responses,
-      'status': 'pending',
+      'eventTypeId': widget.eventType.id,
+      'eventDate': _eventDate?.toIso8601String(),
+      'eventTime': '00:00', // Default time
+      'estimatedGuests': 0, // Default guest count
+      'specialRequests': _specialRequestsController.text,
+      'questionnaireResponses': _responses,
+      'totalPrice': _budget ?? 0,
+      'notes': _specialRequestsController.text,
     };
     
     try {

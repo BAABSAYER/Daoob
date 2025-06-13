@@ -229,7 +229,7 @@ class EventProvider with ChangeNotifier {
   // Helper method to get event type ID for a category
   Future<int?> _getEventTypeIdForCategory(String categoryId, AuthService authService) async {
     try {
-      final response = await authService.apiService.get('${ApiConfig.baseUrl}/api/event-types');
+      final response = await authService.apiService.get('${ApiConfig.baseUrl}/api/event-types/active');
       
       if (response.statusCode == 200) {
         final List<dynamic> eventTypes = json.decode(response.body);
