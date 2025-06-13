@@ -12,6 +12,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -50,11 +52,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final success = await authService.register(
-        _emailController.text.trim(), // username (using email as username)
-        _emailController.text.trim(), // email
-        _passwordController.text,     // password
-        _nameController.text.trim(),  // fullName
-        _selectedUserType,            // userType
+        _usernameController.text.trim(), // username
+        _emailController.text.trim(),    // email
+        _passwordController.text,        // password
+        _nameController.text.trim(),     // fullName
+        _selectedUserType,               // userType
       );
 
       if (success) {
