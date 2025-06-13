@@ -6,8 +6,7 @@ import { db } from "./db";
 import { setupAuth } from "./auth";
 import { 
   InsertVendor, InsertBooking, InsertMessage, InsertEventType, InsertQuestionnaireItem, 
-  InsertEventRequest, InsertQuotation, BOOKING_STATUS, USER_TYPES, messages,
-  eventRequests, quotations
+  BOOKING_STATUS, USER_TYPES, messages
 } from "@shared/schema";
 import { z } from "zod";
 import { eq, or, and } from "drizzle-orm";

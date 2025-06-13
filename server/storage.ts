@@ -106,19 +106,7 @@ export interface IStorage {
   updateQuestionnaireItem(id: number, questionnaireItem: Partial<QuestionnaireItem>): Promise<QuestionnaireItem | undefined>;
   deleteQuestionnaireItem(id: number): Promise<void>;
   
-  // Event Requests (Client)
-  getEventRequest(id: number): Promise<EventRequest | undefined>;
-  getEventRequestsByClient(clientId: number): Promise<EventRequest[]>;
-  getEventRequestsByEventType(eventTypeId: number): Promise<EventRequest[]>;
-  getAllEventRequests(): Promise<EventRequest[]>;
-  createEventRequest(eventRequest: InsertEventRequest): Promise<EventRequest>;
-  updateEventRequest(id: number, eventRequest: Partial<EventRequest>): Promise<EventRequest | undefined>;
-  
-  // Quotations (Admin)
-  getQuotation(id: number): Promise<Quotation | undefined>;
-  getQuotationsByEventRequest(eventRequestId: number): Promise<Quotation[]>;
-  createQuotation(quotation: InsertQuotation): Promise<Quotation>;
-  updateQuotation(id: number, quotation: Partial<Quotation>): Promise<Quotation | undefined>;
+  // Enhanced bookings now handle the complete event flow (requests + quotations)
 }
 
 export class DatabaseStorage implements IStorage {
@@ -262,8 +250,7 @@ export class DatabaseStorage implements IStorage {
       
       // Ensure all required fields are present
       if (!insertBooking.clientId) throw new Error("clientId is required");
-      if (!insertBooking.vendorId) throw new Error("vendorId is required");
-      if (!insertBooking.eventType) throw new Error("eventType is required");
+      if (!insertBooking.eventTypeId) throw new Error("eventTypeId is required");
       if (!insertBooking.eventDate) throw new Error("eventDate is required");
       
       // Format eventDate properly if it's a string
@@ -525,79 +512,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(questionnaireItems).where(eq(questionnaireItems.id, id));
   }
 
-  // Event Requests methods
-  async getEventRequest(id: number): Promise<EventRequest | undefined> {
-    const [request] = await db.select().from(eventRequests).where(eq(eventRequests.id, id));
-    return request;
-  }
-
-  async getEventRequestsByClient(clientId: number): Promise<EventRequest[]> {
-    return db
-      .select()
-      .from(eventRequests)
-      .where(eq(eventRequests.clientId, clientId))
-      .orderBy(desc(eventRequests.createdAt));
-  }
-
-  async getEventRequestsByEventType(eventTypeId: number): Promise<EventRequest[]> {
-    return db
-      .select()
-      .from(eventRequests)
-      .where(eq(eventRequests.eventTypeId, eventTypeId))
-      .orderBy(desc(eventRequests.createdAt));
-  }
-
-  async getAllEventRequests(): Promise<EventRequest[]> {
-    return db.select().from(eventRequests).orderBy(desc(eventRequests.createdAt));
-  }
-
-  async createEventRequest(requestData: InsertEventRequest): Promise<EventRequest> {
-    // Ensure eventDate is a proper Date object or null
-    const data = {
-      ...requestData,
-      eventDate: requestData.eventDate ? new Date(requestData.eventDate as any) : null
-    };
-    
-    const [request] = await db.insert(eventRequests).values(data).returning();
-    return request;
-  }
-
-  async updateEventRequest(id: number, requestData: Partial<EventRequest>): Promise<EventRequest | undefined> {
-    const [updatedRequest] = await db
-      .update(eventRequests)
-      .set({ ...requestData, updatedAt: new Date() })
-      .where(eq(eventRequests.id, id))
-      .returning();
-    return updatedRequest;
-  }
-
-  // Quotations methods
-  async getQuotation(id: number): Promise<Quotation | undefined> {
-    const [quotation] = await db.select().from(quotations).where(eq(quotations.id, id));
-    return quotation;
-  }
-
-  async getQuotationsByEventRequest(eventRequestId: number): Promise<Quotation[]> {
-    return db
-      .select()
-      .from(quotations)
-      .where(eq(quotations.eventRequestId, eventRequestId))
-      .orderBy(desc(quotations.createdAt));
-  }
-
-  async createQuotation(quotationData: InsertQuotation): Promise<Quotation> {
-    const [quotation] = await db.insert(quotations).values(quotationData).returning();
-    return quotation;
-  }
-
-  async updateQuotation(id: number, quotationData: Partial<Quotation>): Promise<Quotation | undefined> {
-    const [updatedQuotation] = await db
-      .update(quotations)
-      .set({ ...quotationData, updatedAt: new Date() })
-      .where(eq(quotations.id, id))
-      .returning();
-    return updatedQuotation;
-  }
+  // Event request and quotation functionality moved to enhanced bookings table
 }
 
 export const storage = new DatabaseStorage();
