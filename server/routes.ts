@@ -6,7 +6,7 @@ import { db } from "./db";
 import { setupAuth } from "./auth";
 import { 
   InsertVendor, InsertBooking, InsertMessage, InsertEventType, InsertQuestionnaireItem, 
-  BOOKING_STATUS, USER_TYPES, messages
+  BOOKING_STATUS, USER_TYPES, messages, User
 } from "@shared/schema";
 import { z } from "zod";
 import { eq, or, and } from "drizzle-orm";
@@ -306,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const users = await storage.getAllUsers();
       // Remove passwords from response
-      const safeUsers = users.map(user => {
+      const safeUsers = users.map((user: User) => {
         const { password, ...safeUser } = user;
         return safeUser;
       });
@@ -866,6 +866,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: 'Vendor profile not found' });
         }
         bookings = await storage.getBookingsByVendor(vendor.id);
+      } else if (req.user.userType === 'admin') {
+        bookings = await storage.getAllBookings();
       } else {
         return res.status(403).json({ message: 'Unauthorized' });
       }
