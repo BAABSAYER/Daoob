@@ -929,6 +929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedBooking = await storage.updateBooking(id, req.body);
       res.json(updatedBooking);
     } catch (error) {
+      console.error('Booking update error:', error);
       res.status(500).json({ message: 'Error updating booking' });
     }
   });
