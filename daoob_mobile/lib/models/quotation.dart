@@ -9,6 +9,9 @@ class Quotation {
   final Map<String, dynamic>? breakdown;
   final String? notes;
   
+  // Getter for backward compatibility
+  double get totalPrice => totalAmount;
+  
   const Quotation({
     required this.id,
     required this.eventRequestId,
