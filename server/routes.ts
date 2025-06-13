@@ -427,8 +427,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Admin Users Management Endpoints
   
-  // Get all admin users
+  // Get all users for admin dashboard
   app.get('/api/admin/users', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Check if user is admin
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    try {
+      // Get all users in the system
+      const allUsers = await storage.getAllUsers();
+      
+      // Remove password field from all users
+      const safeUsers = allUsers.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(safeUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Error fetching users' });
+    }
+  });
+
+  // Get admin users specifically
+  app.get('/api/admin/admin-users', async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
