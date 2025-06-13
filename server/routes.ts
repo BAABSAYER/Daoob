@@ -750,9 +750,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         if (data.type === 'message' && userId !== null) {
-          // Store message in database with correct sender/receiver mapping
+          // Store message in database
           const messageData = {
-            senderId: data.sender, // Use the sender from the message data
+            senderId: userId, // Use authenticated WebSocket user ID
             receiverId: data.receiver,
             content: data.content,
             read: false
@@ -760,29 +760,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const savedMessage = await storage.createMessage(messageData);
           
-          // Broadcast message to both sender and receiver
-          const senderConnection = connections.find(conn => conn.userId === data.sender);
+          // Broadcast to recipient only
           const recipientConnection = connections.find(conn => conn.userId === data.receiver);
-          
-          const messagePayload = {
-            type: 'message',
-            id: savedMessage.id,
-            sender: data.sender,
-            receiver: data.receiver,
-            content: data.content,
-            timestamp: savedMessage.createdAt
-          };
-          
-          // Send to recipient
           if (recipientConnection && recipientConnection.socket.readyState === WebSocket.OPEN) {
-            recipientConnection.socket.send(JSON.stringify(messagePayload));
-          }
-          
-          // Send confirmation back to sender (but not the same message)
-          if (senderConnection && senderConnection.socket.readyState === WebSocket.OPEN) {
-            senderConnection.socket.send(JSON.stringify({
-              ...messagePayload,
-              type: 'message_sent'
+            recipientConnection.socket.send(JSON.stringify({
+              type: 'message',
+              id: savedMessage.id,
+              sender: userId,
+              receiver: data.receiver,
+              content: data.content,
+              timestamp: savedMessage.createdAt
             }));
           }
         }

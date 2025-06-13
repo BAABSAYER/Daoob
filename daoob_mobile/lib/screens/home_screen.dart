@@ -176,14 +176,15 @@ class _HomeScreenState extends State<HomeScreen> {
               
               Container(
                 width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Color(0xFF6A3DE8),
-                    side: BorderSide(color: Color(0xFF6A3DE8), width: 2),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
+                    elevation: 2,
                   ),
                   onPressed: () {
                     _startChatWithAdmin(context);
@@ -204,6 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              
+              const SizedBox(height: 24),
             
             SizedBox(height: 24),
             

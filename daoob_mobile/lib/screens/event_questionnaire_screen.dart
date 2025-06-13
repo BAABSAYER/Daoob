@@ -115,7 +115,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       'specialRequests': _specialRequestsController.text.trim().isNotEmpty 
           ? _specialRequestsController.text.trim() 
           : '',
-      'questionnaireResponses': json.encode(cleanResponses),
+      'questionnaireResponses': cleanResponses,
       'totalPrice': 0.0,
       'notes': _specialRequestsController.text.trim().isNotEmpty 
           ? _specialRequestsController.text.trim() 
@@ -128,9 +128,7 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
     print('Clean responses: $cleanResponses');
     
     try {
-      // Convert to properly encoded JSON
-      final jsonData = json.encode(requestData);
-      print('JSON encoded data: $jsonData');
+      print('Submitting event request...');
       
       final response = await authService.apiService.post(
         '${ApiConfig.apiUrl}/bookings',

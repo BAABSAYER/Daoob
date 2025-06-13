@@ -71,7 +71,7 @@ export default function AdminChat() {
     
     if (status === 'open') {
       // Use correct WebSocket sendMessage function signature
-      sendMessage(selectedUser, messageText);
+      sendMessage(selectedUser, messageText.trim());
     } else {
       // Fallback to REST API if WebSocket is not available
       sendMessageMutation.mutate({
