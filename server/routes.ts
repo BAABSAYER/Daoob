@@ -932,7 +932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Only include fields that should be updated, excluding timestamp conversion issues
       const allowedFields = ['status', 'totalPrice', 'quotationNotes', 'quotationDetails', 'specialRequests', 'notes', 'guestCount', 'eventTime', 'location', 'estimatedGuests', 'budget'];
-      const filteredData = {};
+      const filteredData: any = {};
       
       allowedFields.forEach(field => {
         if (updateData[field] !== undefined) {
