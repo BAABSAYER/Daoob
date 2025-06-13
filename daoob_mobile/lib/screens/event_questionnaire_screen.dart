@@ -58,8 +58,31 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       // Set the current category
       eventProvider.selectCategory(widget.categoryId);
       
-      // Convert category ID to event type ID (assuming they match or have a mapping)
-      final eventTypeId = _getEventTypeIdFromCategory(widget.categoryId);
+      // First fetch all event types to find the correct ID for this category
+      final eventTypesUrl = '${ApiConfig.apiUrl}/event-types';
+      final eventTypesResponse = await authService.apiService.get(eventTypesUrl);
+      
+      int? eventTypeId;
+      if (eventTypesResponse.statusCode == 200) {
+        final List<dynamic> eventTypesJson = jsonDecode(eventTypesResponse.body);
+        // Find the event type that matches our category
+        for (var eventType in eventTypesJson) {
+          String eventTypeName = eventType['name'].toString().toLowerCase();
+          if (eventTypeName.contains(widget.categoryId.toLowerCase()) || 
+              widget.categoryId.toLowerCase().contains(eventTypeName)) {
+            eventTypeId = eventType['id'];
+            break;
+          }
+        }
+        
+        // If no exact match, use the first available event type
+        if (eventTypeId == null && eventTypesJson.isNotEmpty) {
+          eventTypeId = eventTypesJson.first['id'];
+        }
+      }
+      
+      // If we still don't have an event type ID, use fallback
+      eventTypeId ??= _getEventTypeIdFromCategory(widget.categoryId);
       
       // Fetch questions from API for this event type using authService.apiService
       final url = '${ApiConfig.apiUrl}/event-types/$eventTypeId/questions';
