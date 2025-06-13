@@ -96,37 +96,92 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // Welcome Section
+              // Welcome Section with enhanced design
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6A3DE8), Color(0xFF8B5CF6)],
+                    colors: [Color(0xFF6A3DE8), Color(0xFF8B5CF6), Color(0xFF9C6CFF)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF6A3DE8).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isArabic ? 'مرحبًا، ${user?.name ?? 'صديق'}!' : 'Welcome, ${user?.name ?? 'Friend'}!',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.celebration,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isArabic ? 'مرحبًا، ${user?.name ?? 'صديق'}!' : 'Welcome, ${user?.name ?? 'Friend'}!',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isArabic 
+                                  ? 'دعنا نخطط لحدثك المثالي'
+                                  : 'Let\'s plan your perfect event',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isArabic 
-                        ? 'دعنا نخطط لحدثك المثالي'
-                        : 'Let\'s plan your perfect event',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.stars, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            isArabic 
+                              ? 'خدمة عملاء متاحة 24/7'
+                              : '24/7 Customer Support Available',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -135,101 +190,164 @@ class _HomeScreenState extends State<HomeScreen> {
               
               const SizedBox(height: 32),
               
-              // Action Buttons
-              Container(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6A3DE8),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 2,
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EventSelectionScreen(),
+              // Enhanced Action Buttons Grid
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF6A3DE8), Color(0xFF8B5CF6)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF6A3DE8).withOpacity(0.25),
+                            blurRadius: 15,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.celebration, size: 28),
-                      SizedBox(width: 12),
-                      Text(
-                        isArabic ? 'طلب تنظيم حدث جديد' : 'Plan a New Event',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EventSelectionScreen(),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.add_circle_outline,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  isArabic ? 'حدث جديد' : 'New Event',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              Container(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 2,
                   ),
-                  onPressed: () {
-                    _startChatWithAdmin(context);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.support_agent, size: 28),
-                      SizedBox(width: 12),
-                      Text(
-                        isArabic ? 'تواصل مع الدعم' : 'Contact Support',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFFFF6B6B).withOpacity(0.25),
+                            blurRadius: 15,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            _startChatWithAdmin(context);
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.support_agent,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  isArabic ? 'الدعم' : 'Support',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
               
               const SizedBox(height: 24),
             
-            // Categories section
+            // Enhanced Categories section
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    isArabic ? 'الفئات' : 'Categories',
+                    isArabic ? 'الفئات الشائعة' : 'Popular Categories',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3748),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/categories');
-                    },
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF6A3DE8).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Text(
                       isArabic ? 'عرض الكل' : 'View All',
                       style: const TextStyle(
                         color: Color(0xFF6A3DE8),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -237,35 +355,45 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             
-            // Category cards
+            const SizedBox(height: 16),
+            
+            // Enhanced Category cards
             SizedBox(
-              height: 140,
+              height: 160,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 children: [
-                  _buildCategoryCard(
+                  _buildEnhancedCategoryCard(
                     context,
                     isArabic ? 'زفاف' : 'Wedding',
                     Icons.favorite,
+                    Color(0xFFFFB6C1),
+                    Color(0xFFFF69B4),
                     onTap: () => _navigateToCategory('wedding'),
                   ),
-                  _buildCategoryCard(
+                  _buildEnhancedCategoryCard(
                     context,
                     isArabic ? 'شركات' : 'Corporate',
                     Icons.business,
+                    Color(0xFF87CEEB),
+                    Color(0xFF4682B4),
                     onTap: () => _navigateToCategory('corporate'),
                   ),
-                  _buildCategoryCard(
+                  _buildEnhancedCategoryCard(
                     context,
                     isArabic ? 'أعياد ميلاد' : 'Birthday',
                     Icons.cake,
+                    Color(0xFFFFE4B5),
+                    Color(0xFFFF8C00),
                     onTap: () => _navigateToCategory('birthday'),
                   ),
-                  _buildCategoryCard(
+                  _buildEnhancedCategoryCard(
                     context,
-                    isArabic ? 'مناسبة مخصصة' : 'Custom',
-                    Icons.edit,
+                    isArabic ? 'مناسبة خاصة' : 'Special',
+                    Icons.star,
+                    Color(0xFFDDA0DD),
+                    Color(0xFF9370DB),
                     onTap: () => Navigator.pushNamed(context, '/custom-event'),
                   ),
                 ],
@@ -416,6 +544,68 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildEnhancedCategoryCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color lightColor,
+    Color darkColor, {
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [lightColor, darkColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: darkColor.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryCard(
     BuildContext context,
     String title,
@@ -470,23 +660,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBookingCard(BuildContext context, Booking booking, bool isArabic) {
-    // Determine status color
-    Color statusColor;
+    // Determine status color and gradient
+    List<Color> statusColors;
     switch (booking.status) {
       case 'confirmed':
-        statusColor = Colors.green;
+        statusColors = [Color(0xFF4CAF50), Color(0xFF66BB6A)];
         break;
       case 'pending':
-        statusColor = Colors.orange;
+        statusColors = [Color(0xFFFF9800), Color(0xFFFFB74D)];
         break;
       case 'cancelled':
-        statusColor = Colors.red;
+        statusColors = [Color(0xFFF44336), Color(0xFFEF5350)];
         break;
       case 'completed':
-        statusColor = Colors.blue;
+        statusColors = [Color(0xFF2196F3), Color(0xFF42A5F5)];
         break;
       default:
-        statusColor = Colors.grey;
+        statusColors = [Color(0xFF9E9E9E), Color(0xFFBDBDBD)];
     }
 
     String statusText = booking.status;
@@ -507,14 +697,21 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
-      elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
