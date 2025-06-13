@@ -108,8 +108,8 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => RequestSubmittedScreen(
-                eventType: widget.eventType,
-                submittedData: requestData,
+                eventRequest: requestData,
+                eventTypeName: widget.eventType.name,
               ),
             ),
           );
