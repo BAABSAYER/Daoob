@@ -39,12 +39,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       
-      final response = await http.get(
-        Uri.parse('${ApiConfig.apiUrl}/quotations/request/${widget.eventRequest.id}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': authService.sessionCookie ?? '',
-        },
+      final response = await authService.apiService.get(
+        '${ApiConfig.apiUrl}/quotations/request/${widget.eventRequest.id}',
       );
 
       if (response.statusCode == 200) {

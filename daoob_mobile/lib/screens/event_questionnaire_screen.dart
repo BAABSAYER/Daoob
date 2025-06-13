@@ -54,12 +54,8 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       
-      final response = await http.get(
-        Uri.parse('${ApiConfig.apiUrl}/questionnaire-items/${widget.eventType.id}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': authService.sessionCookie ?? '',
-        },
+      final response = await authService.apiService.get(
+        '${ApiConfig.apiUrl}/questionnaire-items/${widget.eventType.id}',
       );
       
       if (response.statusCode == 200) {
@@ -101,13 +97,9 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
     };
     
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.apiUrl}/bookings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': authService.sessionCookie ?? '',
-        },
-        body: json.encode(requestData),
+      final response = await authService.apiService.post(
+        '${ApiConfig.apiUrl}/bookings',
+        requestData,
       );
       
       if (response.statusCode == 201) {
