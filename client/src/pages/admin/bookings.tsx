@@ -375,6 +375,18 @@ export default function AdminBookings() {
                             View Quote
                           </Button>
                         )}
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this booking?')) {
+                              deleteBookingMutation.mutate(booking.id);
+                            }
+                          }}
+                          disabled={deleteBookingMutation.isPending}
+                        >
+                          Delete
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

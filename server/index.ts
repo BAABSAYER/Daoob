@@ -49,20 +49,21 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    port: process.env.PORT || "3001"
+    port: process.env.PORT || "5000"
   });
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
-  });
+      console.error('Server error:', err);
+      res.status(status).json({ message });
+    });
 
   // Force production mode for Docker deployment
   if (process.env.NODE_ENV === "development" && !process.env.DOCKER_CONTAINER) {
@@ -71,13 +72,20 @@ app.get('/health', (req, res) => {
     serveStatic(app);
   }
 
-  // Use environment port or default to 8080 for Docker
-  const port = parseInt(process.env.PORT || "8080");
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  // Use environment port or default to 5000 for Replit
+  const port = parseInt(process.env.PORT || "5000");
+  
+  // Handle server startup errors
+  server.on('error', (err) => {
+    console.error('Server startup error:', err);
+    process.exit(1);
   });
+  
+    server.listen(port, "0.0.0.0", () => {
+      log(`serving on port ${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 })();
