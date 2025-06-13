@@ -812,8 +812,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      console.log("Booking request body:", JSON.stringify(req.body, null, 2));
-      
       // Validate that required fields are present
       if (!req.body.eventDate) {
         return res.status(400).json({ message: 'Missing required field: eventDate' });
@@ -839,8 +837,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error parsing booking data:", parseError);
         return res.status(400).json({ message: 'Invalid booking data', error: parseError?.message || 'Unknown parsing error' });
       }
-      
-      console.log("Processed booking data:", JSON.stringify(bookingData, null, 2));
       
       try {
         const booking = await storage.createBooking(bookingData);
@@ -926,26 +922,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Not authorized to update this booking' });
       }
       
-      // Handle timestamp fields properly
+      // Convert string dates to Date objects for timestamp fields
       const updateData = { ...req.body };
-      console.log('Update data before processing:', JSON.stringify(updateData, null, 2));
+      if (updateData.quotationValidUntil && typeof updateData.quotationValidUntil === 'string') {
+        const date = new Date(updateData.quotationValidUntil);
+        updateData.quotationValidUntil = isNaN(date.getTime()) ? null : date;
+      }
+      if (updateData.eventDate && typeof updateData.eventDate === 'string') {
+        const date = new Date(updateData.eventDate);
+        updateData.eventDate = isNaN(date.getTime()) ? null : date;
+      }
       
-      // Only include fields that should be updated, excluding timestamp conversion issues
-      const allowedFields = ['status', 'totalPrice', 'quotationNotes', 'quotationDetails', 'specialRequests', 'notes', 'guestCount', 'eventTime', 'location', 'estimatedGuests', 'budget'];
-      const filteredData: any = {};
-      
-      allowedFields.forEach(field => {
-        if (updateData[field] !== undefined) {
-          filteredData[field] = updateData[field];
-        }
-      });
-      
-      console.log('Filtered update data:', JSON.stringify(filteredData, null, 2));
-      
-      const updatedBooking = await storage.updateBooking(id, filteredData);
+      const updatedBooking = await storage.updateBooking(id, updateData);
       res.json(updatedBooking);
     } catch (error) {
-      console.error('Booking update error:', error);
       res.status(500).json({ message: 'Error updating booking' });
     }
   });
