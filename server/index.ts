@@ -65,22 +65,22 @@ app.get('/health', (req, res) => {
       res.status(status).json({ message });
     });
 
-  // Force production mode for Docker deployment
-  if (process.env.NODE_ENV === "development" && !process.env.DOCKER_CONTAINER) {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+    // Force production mode for Docker deployment
+    if (process.env.NODE_ENV === "development" && !process.env.DOCKER_CONTAINER) {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
-  // Use environment port or default to 5000 for Replit
-  const port = parseInt(process.env.PORT || "5000");
-  
-  // Handle server startup errors
-  server.on('error', (err) => {
-    console.error('Server startup error:', err);
-    process.exit(1);
-  });
-  
+    // Use environment port or default to 5000 for Replit
+    const port = parseInt(process.env.PORT || "5000");
+    
+    // Handle server startup errors
+    server.on('error', (err) => {
+      console.error('Server startup error:', err);
+      process.exit(1);
+    });
+    
     server.listen(port, "0.0.0.0", () => {
       log(`serving on port ${port}`);
     });

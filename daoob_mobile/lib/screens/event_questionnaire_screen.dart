@@ -105,21 +105,21 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
       }
     }
     
-    // Create properly structured request data
+    // Create properly structured request data with proper validation
     final Map<String, dynamic> requestData = {
       'eventTypeId': widget.eventType.id,
       'eventDate': DateTime.now().add(Duration(days: 7)).toIso8601String(),
       'eventTime': '12:00:00',
       'estimatedGuests': 50,
       'guestCount': 50,
-      'specialRequests': _specialRequestsController.text.trim().isEmpty 
-          ? null 
-          : _specialRequestsController.text.trim(),
-      'questionnaireResponses': cleanResponses.isEmpty ? {} : cleanResponses,
-      'totalPrice': 0,
-      'notes': _specialRequestsController.text.trim().isEmpty 
-          ? null 
-          : _specialRequestsController.text.trim(),
+      'specialRequests': _specialRequestsController.text.trim().isNotEmpty 
+          ? _specialRequestsController.text.trim() 
+          : '',
+      'questionnaireResponses': json.encode(cleanResponses),
+      'totalPrice': 0.0,
+      'notes': _specialRequestsController.text.trim().isNotEmpty 
+          ? _specialRequestsController.text.trim() 
+          : '',
       'status': 'pending'
     };
     
@@ -128,6 +128,10 @@ class _EventQuestionnaireScreenState extends State<EventQuestionnaireScreen> {
     print('Clean responses: $cleanResponses');
     
     try {
+      // Convert to properly encoded JSON
+      final jsonData = json.encode(requestData);
+      print('JSON encoded data: $jsonData');
+      
       final response = await authService.apiService.post(
         '${ApiConfig.apiUrl}/bookings',
         requestData,

@@ -70,6 +70,7 @@ export default function AdminChat() {
     if (!messageText.trim() || !selectedUser || !user) return;
     
     if (status === 'open') {
+      // Use correct WebSocket sendMessage function signature
       sendMessage(selectedUser, messageText);
     } else {
       // Fallback to REST API if WebSocket is not available
@@ -79,6 +80,8 @@ export default function AdminChat() {
         content: messageText
       });
     }
+    
+    setMessageText("");
   };
   
   const getInitials = (name: string) => {

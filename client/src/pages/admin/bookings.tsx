@@ -336,7 +336,7 @@ export default function AdminBookings() {
                     <TableCell>#{booking.id}</TableCell>
                     <TableCell>{booking.clientName || `Client #${booking.clientId}`}</TableCell>
                     <TableCell>{booking.vendor?.businessName || `Vendor #${booking.vendorId}`}</TableCell>
-                    <TableCell>{EVENT_TYPES[booking.eventTypeId as keyof typeof EVENT_TYPES] || `Event Type #${booking.eventTypeId}`}</TableCell>
+                    <TableCell>Event Type #{booking.eventTypeId}</TableCell>
                     <TableCell>{new Date(booking.eventDate).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(booking.status)}</TableCell>
                     <TableCell>
@@ -412,7 +412,7 @@ export default function AdminBookings() {
           <DialogHeader>
             <DialogTitle>Booking Details</DialogTitle>
             <DialogDescription>
-              {selectedBooking ? `Booking #${selectedBooking.id} - ${EVENT_TYPES[selectedBooking.eventTypeId as keyof typeof EVENT_TYPES] || `Event Type #${selectedBooking.eventTypeId}`} Event` : 'View and manage booking details'}
+              {selectedBooking ? `Booking #${selectedBooking.id} - Event Type #${selectedBooking.eventTypeId}` : 'View and manage booking details'}
             </DialogDescription>
           </DialogHeader>
           
@@ -510,7 +510,7 @@ export default function AdminBookings() {
                       <strong>Guest Count:</strong> {selectedBooking.guestCount}
                     </div>
                     <div>
-                      <strong>Event Type:</strong> {EVENT_TYPES[selectedBooking.eventTypeId as keyof typeof EVENT_TYPES] || `Event Type #${selectedBooking.eventTypeId}`}
+                      <strong>Event Type:</strong> Event Type #{selectedBooking.eventTypeId}
                     </div>
                   </div>
                 </CardContent>
