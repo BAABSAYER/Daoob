@@ -288,9 +288,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Bookings now handle the complete event flow (replacing event requests)
+  // Admin endpoint for dashboard compatibility (returns empty array since we use bookings)
+  app.get('/api/admin/event-requests', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    if (req.user.userType !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    // Return empty array since we've moved to bookings-centric workflow
+    res.json([]);
+  });
   
-  // Event request and quotation functionality has been moved to enhanced bookings table
+  // Bookings now handle the complete event flow (no separate event requests needed)
   
   // Get all users (admin only)
   app.get('/api/users', async (req, res) => {
@@ -1722,45 +1734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // EVENT REQUESTS ROUTES (Client)
-  
-  // Create a new event request (Client)
-  app.post('/api/event-requests', async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    
-    try {
-      const eventTypeId = parseInt(req.body.eventTypeId);
-      const eventType = await storage.getEventType(eventTypeId);
-      
-      if (!eventType || !eventType.isActive) {
-        return res.status(404).json({ message: 'Event type not found or inactive' });
-      }
-      
-      // Validate the request body
-      if (!req.body.responses) {
-        return res.status(400).json({ message: 'Responses are required' });
-      }
-      
-      // Create booking with questionnaire responses (replacing event requests)
-      const bookingData: InsertBooking = {
-        clientId: req.user.id,
-        eventTypeId,
-        status: BOOKING_STATUS.PENDING,
-        questionnaireResponses: req.body.responses,
-        eventDate: req.body.eventDate ? new Date(req.body.eventDate) : new Date(),
-        budget: req.body.budget || null,
-        specialRequests: req.body.specialRequests || '',
-      };
-      
-      const booking = await storage.createBooking(bookingData);
-      res.status(201).json(booking);
-    } catch (error) {
-      console.error('Error creating event request:', error);
-      res.status(500).json({ message: 'Error creating event request' });
-    }
-  });
+  // Event submissions now go directly to bookings table via /api/bookings endpoint
   
   // Bookings now handle the complete event flow (replacing event requests)
   

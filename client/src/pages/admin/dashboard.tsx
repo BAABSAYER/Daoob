@@ -48,13 +48,9 @@ export default function AdminDashboard() {
     return bookings.filter((booking: any) => booking.status === BOOKING_STATUS.PENDING).length;
   };
   
-  const { data: eventRequests = [], isLoading: isLoadingEventRequests } = useQuery<any[]>({
-    queryKey: ["/api/admin/event-requests"],
-  });
-
-  const getTotalEventRequestsCount = () => {
-    // Count active event requests
-    return eventRequests.length;
+  const getTotalBookingsCount = () => {
+    // Count all bookings
+    return bookings.length;
   };
   
   // Fetch all users
@@ -144,15 +140,15 @@ export default function AdminDashboard() {
           <Card className="col-span-1">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Event Requests
+                Total Bookings
               </CardTitle>
               <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{getTotalEventRequestsCount()}</div>
+              <div className="text-2xl font-bold">{getTotalBookingsCount()}</div>
             </CardContent>
             <CardFooter className="p-2">
-              <Link href="/admin/events">
+              <Link href="/admin/bookings">
                 <Button variant="ghost" size="sm" className="w-full justify-between">
                   <span>View all</span>
                   <ArrowRight className="h-4 w-4" />
@@ -271,56 +267,56 @@ export default function AdminDashboard() {
               {/* Event Requests */}
               <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Recent Event Requests</CardTitle>
+                  <CardTitle>Recent Bookings</CardTitle>
                   <CardDescription>
-                    Latest client event requests
+                    Latest client bookings
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {isLoadingEventRequests ? (
+                    {isLoadingBookings ? (
                       <>
                         <Skeleton className="h-12 w-full" />
                         <Skeleton className="h-12 w-full" />
                         <Skeleton className="h-12 w-full" />
                       </>
-                    ) : eventRequests.length > 0 ? (
-                      eventRequests.slice(0, 3).map((request: any, index: number) => (
-                        <div key={request.id} className="flex items-center justify-between">
+                    ) : bookings.length > 0 ? (
+                      getRecentBookings().slice(0, 3).map((booking: any, index: number) => (
+                        <div key={booking.id} className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
                               {index + 1}
                             </div>
                             <div>
-                              <p className="text-sm font-medium">{request.eventType}</p>
+                              <p className="text-sm font-medium">Booking #{booking.id}</p>
                               <p className="text-xs text-muted-foreground">
-                                Requested {request.createdAt ? format(new Date(request.createdAt), 'MMM d, yyyy') : 'recently'}
+                                Created {booking.createdAt ? format(new Date(booking.createdAt), 'MMM d, yyyy') : 'recently'}
                               </p>
                             </div>
                           </div>
                           <Badge 
                             variant="outline" 
                             className={
-                              request.status === 'pending' ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
-                              request.status === 'quoted' ? "bg-blue-100 text-blue-800 border-blue-300" :
-                              request.status === 'accepted' ? "bg-green-100 text-green-800 border-green-300" :
+                              booking.status === 'pending' ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
+                              booking.status === 'quoted' ? "bg-blue-100 text-blue-800 border-blue-300" :
+                              booking.status === 'confirmed' ? "bg-green-100 text-green-800 border-green-300" :
                               "bg-gray-100 text-gray-800 border-gray-300"
                             }
                           >
-                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                           </Badge>
                         </div>
                       ))
                     ) : (
                       <div className="text-center py-4 text-gray-500">
-                        No event requests available
+                        No bookings available
                       </div>
                     )}
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Link href="/admin/events">
-                    <Button variant="outline" size="sm">View all requests</Button>
+                  <Link href="/admin/bookings">
+                    <Button variant="outline" size="sm">View all bookings</Button>
                   </Link>
                 </CardFooter>
               </Card>
