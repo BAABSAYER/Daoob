@@ -251,8 +251,6 @@ export class DatabaseStorage implements IStorage {
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
     try {
-      console.log("Database - creating booking with data:", JSON.stringify(insertBooking, null, 2));
-      
       // Ensure all required fields are present
       if (!insertBooking.clientId) throw new Error("clientId is required");
       if (!insertBooking.eventTypeId) throw new Error("eventTypeId is required");
@@ -280,8 +278,6 @@ export class DatabaseStorage implements IStorage {
         specialRequests: insertBooking.specialRequests || null,
         serviceId: insertBooking.serviceId || null
       };
-      
-      console.log("Database - final booking data:", JSON.stringify(bookingToCreate, null, 2));
       
       const [booking] = await db.insert(bookings).values(bookingToCreate).returning();
       return booking;
