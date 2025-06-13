@@ -184,6 +184,9 @@ class EventProvider with ChangeNotifier {
         requestData['clientId'] = authService.user!.id;
       }
       
+      // Get the event type ID for the category
+      int? eventTypeId = await _getEventTypeIdForCategory(requestData['categoryId'], authService);
+      
       // Transform the request data to match the new booking structure
       final bookingData = {
         'clientId': requestData['clientId'],
@@ -191,7 +194,7 @@ class EventProvider with ChangeNotifier {
         'eventTime': requestData['eventTime'] ?? '',
         'estimatedGuests': requestData['estimatedGuests'] ?? 50,
         'status': 'pending',
-        'eventTypeId': null, // Will be determined by the backend based on category
+        'eventTypeId': eventTypeId ?? 1, // Use first event type as fallback
         'questionnaireResponses': requestData['answers'] ?? {},
         'notes': 'Submitted from mobile app for category: ${requestData['categoryId']}',
       };
@@ -221,6 +224,35 @@ class EventProvider with ChangeNotifier {
     } catch (e) {
       throw Exception('Failed to create booking: $e');
     }
+  }
+
+  // Helper method to get event type ID for a category
+  Future<int?> _getEventTypeIdForCategory(String categoryId, AuthService authService) async {
+    try {
+      final response = await authService.apiService.get('${ApiConfig.baseUrl}/api/event-types');
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> eventTypes = json.decode(response.body);
+        
+        // Find matching event type by name similarity
+        for (var eventType in eventTypes) {
+          String eventTypeName = eventType['name'].toString().toLowerCase();
+          if (eventTypeName.contains(categoryId.toLowerCase()) || 
+              categoryId.toLowerCase().contains(eventTypeName)) {
+            return eventType['id'];
+          }
+        }
+        
+        // Return first event type as fallback
+        if (eventTypes.isNotEmpty) {
+          return eventTypes.first['id'];
+        }
+      }
+    } catch (e) {
+      print('Error fetching event types: $e');
+    }
+    
+    return null;
   }
 
   // Load event requests for the current user

@@ -371,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enhance bookings with vendor/client data
       const enhancedBookings = await Promise.all(
         bookings.map(async booking => {
-          const vendor = await storage.getVendor(booking.vendorId);
+          const vendor = booking.vendorId ? await storage.getVendor(booking.vendorId) : null;
           const client = await storage.getUser(booking.clientId);
           
           return {
@@ -853,7 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enhance bookings with vendor/client data
       const enhancedBookings = await Promise.all(
         bookings.map(async booking => {
-          const vendor = await storage.getVendor(booking.vendorId);
+          const vendor = booking.vendorId ? await storage.getVendor(booking.vendorId) : null;
           const client = await storage.getUser(booking.clientId);
           
           return {
