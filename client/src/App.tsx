@@ -34,6 +34,7 @@ import Profile from "./pages/profile";
 
 import { ProtectedRoute } from "./lib/protected-route";
 import { AdminRoute } from "./lib/admin-route";
+import { VendorRoute } from "./lib/vendor-route";
 import "./app.css";
 
 function Router() {
@@ -55,10 +56,10 @@ function Router() {
       <ProtectedRoute path="/profile" component={Profile} />
       
       {/* Vendor Routes */}
-      <ProtectedRoute path="/vendor/dashboard" component={VendorDashboard} />
-      <ProtectedRoute path="/vendor/bookings" component={VendorBookings} />
-      <ProtectedRoute path="/vendor/services" component={VendorServices} />
-      <ProtectedRoute path="/vendor/profile" component={VendorProfile} />
+      <VendorRoute path="/vendor/dashboard" component={VendorDashboard} />
+      <VendorRoute path="/vendor/bookings" component={VendorBookings} />
+      <VendorRoute path="/vendor/services" component={VendorServices} />
+      <VendorRoute path="/vendor/profile" component={VendorProfile} />
       
       {/* Admin Dashboard Routes */}
       <AdminRoute path="/admin" component={AdminDashboard} />
