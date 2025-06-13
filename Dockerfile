@@ -1,4 +1,4 @@
-# Optimized production Dockerfile for DAOOB platform
+# Production Dockerfile for DAOOB platform
 FROM node:20-alpine
 
 # Install build dependencies for native modules
@@ -9,10 +9,10 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install all dependencies (including dev deps for build)
+# Install all dependencies for build
 RUN npm ci
 
-# Copy source code (excluding unnecessary files)
+# Copy source code
 COPY client ./client
 COPY server ./server
 COPY shared ./shared
@@ -23,11 +23,11 @@ COPY postcss.config.js ./
 COPY components.json ./
 COPY drizzle.config.ts ./
 
-# Build the application
+# Build the application using existing build script
 RUN npm run build
 
-# Clean up development dependencies to reduce image size
-RUN npm prune --production
+# Keep all node_modules for now since the bundled server imports dev dependencies
+# This is a temporary fix - in production the build process should be improved
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
