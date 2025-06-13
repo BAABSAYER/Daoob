@@ -71,8 +71,8 @@ app.get('/health', (req, res) => {
     serveStatic(app);
   }
 
-  // Use environment port or default to 3001 for Docker
-  const port = parseInt(process.env.PORT || "3001");
+  // Use environment port or default to 8080 for Docker
+  const port = parseInt(process.env.PORT || "8080");
   server.listen({
     port,
     host: "0.0.0.0",

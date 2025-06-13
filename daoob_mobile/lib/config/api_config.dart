@@ -2,7 +2,7 @@ import 'dart:io';
 
 class ApiConfig {
   // API URLs for different environments
-  static const String productionApiUrl = 'http://178.62.41.245'; // Your DigitalOcean droplet IP
+  static const String productionApiUrl = 'http://178.62.41.245:8080'; // Your DigitalOcean droplet IP with port 8080
   
   // Updated to match your specific Replit deployment URL
   static const String replitDeploymentUrl = 'https://daoob-abdeez.replit.app';
