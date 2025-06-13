@@ -4,6 +4,7 @@ import 'package:daoob_mobile/services/auth_service.dart';
 import 'package:daoob_mobile/services/message_service.dart';
 import 'package:daoob_mobile/l10n/language_provider.dart';
 import 'package:daoob_mobile/screens/chat_screen.dart';
+import 'package:daoob_mobile/models/chat_user.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
