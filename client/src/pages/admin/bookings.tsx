@@ -380,7 +380,7 @@ export default function AdminBookings() {
           <DialogHeader>
             <DialogTitle>Booking Details</DialogTitle>
             <DialogDescription>
-              {selectedBooking ? `Booking #${selectedBooking.id} - ${EVENT_TYPES[selectedBooking.eventType as keyof typeof EVENT_TYPES] || selectedBooking.eventType} Event` : 'View and manage booking details'}
+              {selectedBooking ? `Booking #${selectedBooking.id} - ${EVENT_TYPES[selectedBooking.eventTypeId as keyof typeof EVENT_TYPES] || `Event Type #${selectedBooking.eventTypeId}`} Event` : 'View and manage booking details'}
             </DialogDescription>
           </DialogHeader>
           
@@ -444,6 +444,159 @@ export default function AdminBookings() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsViewingDetails(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quotation Creation Dialog */}
+      <Dialog open={isCreatingQuotation} onOpenChange={setIsCreatingQuotation}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Quotation</DialogTitle>
+            <DialogDescription>
+              {selectedBooking ? `Creating quote for Booking #${selectedBooking.id}` : 'Create a detailed quotation for the booking'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedBooking && (
+            <div className="space-y-6">
+              {/* Booking Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Booking Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <strong>Client:</strong> {selectedBooking.clientName || `Client #${selectedBooking.clientId}`}
+                    </div>
+                    <div>
+                      <strong>Event Date:</strong> {new Date(selectedBooking.eventDate).toLocaleDateString()}
+                    </div>
+                    <div>
+                      <strong>Guest Count:</strong> {selectedBooking.guestCount}
+                    </div>
+                    <div>
+                      <strong>Event Type:</strong> {EVENT_TYPES[selectedBooking.eventTypeId as keyof typeof EVENT_TYPES] || `Event Type #${selectedBooking.eventTypeId}`}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quotation Items */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <Label className="text-base font-medium">Quotation Items</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addQuotationItem}
+                  >
+                    Add Item
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  {quotationForm.quotationDetails.items.map((item, index) => (
+                    <Card key={index}>
+                      <CardContent className="p-4">
+                        <div className="grid grid-cols-12 gap-3 items-end">
+                          <div className="col-span-4">
+                            <Label htmlFor={`service-${index}`}>Service</Label>
+                            <Input
+                              id={`service-${index}`}
+                              placeholder="Service name"
+                              value={item.service}
+                              onChange={(e) => updateQuotationItem(index, 'service', e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label htmlFor={`price-${index}`}>Price ($)</Label>
+                            <Input
+                              id={`price-${index}`}
+                              type="number"
+                              placeholder="0.00"
+                              value={item.price}
+                              onChange={(e) => updateQuotationItem(index, 'price', e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-5">
+                            <Label htmlFor={`description-${index}`}>Description</Label>
+                            <Input
+                              id={`description-${index}`}
+                              placeholder="Service description"
+                              value={item.description}
+                              onChange={(e) => updateQuotationItem(index, 'description', e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            {quotationForm.quotationDetails.items.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeQuotationItem(index)}
+                              >
+                                ×
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total Price */}
+              <div>
+                <Label htmlFor="totalPrice">Total Price ($)</Label>
+                <Input
+                  id="totalPrice"
+                  type="number"
+                  placeholder="0.00"
+                  value={quotationForm.totalPrice}
+                  onChange={(e) => setQuotationForm(prev => ({ ...prev, totalPrice: e.target.value }))}
+                  className="text-lg font-semibold"
+                />
+              </div>
+
+              {/* Quotation Notes */}
+              <div>
+                <Label htmlFor="quotationNotes">Additional Notes</Label>
+                <Textarea
+                  id="quotationNotes"
+                  placeholder="Any additional terms, conditions, or notes for the client..."
+                  value={quotationForm.quotationNotes}
+                  onChange={(e) => setQuotationForm(prev => ({ ...prev, quotationNotes: e.target.value }))}
+                  rows={4}
+                />
+              </div>
+
+              {/* Valid Until */}
+              <div>
+                <Label htmlFor="quotationValidUntil">Quote Valid Until</Label>
+                <Input
+                  id="quotationValidUntil"
+                  type="date"
+                  value={quotationForm.quotationValidUntil}
+                  onChange={(e) => setQuotationForm(prev => ({ ...prev, quotationValidUntil: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreatingQuotation(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitQuotation}
+              disabled={createQuotationMutation.isPending || !quotationForm.totalPrice}
+            >
+              {createQuotationMutation.isPending ? 'Creating...' : 'Send Quotation'}
             </Button>
           </DialogFooter>
         </DialogContent>
